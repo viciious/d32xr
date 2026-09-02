@@ -188,6 +188,14 @@ static boolean P_ChangeSector (sector_t *sector, boolean crunch, fixed_t *secbbo
 
 /* recheck heights for all things near the moving sector */
 
+	if (blocklinksadjust)
+	{
+		blockbox[BOXLEFT] /= 2;
+		blockbox[BOXRIGHT] /= 2;
+		blockbox[BOXBOTTOM] /= 2;
+		blockbox[BOXTOP] /= 2;
+	}
+
 	for (x=blockbox[BOXLEFT] ; x<= blockbox[BOXRIGHT] ; x++)
 		for (y=blockbox[BOXBOTTOM];y<= blockbox[BOXTOP] ; y++)
 			P_BlockThingsIterator (x, y, (blockthingsiter_t)PIT_ChangeSector, &ct);

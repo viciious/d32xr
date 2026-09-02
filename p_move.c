@@ -236,6 +236,14 @@ boolean PIT_CheckPosition(pmovework_t *w)
    if(yh >= bmapheight)
       yh = bmapheight - 1;
 
+   if (blocklinksadjust)
+   {
+      xl /= 2;
+      xh /= 2;
+      yl /= 2;
+      yh /= 2;
+   }
+
    // check things
    for(bx = xl; bx <= xh; bx++)
    {

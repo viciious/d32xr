@@ -328,6 +328,14 @@ void P_RadiusAttack (mobj_t *spot, mobj_t *source, int damage)
 	ra.bombsource = source;
 	ra.bombdamage = damage;
 	
+	if (blocklinksadjust)
+	{
+		xl /= 2;
+		xh /= 2;
+		yl /= 2;
+		yh /= 2;
+	}
+
 	for (y=yl ; y<=yh ; y++)
 		for (x=xl ; x<=xh ; x++)
 			P_BlockThingsIterator (x, y, (blockthingsiter_t)PIT_RadiusAttack, &ra );

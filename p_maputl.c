@@ -469,8 +469,6 @@ boolean P_BlockThingsIterator (int x, int y, blockthingsiter_t func, void *userp
 
 	if (blocklinksadjust)
 	{
-		x >>= 1;
-		y >>= 1;
 		y *= (bmapwidth+1)/2;
 	}
 	else

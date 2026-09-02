@@ -1050,10 +1050,37 @@ void A_VileChase (mobj_t* actor)
 		vc.viletryy =
 			actor->y + actor->speed*yspeed[actor->movedir];
 
-		xl = (vc.viletryx - bmaporgx - MAXRADIUS*2)>>MAPBLOCKSHIFT;
-		xh = (vc.viletryx - bmaporgx + MAXRADIUS*2)>>MAPBLOCKSHIFT;
-		yl = (vc.viletryy - bmaporgy - MAXRADIUS*2)>>MAPBLOCKSHIFT;
-		yh = (vc.viletryy - bmaporgy + MAXRADIUS*2)>>MAPBLOCKSHIFT;
+		xl = vc.viletryx - bmaporgx - MAXRADIUS*2;
+		xh = vc.viletryx - bmaporgx + MAXRADIUS*2;
+		yl = vc.viletryy - bmaporgy - MAXRADIUS*2;
+		yh = vc.viletryy - bmaporgy + MAXRADIUS*2;
+
+		if(xl < 0)
+			xl = 0;
+		if(yl < 0)
+			yl = 0;
+		if(yh < 0)
+			return;
+		if(xh < 0)
+			return;
+
+		xl = (unsigned)xl >> MAPBLOCKSHIFT;
+		xh = (unsigned)xh >> MAPBLOCKSHIFT;
+		yl = (unsigned)yl >> MAPBLOCKSHIFT;
+		yh = (unsigned)yh >> MAPBLOCKSHIFT;
+
+		if(xh >= bmapwidth)
+			xh = bmapwidth - 1;
+		if(yh >= bmapheight)
+			yh = bmapheight - 1;
+
+		if (blocklinksadjust)
+		{
+			xl /= 2;
+			xh /= 2;
+			yl /= 2;
+			yh /= 2;
+		}
 
 		for (bx=xl ; bx<=xh ; bx++)
 		{
