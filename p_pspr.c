@@ -14,7 +14,7 @@
 
 #define MAXSOUNDSECS	2048
 
-static void P_RecursiveSound(mobj_t *soundtarget, sector_t *sec, int soundblocks, uint8_t* soundtraversed);
+static void P_RecursiveSound(mobj_t *soundtarget, int secnum, int soundblocks, uint8_t* soundtraversed);
 
 /*
 =================
@@ -26,16 +26,14 @@ static void P_RecursiveSound(mobj_t *soundtarget, sector_t *sec, int soundblocks
 =================
 */
 
-static void P_RecursiveSound (mobj_t *soundtarget, sector_t *sec, int soundblocks, uint8_t *soundtraversed)
+static void P_RecursiveSound (mobj_t *soundtarget, int secnum, int soundblocks, uint8_t *soundtraversed)
 {
 	int			i;
 	line_t		*check;
-	int 		secnum;
-	sector_t 	*other;
+	sector_t 	*sec = &sectors[secnum];
 	sector_t	*front, *back;
 	
 /* wake up all monsters in this sector */
-	secnum = ((uintptr_t)sec - (uintptr_t)sectors)/sizeof(sector_t);
 	if (secnum >= MAXSOUNDSECS)
 		return;
 	if (validcount[secnum+1] == validcount[0] && soundtraversed[secnum] <= soundblocks+1)
@@ -47,6 +45,7 @@ static void P_RecursiveSound (mobj_t *soundtarget, sector_t *sec, int soundblock
 	for (i=0 ;i<sec->linecount ; i++)
 	{
 		int backnum, frontnum;
+		int othernum;
 		fixed_t opentop, openbottom;
 
 		check = lines + sec->lines[i];
@@ -75,16 +74,16 @@ static void P_RecursiveSound (mobj_t *soundtarget, sector_t *sec, int soundblock
 			continue;		/* closed door */
 
 		if (front == sec)
-			other = back;
+			othernum = backnum;
 		else
-			other = front;
+			othernum = frontnum;
 		if (check->flags & ML_SOUNDBLOCK)
 		{
 			if (!soundblocks)
-				P_RecursiveSound (soundtarget, other, 1, soundtraversed);
+				P_RecursiveSound (soundtarget, othernum, 1, soundtraversed);
 		}
 		else
-			P_RecursiveSound (soundtarget, other, soundblocks, soundtraversed);
+			P_RecursiveSound (soundtarget, othernum, soundblocks, soundtraversed);
 	}
 }
 
@@ -99,10 +98,12 @@ static void P_RecursiveSound (mobj_t *soundtarget, sector_t *sec, int soundblock
 
 void P_NoiseAlert (player_t *player)
 {
+	int 		secnum;
 	sector_t	*sec;
 	uint8_t soundtraversed[MAXSOUNDSECS];
 
-	sec = SSEC_SECTOR(player->mo->subsector);
+	secnum = player->mo->subsector->sector;
+	sec = &sectors[secnum];
 	
 	if (player->lastsoundsector == (void *)sec)
 		return;		/* don't bother doing it again here */
@@ -110,7 +111,7 @@ void P_NoiseAlert (player_t *player)
 	player->lastsoundsector = (void *)sec;
 	
 	validcount[0]++;
-	P_RecursiveSound (player->mo, sec, 0, soundtraversed);
+	P_RecursiveSound (player->mo, secnum, 0, soundtraversed);
 }
 
 
