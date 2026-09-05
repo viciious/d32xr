@@ -383,8 +383,6 @@ void O_Control (player_t *player)
 				S_StartSound(NULL,  sfx_swtchn);
 #ifndef MARS
 				DoubleBufferSetup();
-#else
-				Mars_SetVDPPri(1);
 #endif
 			}
 			else

@@ -1330,7 +1330,6 @@ void I_NetStop(void)
 {
 	consoleplayer = 0;
 	Mars_CleanupNet();
-	Mars_SetVDPPri(1);
 }
 
 #define PACKET_SIZE 6

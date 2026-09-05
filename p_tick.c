@@ -541,8 +541,6 @@ void P_Drawer (void)
 		if (clearscreen == 2 || optionsactive)
 			ST_ForceDraw();
 		clearscreen--;
-		if (clearscreen == 0 && !optionsactive)
-			Mars_SetVDPPri(0);
 	}
 
 	if (initmathtables)
