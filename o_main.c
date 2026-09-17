@@ -8,7 +8,7 @@
 #endif
 
 #define MOVEWAIT		(I_IsPAL() ? TICVBLS*5 : TICVBLS*6)
-#define STARTY		38
+#define STARTY		30
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
@@ -857,7 +857,7 @@ void O_Drawer (void)
 
 /* Draw menu */
 
-	y = 10;
+	y = 6;
 	print(104, y, menuscr->name);
 	
 	for (i = 0; i < menuscr->numitems; i++)
@@ -1083,8 +1083,7 @@ void O_Drawer (void)
 		{
 			x = 182;
 			l = y/8;
-			I_Print8(x, l, "^E5Scan the QR code");
-			I_Print8(x, l+1, "^E5for more info");
+			I_Print8(x, l+1, "^E5Online help:");
 			DrawJagobjLump(m_help, x, y+16, NULL, NULL);
 		}
 	}

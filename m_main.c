@@ -6,7 +6,7 @@
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
-#define STARTY			48
+#define STARTY			40
 #define ITEMSPACE	20
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define	NUMLCHARS 64	
