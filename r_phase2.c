@@ -129,7 +129,7 @@ static uint16_t P_SegOffset(seg_t *seg)
 
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 {
-    angle_t      distangle, offsetangle, normalangle;
+    angle_t      normalangle;
     seg_t       *seg = wc->seg;
     angle_t      angle1 = wc->scalestep;
     fixed_t      sineval, rw_distance;
@@ -153,17 +153,31 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 
     normalangle = R_PointToAngle(x1, y1, x2, y2);
     normalangle += ANG90;
-    offsetangle = normalangle - angle1;
 
-    if ((int)offsetangle < 0)
-        offsetangle = 0 - offsetangle;
+    if (x1 == x2)
+    {
+        rw_distance = D_abs(vd->viewx - x1);
+    }
+    else if (y1 == y2)
+    {
+        rw_distance = D_abs(vd->viewy - y1);
+    }
+    else
+    {
+        angle_t distangle, offsetangle;
 
-    if (offsetangle > ANG90)
-        offsetangle = ANG90;
+        offsetangle = normalangle - angle1;
 
-    distangle = ANG90 - offsetangle;
-    sineval = finesine(distangle >> ANGLETOFINESHIFT);
-    rw_distance = FixedMul(hyp, sineval);
+        if ((int)offsetangle < 0)
+            offsetangle = 0 - offsetangle;
+
+        if (offsetangle > ANG90)
+            offsetangle = ANG90;
+
+        distangle = ANG90 - offsetangle;
+        sineval = finesine(distangle >> ANGLETOFINESHIFT);
+        rw_distance = FixedMul(hyp, sineval);
+    }
     wc->distance = rw_distance;
 
     wc->offset = ((fixed_t)wc->offset + offset) << FRACBITS;
