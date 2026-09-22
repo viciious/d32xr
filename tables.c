@@ -2604,13 +2604,13 @@ fixed_t finetangent(angle_t angle) {
 fixed_t finesine(angle_t angle) {
 	int o, res;
 	unsigned q;
-	static int8_t offset[4] = { 0, 16, -16, 32 };
+	static int8_t offset[4] = { 0, 32, -32, 64 };
 	const unsigned short *s;
 
 	angle &= FINEMASK;
 	q = angle / (FINEANGLES / 4);
 	o = offset[q];
-	s = finesine_ + o * (FINEANGLES / 32); // *= 256
+	s = (const unsigned short *)((uintptr_t)finesine_ + o * (FINEANGLES / 32)); // *= 256
 	if (q & 1)
 		angle = ~angle;
 
