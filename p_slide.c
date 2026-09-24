@@ -48,6 +48,8 @@ typedef struct
 
 #define CLIPRADIUS 23
 
+#define ON_SIDE_EPSILON FRACUNIT/128
+
 enum
 {
    SIDE_BACK = -1,
@@ -69,9 +71,9 @@ static int SL_PointOnSide(pslidework_t *sw, fixed_t x, fixed_t y)
    dy = FixedMul(dy, sw->nvy);
    dist = dx + dy;
 
-   if(dist > FRACUNIT)
+   if(dist > ON_SIDE_EPSILON)
       return SIDE_FRONT;
-   else if(dist < -FRACUNIT)
+   else if(dist < -ON_SIDE_EPSILON)
       return SIDE_BACK;
    else
       return SIDE_ON;
@@ -503,8 +505,6 @@ void P_SlideMove(pslidemove_t *sm)
    for(i = 0; i < 3; i++)
    {
       frac = P_CompletableFrac(&sw, dx, dy);
-      if(frac != FRACUNIT)
-         frac -= 0x1000;
       if(frac < 0)
          frac = 0;
 

@@ -35,7 +35,7 @@ void P_PlayerMove (mobj_t *mo)
 	P_SlideMove(&sm);
 
 	if (sm.slidex == mo->x && sm.slidey == mo->y)
-		goto stairstep;
+		return;
 		
 	if ( P_TryMove (&tm, mo, sm.slidex, sm.slidey) )
 		goto dospecial;
