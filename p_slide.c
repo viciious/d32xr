@@ -209,13 +209,33 @@ findfrac:
 
    dx = sw->p2.x - sw->p1.x;
    dy = sw->p2.y - sw->p1.y;
-   fineangle = ( dy == 0 ) ? (( dx < 0 ) ? ANG180 : 0 ) :
-               ( dx == 0 ) ? (( dy < 0 ) ? ANG270 : ANG90 ) :
-               R_PointToAngle(0, 0, dx, dy);
-   fineangle >>= ANGLETOFINESHIFT;
+   fineangle = ( dy == 0 ) ? (( dx < 0 ) ? 2 : 0 ) :
+               ( dx == 0 ) ? (( dy < 0 ) ? 3 : 1 ) :
+               4;
 
-   sw->nvx = finesine(fineangle);
-   sw->nvy = -finecosine(fineangle);
+   switch (fineangle) {
+      case 0:
+         sw->nvx = 0;
+         sw->nvy = -FRACUNIT;
+         break;
+      case 1:
+         sw->nvx = FRACUNIT;
+         sw->nvy = 0;
+         break;
+      case 2:
+         sw->nvx = 0;
+         sw->nvy = FRACUNIT;
+         break;
+      case 3:
+         sw->nvx = -FRACUNIT;
+         sw->nvy = 0;
+         break;
+      default:
+         fineangle = R_PointToAngle(0, 0, dx, dy) >> ANGLETOFINESHIFT;
+         sw->nvx = finesine(fineangle);
+         sw->nvy = -finecosine(fineangle);
+         break;
+   }
    
    side1 = SL_PointOnSide(sw, sw->slidex, sw->slidey);
    switch(side1)
