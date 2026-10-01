@@ -17,7 +17,7 @@ typedef struct sfxinfo_s
 	char singularity;	/* Sfx singularity (only one at a time) */
 	unsigned char priority;		/* Sfx priority */
 #ifdef MARS
-	short lump;
+	char lump;
 #else
 	int	pitch;		/* pitch if a link */
 	int	volume;		/* volume if a link */
@@ -112,6 +112,8 @@ extern	int		samplecount;		/* 22khz sample counter in DSP memory */
 extern	VINT	musictype;
 
 extern 	char 	spcmDir[9];
+
+extern 	VINT 	sfxdsstart;
 
 /*============================================================================ */
 

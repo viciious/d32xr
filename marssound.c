@@ -101,6 +101,8 @@ VINT 			cdsfx = 0;
 
 VINT 			sfxdriver = sfxdriver_auto, mcd_avail = 0; // 0 - auto, 2 - megacd, 2 - 32x
 
+VINT 			sfxdsstart;
+
 extern degenmobj_t emptymobj;
 
 static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol, int freq);
@@ -161,6 +163,8 @@ void S_Init(void)
 	/* build an in-memory PWAD with all SFX */
 	start = W_CheckNumForName("DS_START");
 	end = W_CheckNumForName("DS_END");
+	sfxdsstart = start;
+
 	if (start >= 0 && end > start + 1)
 	{
 		int numsfx = end - start - 1;
@@ -169,7 +173,9 @@ void S_Init(void)
 
 		for (i=1 ; i < NUMSFX ; i++)
 		{
-			S_sfx[i].lump = W_CheckRangeForName(S_sfxnames[i], start, end);
+			int lump = W_CheckRangeForName(S_sfxnames[i], start, end);
+			if (lump >= 0)
+				S_sfx[i].lump = lump - start;
 		}
 
 		if (W_IsIWad(start))
@@ -185,6 +191,7 @@ void S_Init(void)
 					if (lump < 0) {
 						continue;
 					}
+					lump += start;
 					Mars_MCDLoadSfx(i, W_POINTLUMPNUM(lump), W_LumpLength(lump));
 				}
 			}
@@ -197,12 +204,6 @@ void S_Init(void)
 			int sfxol[NUMSFX*2];
 
 			cdsfx = 1;
-
-			for (i = 0; i < NUMSFX; i++)
-			{
-				if (S_sfx[i].lump >= 0)
-					S_sfx[i].lump -= start;
-			}
 
 			for (i = 0; i < numsfx; i++)
 				lumps[i] = start + 1 + i;
@@ -1248,7 +1249,7 @@ static sfxchannel_t *S_AllocateChannel(mobj_t* mobj, unsigned sound_id, int vol,
 	else
 	{
 #ifndef DISABLE_DMA_SOUND
-		md_data = W_POINTLUMPNUM(sfx->lump);
+		md_data = W_POINTLUMPNUM(sfxdsstart+sfx->lump);
 		length = md_data->samples;
 		if (length < 4)
 #endif
