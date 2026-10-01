@@ -41,8 +41,8 @@ memzone_t *Z_InitZone (byte *base, int size)
 	zone->blocklist.size = size - 8;
 	zone->blocklist.tag = 0;
 	zone->blocklist.id = ZONEID;
-	zone->blocklist.next = NULL;
-	zone->blocklist.prev = NULL;
+	zone->blocklist.next = LPTR_TO_SPTR(NULL);
+	zone->blocklist.prev = LPTR_TO_SPTR(NULL);
 #ifndef MARS
 	zone->blocklist.lockframe = -1;
 #endif
@@ -95,23 +95,24 @@ void Z_Free2 (memzone_t *mainzone, void *ptr)
 	block->id = 0;
 
 	// merge with adjacent blocks
-	adj = block->prev;
+	adj = SPTR_TO_LPTR(block->prev);
 	if (adj && !adj->tag)
 	{
 		adj->next = block->next;
-		adj->next->prev = adj;
+		if (adj->next)
+			((memblock_t *)SPTR_TO_LPTR(adj->next))->prev = LPTR_TO_SPTR(adj);
 		adj->size += block->size;
 		if (mainzone->rover == block)
 			mainzone->rover = adj;
 		block = adj;
 	}
 
-	adj = block->next;
+	adj = SPTR_TO_LPTR(block->next);
 	if (adj && !adj->tag)
 	{
 		block->next = adj->next;
 		if (block->next)
-			block->next->prev = block;
+			((memblock_t *)SPTR_TO_LPTR(block->next))->prev = LPTR_TO_SPTR(block);
 		block->size += adj->size;
 		if (mainzone->rover == adj)
 			mainzone->rover = block;
@@ -153,7 +154,7 @@ Z_CheckHeap (mainzone);	/* DEBUG */
 		if (base->tag)
 			rover = base;
 		else
-			rover = base->next;
+			rover = SPTR_TO_LPTR(base->next);
 			
 		if (!rover)
 			goto backtostart;
@@ -161,7 +162,7 @@ Z_CheckHeap (mainzone);	/* DEBUG */
 		if (rover->tag)
 		{
 		/* hit an in use block, so move base past it */
-			base = rover->next;
+			base = SPTR_TO_LPTR(rover->next);
 			if (!base)
 			{
 backtostart:
@@ -187,11 +188,11 @@ backtostart:
 		new = (memblock_t *) ((byte *)base + size );
 		new->size = extra;
 		new->tag = 0;		/* free block */
-		new->prev = base;
+		new->prev = LPTR_TO_SPTR(base);
 		new->next = base->next;
 		if (new->next)
-			new->next->prev = new;
-		base->next = new;
+			((memblock_t *)SPTR_TO_LPTR(new->next))->prev = LPTR_TO_SPTR(new);
+		base->next = LPTR_TO_SPTR(new);
 		base->size = size;
 	}
 	
@@ -200,7 +201,7 @@ backtostart:
 #ifndef MARS
 	base->lockframe = -1;
 #endif	
-	mainzone->rover = base->next;	/* next allocation will start looking here */
+	mainzone->rover = SPTR_TO_LPTR(base->next);	/* next allocation will start looking here */
 	if (!mainzone->rover)
 		mainzone->rover = &mainzone->blocklist;
 		
@@ -222,7 +223,7 @@ void Z_FreeTags (memzone_t *mainzone)
 	
 	for (block = &mainzone->blocklist ; block ; block = next)
 	{
-		next = block->next;		/* get link before freeing */
+		next = SPTR_TO_LPTR(block->next);		/* get link before freeing */
 		if (!block->tag)
 			continue;			/* free block */
 		if (block->tag == PU_LEVEL || block->tag == PU_LEVSPEC)
@@ -244,7 +245,7 @@ memblock_t	*checkblock;
 void Z_CheckHeap (memzone_t *mainzone)
 {
 	
-	for (checkblock = &mainzone->blocklist ; checkblock; checkblock = checkblock->next)
+	for (checkblock = &mainzone->blocklist ; checkblock; checkblock = SPTR_TO_LPTR(checkblock->next))
 	{
 		if (!checkblock->next)
 		{
@@ -254,9 +255,9 @@ void Z_CheckHeap (memzone_t *mainzone)
 			continue;
 		}
 		
-		if ( (byte *)checkblock + checkblock->size != (byte *)checkblock->next)
+		if ( (byte *)checkblock + checkblock->size != (byte *)SPTR_TO_LPTR(checkblock->next))
 			I_Error ("Z_CheckHeap: block size does not touch the next block\n");
-		if ( checkblock->next->prev != checkblock)
+		if ( !checkblock->next || ((memblock_t *)SPTR_TO_LPTR(checkblock->next))->prev != LPTR_TO_SPTR(checkblock))
 			I_Error ("Z_CheckHeap: next block doesn't have proper back link\n");
 	}
 }
@@ -295,7 +296,7 @@ int Z_FreeMemory (memzone_t *mainzone)
 	int			free;
 	
 	free = 0;
-	for (block = &mainzone->blocklist ; block ; block = block->next)
+	for (block = &mainzone->blocklist ; block ; block = SPTR_TO_LPTR(block->next))
 		if (!block->tag)
 			free += block->size;
 	return free;
@@ -314,7 +315,7 @@ int Z_LargestFreeBlock(memzone_t *mainzone)
 	int			free;
 	
 	free = 0;
-	for (block = &mainzone->blocklist ; block ; block = block->next)
+	for (block = &mainzone->blocklist ; block ; block = SPTR_TO_LPTR(block->next))
 		if (!block->tag)
 			if (block->size > free) free = block->size;
 	return free;
@@ -333,7 +334,7 @@ void Z_ForEachBlock(memzone_t *mainzone, memblockcall_t cb, void *p)
 
 	for (block = &mainzone->blocklist ; block ; block = next)
 	{
-		next = block->next;
+		next = SPTR_TO_LPTR(block->next);
 		if (block->tag)
 			cb((byte *)block + sizeof(memblock_t), p);
 	}
@@ -353,7 +354,7 @@ int Z_FreeBlocks(memzone_t* mainzone)
 
 	for (block = &mainzone->blocklist; block; block = next)
 	{
-		next = block->next;
+		next = SPTR_TO_LPTR(block->next);
 		if (!block->tag)
 			total += block->size;
 	}

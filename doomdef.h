@@ -680,8 +680,8 @@ typedef struct memblock_s
 #ifndef MARS
 	int		lockframe;		/* don't purge on the same frame */
 #endif
-	struct memblock_s   *next;
-	struct memblock_s	*prev;
+	SPTR   next;
+	SPTR   prev;
 } memblock_t;
 
 typedef struct
