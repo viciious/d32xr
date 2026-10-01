@@ -49,6 +49,7 @@ typedef struct {
 	void *columncache;
 	void *colormaps;
 	int  *fuzzpos;
+	void *framebuffer;
 } mars_tls_t __attribute__((aligned(16))); // thread local storage
 
 VINT COLOR_WHITE = 0x04;

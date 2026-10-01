@@ -922,6 +922,7 @@ static void R_Setup (int displayplayer, sector_t **vissectors_)
 
 	//I_Error("%d", ((uint16_t *)I_FrameBuffer() + 64*1024-0x100 - tempbuf) * 2);
 
+	I_SetThreadLocalVar(DOOMTLS_FRAMEBUFFER, viewportbuffer);
 	I_SetThreadLocalVar(DOOMTLS_COLUMNCACHE, vd->columncache[0]);
 
 	/* */
@@ -948,6 +949,7 @@ void Mars_Sec_R_Setup(void)
 
 	//Mars_ClearCacheLines(vd->visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
 
+	I_SetThreadLocalVar(DOOMTLS_FRAMEBUFFER, viewportbuffer);
 	I_SetThreadLocalVar(DOOMTLS_COLUMNCACHE, vd->columncache[1]);
 }
 

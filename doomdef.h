@@ -1376,6 +1376,7 @@ void I_LoadFonts(void);
 #define DOOMTLS_COLUMNCACHE		12
 #define DOOMTLS_COLORMAP		16
 #define DOOMTLS_FUZZPOS			20
+#define DOOMTLS_FRAMEBUFFER		24
 // !!! if this is changed, it must be changed in mars_tls_t too!
 
 #ifdef MARS

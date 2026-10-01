@@ -4,6 +4,7 @@
 
 .equ DOOMTLS_COLORMAP, 16
 .equ DOOMTLS_FUZZPOS,  20
+.equ DOOMTLS_FRAMEBUFFER, 24
 
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.
@@ -29,10 +30,10 @@ _I_DrawColumnA:
         mov.l   r9,@-r15
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
-        mov.l   @r8,r8          /* frame buffer start */
-        add     r4,r8           /* fb += dc_x */
+        mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r5
+        mov     r0,r8           /* frame buffer start */
+        add     r4,r8           /* fb += dc_x */
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
@@ -99,10 +100,10 @@ _I_DrawColumnNPo2A:
         mov.l   r8,@-r15
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
-        mov.l   @r8,r8          /* frame buffer start */
-        add     r4,r8           /* fb += dc_x */
+        mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
+        mov     r0,r8           /* frame buffer start */
         shll8   r5
+        add     r4,r8           /* fb += dc_x */
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
@@ -188,10 +189,10 @@ _I_DrawFuzzColumnA:
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         mov.l   r8,@-r15
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
-        mov.l   @r8,r8          /* frame buffer start */
-        add     r4,r8           /* fb += dc_x */
+        mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
+        mov     r0,r8           /* frame buffer start */
         shll8   r5
+        add     r4,r8           /* fb += dc_x */
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
@@ -249,12 +250,11 @@ _I_DrawSpanA:
         mov.l   r12,@-r15
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* ds_colormap = colormap + light */
-        mov.l   draw_fb,r8
-
-        mov.l   @r8,r8          /* frame buffer start */
+        mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
+        shll8   r4
+        mov     r0,r8           /* frame buffer start */
         add     r5,r8
         add     r6,r8
-        shll8   r4
 
         mov.l   @(40,r15),r11   /* ds_height */
 
@@ -335,8 +335,6 @@ do_span_loop_1px:
         mov.l   @r15+,r8
 
         .align  2
-draw_fb:
-        .long   _viewportbuffer
 draw_width:
         .long   320
 draw_height:

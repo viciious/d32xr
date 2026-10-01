@@ -3,6 +3,7 @@
 .section .sdata
 
 .equ DOOMTLS_COLORMAP, 16
+.equ DOOMTLS_FRAMEBUFFER, 24
 
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.
@@ -29,10 +30,10 @@ _I_Draw4bColumnA:
         shlr2   r7              /* light >>= 3 */
         shlr    r7
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
-        mov.l   @r8,r8          /* frame buffer start */
-        add     r4,r8           /* fb += dc_x */
+        mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r5
+        mov     r0,r8           /* frame buffer start */
+        add     r4,r8           /* fb += dc_x */
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
@@ -122,10 +123,10 @@ _I_Draw4bColumnNPo2A:
         shlr2   r7              /* light >>= 3 */
         shlr    r7        
         add     r0,r7           /* dc_colormap = colormap + light */
-        mov.l   draw_fb,r8
-        mov.l   @r8,r8          /* frame buffer start */
-        add     r4,r8           /* fb += dc_x */
+        mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r5
+        mov     r0,r8           /* frame buffer start */
+        add     r4,r8           /* fb += dc_x */
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
@@ -218,9 +219,5 @@ do_cnp4b_loop_odd_noshift:
         mov.l   @r15+,r8
 
         .align  2
-draw_fb:
-        .long   _viewportbuffer
 draw_width:
         .long   320
-draw_height:
-        .long   _viewportHeight
