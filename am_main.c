@@ -812,9 +812,9 @@ static void AM_Drawer_ (int c)
 		mobj_t	*mo;
 		mobj_t	*next;
 		
-		for (mo = mobjhead.next; mo != (void *)&mobjhead; mo=next)
+		for (mo = SPTR_TO_NNLPTR(mobjhead.next); mo != (void *)&mobjhead; mo=next)
 		{
-			next = mo->next;
+			next = SPTR_TO_NNLPTR(mo->next);
 			if (mo == p->mo)
 				continue;
 				

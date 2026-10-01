@@ -18,7 +18,7 @@ void P_Telefrag (mobj_t *thing, fixed_t x, fixed_t y)
 	int		size;
 	mobj_t	*m;
 	
-	for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
+	for (m=SPTR_TO_NNLPTR(mobjhead.next) ; m != (void *)&mobjhead ; m=SPTR_TO_NNLPTR(m->next))
 	{
 		if (!(m->flags & MF_SHOOTABLE) )
 			continue;		/* not shootable */
@@ -64,7 +64,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 	k = 0;
 	while ((secnum = P_FindNextSectorByTagNum(tag,&k)) >= 0)
 	{
-		for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
+		for (m=SPTR_TO_NNLPTR(mobjhead.next) ; m != (void *)&mobjhead ; m=SPTR_TO_NNLPTR(m->next))
 		{
 			pmovework_t tm;
 

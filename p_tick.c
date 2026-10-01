@@ -43,10 +43,10 @@ degenmobj_t		limbomobjhead;
 void P_InitThinkers (void)
 {
 	thinkercap.prev = thinkercap.next  = &thinkercap;
-	mobjhead.next = mobjhead.prev = (void *)&mobjhead;
-	freemobjhead.next = freemobjhead.prev = (void *)&freemobjhead;
-	freestaticmobjhead.next = freestaticmobjhead.prev = (void *)&freestaticmobjhead;
-	limbomobjhead.next = limbomobjhead.prev = (void*)&limbomobjhead;
+	mobjhead.next = mobjhead.prev = LPTR_TO_NNSPTR((void *)&mobjhead);
+	freemobjhead.next = freemobjhead.prev = LPTR_TO_NNSPTR((void *)&freemobjhead);
+	freestaticmobjhead.next = freestaticmobjhead.prev = LPTR_TO_NNSPTR((void *)&freestaticmobjhead);
+	limbomobjhead.next = limbomobjhead.prev = LPTR_TO_NNSPTR((void*)&limbomobjhead);
 }
 
 /*

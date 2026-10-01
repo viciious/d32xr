@@ -256,9 +256,9 @@ void P_MobjThinker(mobj_t *mobj)
 void P_RunMobjBase2(void)
 {
     mobj_t* mo;
-    mobj_t* next;
+    SPTR next;
 
-    for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
+    for (mo = SPTR_TO_NNLPTR(mobjhead.next); mo != (void*)&mobjhead; mo = SPTR_TO_NNLPTR(next))
     {
 #ifdef MARS
         // clear cache for mobj flags following the sight check as 
@@ -284,9 +284,9 @@ void P_RunMobjBase2(void)
 void P_RunMobjLate(void)
 {
     mobj_t* mo, *targ;
-    mobj_t* next;
+    SPTR next;
 
-    for (mo = mobjhead.next; mo != (void*)&mobjhead; mo = next)
+    for (mo = SPTR_TO_NNLPTR(mobjhead.next); mo != (void*)&mobjhead; mo = SPTR_TO_NNLPTR(next))
     {
         next = mo->next;	/* in case mo is removed this time */
         if (mo->flags & MF_STATIC)
@@ -315,7 +315,7 @@ void P_RunMobjLate(void)
     }
 
     /* move entities, removed this frame, from limbo to free list */
-    for (mo = limbomobjhead.next; mo != (void*)&limbomobjhead; mo = next)
+    for (mo = SPTR_TO_NNLPTR(limbomobjhead.next); mo != (void*)&limbomobjhead; mo = SPTR_TO_NNLPTR(next))
     {
         next = mo->next;
         P_FreeMobj(mo);

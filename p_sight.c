@@ -416,7 +416,7 @@ static mobj_t *P_GetSightMobj(int c)
          Mars_ClearCacheLine(&mobj->next);
       }
 
-      mobj = mobj->next;
+      mobj = SPTR_TO_NNLPTR(mobj->next);
       if (mobj == (void*)&mobjhead)
       {
          mobj = NULL;

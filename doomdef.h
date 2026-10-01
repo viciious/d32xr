@@ -78,12 +78,16 @@ typedef unsigned char byte;
 
 #ifdef MARS
 #define SPTR uint16_t
-#define LPTR_TO_SPTR(p) ((p) ? (uint16_t)(((uintptr_t)(p) - DATA_START_ADDRESS)>>2) : 0) // use with caution as pointer at the beginning of RAM address space will be mapped to a NULL pointer!
-#define SPTR_TO_LPTR(p) ((p) ? (void*)(((uintptr_t)(p) << 2) + DATA_START_ADDRESS) : NULL)
+#define LPTR_TO_NNSPTR(p) ((uint16_t)(((uintptr_t)(p) - DATA_START_ADDRESS)>>2)) // use with caution as pointer at the beginning of RAM address space will be mapped to a NULL pointer!
+#define SPTR_TO_NNLPTR(p) ((void*)(((uintptr_t)(p) << 2) + DATA_START_ADDRESS))
+#define LPTR_TO_SPTR(p) ((p) ? LPTR_TO_NNSPTR(p) : 0) // use with caution as pointer at the beginning of RAM address space will be mapped to a NULL pointer!
+#define SPTR_TO_LPTR(p) ((p) ? SPTR_TO_NNLPTR(p) : NULL)
 #else
 #define SPTR void *
 #define LPTR_TO_SPTR(p) (p)
+#define LPTR_TO_NNSPTR(p) (p)
 #define SPTR_TO_LPTR(p) (p)
+#define SPTR_TO_NNLPTR(p) (p)
 #endif
 
 /*============================================================================= */
@@ -250,7 +254,8 @@ enum
 typedef struct mobj_s
 {
 	fixed_t			x, y, z;
-	struct	mobj_s* prev, * next;
+	SPTR 			prev;
+	SPTR 			next;
 
 	VINT			tics;				/* state tic counter */
 	VINT 			state;
@@ -300,7 +305,8 @@ typedef struct mobj_s
 typedef struct degenmobj_s
 {
 	fixed_t			x, y, z;
-	void 			*prev, *next;
+	SPTR 			prev;
+	SPTR 			next;
 } degenmobj_t
 ;
 

@@ -20,17 +20,17 @@ int			iquehead, iquetail;
 static void P_AddMobjToList (mobj_t *mobj_, mobj_t *head_)
 {
 	degenmobj_t *mobj = (void*)mobj_, *head = (void *)head_;
-	((degenmobj_t *)head->prev)->next = mobj;
-	mobj->next = head;
+	((degenmobj_t *)SPTR_TO_NNLPTR(head->prev))->next = LPTR_TO_NNSPTR(mobj);
+	mobj->next = LPTR_TO_NNSPTR(head);
 	mobj->prev = head->prev;
-	head->prev = mobj;
+	head->prev = LPTR_TO_NNSPTR(mobj);
 }
 
 static void P_RemoveMobjFromCurrList (mobj_t *mobj_)
 {
 	degenmobj_t *mobj = (void*)mobj_;
-	((degenmobj_t *)mobj->next)->prev = mobj->prev;
-	((degenmobj_t *)mobj->prev)->next = mobj->next;
+	((degenmobj_t *)SPTR_TO_NNLPTR(mobj->next))->prev = mobj->prev;
+	((degenmobj_t *)SPTR_TO_NNLPTR(mobj->prev))->next = mobj->next;
 }
 
 /*
@@ -251,9 +251,9 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 /* try to reuse a previous mobj first */
 	if (info->flags & MF_STATIC)
 	{
-		if (freestaticmobjhead.next != (void *)&freestaticmobjhead)
+		if (SPTR_TO_NNLPTR(freestaticmobjhead.next) != (void *)&freestaticmobjhead)
 		{
-			mobj = freestaticmobjhead.next;
+			mobj = SPTR_TO_NNLPTR(freestaticmobjhead.next);
 			P_RemoveMobjFromCurrList(mobj);
 		}
 		else
@@ -264,9 +264,9 @@ mobj_t *P_SpawnMobj2 (fixed_t x, fixed_t y, fixed_t z, mobjtype_t type, subsecto
 	}
 	else
 	{
-		if (freemobjhead.next != (void *)&freemobjhead)
+		if (SPTR_TO_NNLPTR(freemobjhead.next) != (void *)&freemobjhead)
 		{
-			mobj = freemobjhead.next;
+			mobj = SPTR_TO_NNLPTR(freemobjhead.next);
 			P_RemoveMobjFromCurrList(mobj);
 		}
 		else

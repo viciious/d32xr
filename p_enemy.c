@@ -1463,7 +1463,7 @@ void A_BossDeath (mobj_t *mo)
 /*	 */
 
 /* FIXME */
-	for (mo2=mobjhead.next ; mo2 != (void *)&mobjhead ; mo2=mo2->next)
+	for (mo2=SPTR_TO_NNLPTR(mobjhead.next) ; mo2 != (void *)&mobjhead ; mo2=SPTR_TO_NNLPTR(mo2->next))
 	{
 		if (mo2 != mo && mo2->type == mo->type && mo2->health > 0)
 			return;		/* other boss not dead */
@@ -1535,7 +1535,7 @@ void A_BrainAwake(mobj_t *mo)
 	numbraintargets = 0;
 	braintargeton = 0;
 
-	for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
+	for (m=SPTR_TO_NNLPTR(mobjhead.next) ; m != (void *)&mobjhead ; m=SPTR_TO_NNLPTR(m->next))
 	{
 		if (m->type == MT_BOSSTARGET)
 		{
@@ -1621,7 +1621,7 @@ void A_BrainSpit(mobj_t *mo)
 
 	{
 		mobj_t *m;
-		for (m=mobjhead.next ; m != (void *)&mobjhead ; m=m->next)
+		for (m=SPTR_TO_NNLPTR(mobjhead.next) ; m != (void *)&mobjhead ; m=SPTR_TO_NNLPTR(m->next))
 		{
 			if (m->flags & MF_COUNTCUBE)
 			{
@@ -1742,7 +1742,7 @@ void A_KeenDie (mobj_t* mo)
 
     // scan the remaining thinkers
     // to see if all Keens are dead
-	for (mo2=mobjhead.next ; mo2 != (void *)&mobjhead ; mo2=mo2->next)
+	for (mo2=SPTR_TO_NNLPTR(mobjhead.next) ; mo2 != (void *)&mobjhead ; mo2=SPTR_TO_NNLPTR(mo2->next))
 	{
 		if (mo2 != mo && mo2->type == mo->type && mo2->health > 0)
 			return;		/* other Keen not dead */
