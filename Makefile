@@ -49,11 +49,14 @@ CCFLAGS += -DMIPLEVELS=$(MIPLEVELS)
 endif
 
 debug: CCFLAGS += -g -ggdb
+reldebug: CCFLAGS += -g -ggdb
 
 release: CCFLAGS += -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
-release: CCFLAGS += -fno-common -ffunction-sections -fdata-sections -flto=auto
+release: CCFLAGS += -fno-common -ffunction-sections -fdata-sections
+release: LDFLAGS += -Os
 
-release: LDFLAGS += -Os -flto=auto
+release: CCFLAGS += -flto=auto
+release: LDFLAGS += -flto=auto
 
 MARSHWCFLAGS := $(CCFLAGS)
 MARSHWCFLAGS += -O1 -fno-lto
@@ -146,6 +149,8 @@ OBJS = \
 release: $(TARGET).32x
 
 debug: $(TARGET).32x
+
+reldebug: $(TARGET).32x
 
 all: release
 
