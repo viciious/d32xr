@@ -27,23 +27,23 @@ _I_DrawColumnLowA:
 1:
         mov.l   r8,@-r15
         mov.l   r9,@-r15
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r5
+        mov.l   @(8,r15),r2     /* frac */
         mov     r0,r8           /* frame buffer start */
+        mov.l   @(12,r15),r3    /* fracstep */
         add     r4,r8           /* fb += dc_x */
         add     r4,r8           /* fb += dc_x */
         add     r5,r8
+        mov.l   @(20,r15),r4
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(8,r15),r2     /* frac */
-        mov.l   @(12,r15),r3    /* fracstep */
         mov.l   @(16,r15),r5    /* dc_source */
-        mov.l   @(20,r15),r4
-        mov.l   draw_width,r1
         add     #-1,r4          /* heightmask = texheight - 1 */
+        mov.l   draw_width,r1
         sub     r1,r8           /* fb -= SCREENWIDTH */
 
         swap.w  r2,r0           /* (frac >> 16) */
@@ -101,21 +101,21 @@ _I_DrawColumnNPo2LowA:
 1:
         mov.l   r8,@-r15
         mov.l   r9,@-r15 
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r5
+        mov.l   @(8,r15),r2     /* frac */
         mov     r0,r8           /* frame buffer start */
+        mov.l   @(12,r15),r3     /* fracstep */
         add     r4,r8           /* fb += dc_x */
         add     r4,r8           /* fb += dc_x */
+        mov.l   @(20,r15),r4
         add     r5,r8
         shlr2   r5
         add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   @(8,r15),r2     /* frac */
-        mov.l   @(12,r15),r3     /* fracstep */
         mov.l   @(16,r15),r5    /* dc_source */
-        mov.l   @(20,r15),r4
         shll16  r4              /* heightmask = texheight << FRACBITS */
 
         mov     #0,r0
@@ -263,16 +263,15 @@ _I_DrawSpanLowA:
         mov.l   r10,@-r15
         mov.l   r11,@-r15
         mov.l   r12,@-r15
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* ds_colormap = colormap + light */
         mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r4
         mov     r0,r8           /* frame buffer start */
+        add     r6,r5
+        add     r5,r5
         add     r5,r8
-        add     r5,r8
-        add     r6,r8
-        add     r6,r8
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
@@ -376,16 +375,15 @@ _I_DrawSpanLowSwapA:
         mov.l   r10,@-r15
         mov.l   r11,@-r15
         mov.l   r12,@-r15
-        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r7,r7
+        mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         add     r0,r7           /* ds_colormap = colormap + light */
         mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r4
         mov     r0,r8           /* frame buffer start */
+        add     r6,r5
         add     r5,r8
         add     r5,r8
-        add     r6,r8
-        add     r6,r8
         add     r4,r8
         shlr2   r4
         add     r4,r8           /* fb += (ds_y*256 + ds_y*64) */
