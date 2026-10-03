@@ -793,7 +793,6 @@ void R_InitSpriteDefs(const char** namelist)
 				sprtemp[frame].rotate = 0;
 			case 0:
 				// only the first rotation is needed
-				totallumps++;
 				break;
 			case 1:
 				// must have all 8 frames
@@ -823,14 +822,13 @@ void R_InitSpriteDefs(const char** namelist)
 
 	for (i = 0; i < totalframes; i++)
 	{
-		spriteframes[i].lump = lumps - spritelumps;
 		if (!sprtemp[i].rotate)
 		{
-			lumps[0] = sprtemp[i].lump[0]|SL_SINGLESIDED;
-			lumps++;
+			spriteframes[i].lump = sprtemp[i].lump[0]|SL_SINGLESIDED;
 		}
 		else
 		{
+			spriteframes[i].lump = lumps - spritelumps;
 			for (l = 0; l < 8; l++)
 				lumps[l] = sprtemp[i].lump[l];
 			lumps += 8;

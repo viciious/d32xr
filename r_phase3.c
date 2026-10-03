@@ -75,9 +75,16 @@ static void R_PrepMobj(mobj_t *thing)
       return;
 
    sprframe = &spriteframes[framenum];
-   sprlump = &spritelumps[sprframe->lump];
+   lump = sprframe->lump;
+   if (lump == -1)
+      return;
 
-   lump = sprlump[0];
+   if(!(lump & SL_SINGLESIDED))
+   {
+      sprlump = &spritelumps[sprframe->lump];
+      lump = sprlump[0];
+   }
+
    if(!(lump & SL_SINGLESIDED) && !(thing->flags & MF_STATIC))
    {
       // select proper rotation depending on player's view point
@@ -198,7 +205,6 @@ static void R_PrepPSprite(pspdef_t *psp)
 {
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
-   VINT         *sprlump;
    int          lump, framenum;
    patch_t      *patch;
    vissprite_t  *vis;
@@ -214,10 +220,9 @@ static void R_PrepPSprite(pspdef_t *psp)
       return;
 
    sprframe = &spriteframes[framenum];
-   if (sprframe->lump < 0)
+   if (sprframe->lump == -1)
       return;
-   sprlump  = &spritelumps[sprframe->lump];
-   lump     = sprlump[0] & SL_LUMPMASK;
+   lump     = sprframe->lump & SL_LUMPMASK;
    patch    = W_POINTLUMPNUM(lump);
 
    if (lump < firstsprite || lump >= firstsprite + numsprites)
