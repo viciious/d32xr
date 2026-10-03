@@ -165,7 +165,6 @@ typedef struct
 typedef struct 
 { 
 	short		width;				/* bounding box size  */
-	short		height; 
 	short		leftoffset;			/* pixels to the left of origin  */
 	short		topoffset;			/* pixels below the origin  */
 	unsigned short	columnofs[8];	/* only [width] used */
