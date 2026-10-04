@@ -522,8 +522,8 @@ void R_FixupTextures(void)
 		}
 
 		if (lump >= firstsprite && lump < firstsprite + numsprites) {
-			length = W_LumpLength(lump+1);
-			data = W_POINTLUMPNUM(lump+1);
+			length = R_SpritePixelsLength(lump);
+			data = R_CheckSpritePixels(lump);
 			skipheader = false;
 		} else if (W_IsCompressed(lump)) {
 			length = W_LumpLength(lump);

@@ -156,7 +156,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
    patch     = W_POINTLUMPNUM(vis->patchnum);
 #ifdef MARS
-   pixels    = W_POINTLUMPNUM(vis->patchnum+1);
+   pixels    = R_CheckSpritePixels(vis->patchnum);
 #else
    pixels    = vis->pixels;
 #endif

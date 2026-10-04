@@ -155,7 +155,7 @@ static void R_UpdateCache(void)
         data = (void **)tex->data;
         if (lump >= firstsprite && lump < firstsprite + numsprites) {
           masked = true;
-          pixels = W_LumpLength(lump+1);
+          pixels = R_SpritePixelsLength(lump);
           pdata = (void**)&data[0];
           D_memcpy(name, W_GetNameForNum(lump), 8);
         } else {

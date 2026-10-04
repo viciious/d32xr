@@ -424,6 +424,8 @@ extern	flattex_t		*flatpixels;
 
 extern	VINT		firstflat, numflats, col2flat;
 
+extern 	int 		*poffsets;
+extern 	uint16_t 	*plengths;
 extern	VINT		firstsprite, numsprites, numspriteframes;
 
 extern int8_t* dc_colormaps;
@@ -438,6 +440,10 @@ extern int8_t* dc_lcolormaps2;
 extern uint8_t* dc_playpals, *dc_cshift_playpals;
 
 #ifdef MARS
+#define R_SpritePixelsLength(lumpnum) BIGSHORT(plengths[(lumpnum)-firstsprite])
+
+#define R_CheckSpritePixels(lumpnum) (void *)(I_WadBase() + BIGLONG(poffsets[(lumpnum)-firstsprite]))
+
 #define R_CheckPixels(lumpnum) (void *)(W_POINTLUMPNUM(lumpnum))
 
 // auto-detect presence of jagobj_t header

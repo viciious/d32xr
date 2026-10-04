@@ -120,7 +120,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
       return;
 
 	patch = (patch_t *)W_POINTLUMPNUM(lump);
-	pixels = R_CheckPixels(lump + 1);
+	pixels = R_CheckSpritePixels(lump);
 
 	S_UpdateSounds ();
 	 	

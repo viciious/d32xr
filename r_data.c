@@ -11,6 +11,8 @@ boolean	spr_rotations;
 
 VINT		firstflat, numflats, col2flat;
 
+int 		*poffsets;
+uint16_t 	*plengths;
 VINT		firstsprite, numsprites, numspriteframes;
 
 VINT		numtextures = 0;
@@ -410,6 +412,9 @@ void R_InitData (void)
 	firstsprite = W_GetNumForName ("S_START") + 1;
 	numsprites = W_GetNumForName ("S_END") - firstsprite;
 
+	poffsets = W_POINTLUMPNUM(W_GetNumForName("POFFSETS"));
+	plengths = (uint16_t *)(poffsets + numsprites);
+
 	col2sky = W_CheckNumForName ("S_STCOL2");
 
 	R_InitTextures ();
@@ -747,7 +752,7 @@ void R_InitSpriteDefs(const char** namelist)
 
 		// scan the lumps,
 		//  filling in the frames for whatever is found
-		for (l = start; l < end; l += 2)
+		for (l = start; l < end; l++)
 		{
 			int flip;
 			const char* framename;
