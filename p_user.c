@@ -40,7 +40,6 @@ void P_PlayerMove (mobj_t *mo)
 	if ( P_TryMove (&tm, mo, sm.slidex, sm.slidey) )
 		goto dospecial;
 
-stairstep:
 	//momx = mo->momx;
 	//momy = mo->momy;
 

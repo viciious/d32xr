@@ -19,7 +19,6 @@ typedef struct
 #endif
    VINT      height;
    VINT      pitch;
-   VINT      depth;
    drawcol_t drawcol;
 
    // decals stuff
@@ -223,7 +222,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
                 texturelight = lightmin;
             if (texturelight > lightmax)
                 texturelight = lightmax;
-            texturelight = (unsigned)texturelight >> FRACBITS;
+            texturelight = texturelight >> FRACBITS;
             texturelight <<= 8;
         }
 
@@ -272,7 +271,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     fixed_t scalefrac = segl->scalefrac;
     fixed_t scalestep = segl->scalestep;
 
-    const fixed_t ceilingheight = segl->ceilingheight << 12;
+    const fixed_t ceilingheight = segl->ceilingheight<<HEIGHTINTBITS;
     const int start = segl->start;
     const int stop = segl->stop;
     const int pitch = lseg->skypitch;
@@ -365,7 +364,6 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         mip->pitch = mipheight;
         mip->data = tex->data[j];
         mip->drawcol = (mipheight & (mipheight - 1)) ? drawcolnpo2 : drawcol;
-        mip->depth = 3;
         mip->colormaps = dc_colormaps;
         mipwidth >>= 1, mipheight >>= 1;
         if (mipwidth < 1)
@@ -385,7 +383,6 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         } else if (!mip->numdecals && tex->colormaps != NULL) {
             mip->drawcol = (mipheight & (mipheight - 1)) ? draw4bcolnpo2 : draw4bcol;
             mip->colormaps = tex->colormaps;
-            mip->depth = 2;
             mip->pitch /= 2;
             if (mip->pitch < 1)
                 mip->pitch = 1;
