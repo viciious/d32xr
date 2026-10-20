@@ -103,19 +103,21 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          continue;
 
       src = columnptr + 2;
+      column = (column_t *)columnptr;
+      if ((columnofs & COLUMN_INLINE) != 0)
+         columnptr = NULL;
 
       // column loop
       // a post record has up to four bytes: topdelta length pixelofs*2
       // an inlined column is a single post: topdelta count pixels...
       // (bit 7 of 'count' is set for an inline post, like a last post)
       do {
-         column = (column_t *)columnptr;
          int top    = column->topdelta * spryscale + sprtop;
          int bottom = ((column->length & 0x7f) + 1) * spryscale + top;
          fixed_t frac;
          int temp = FRACUNIT-1;
 
-         if ((columnofs & COLUMN_INLINE) == 0)
+         if (columnptr != NULL)
          {
             byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
             int dataofs = BIGSHORT((dataofsofs[0] << 8) | dataofsofs[1]);
@@ -148,7 +150,11 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          }
 
          drawcol(x, top, bottom, light, frac, iscale, src, 128);
-      } while (column->length >= 0);
+
+         if (column->length < 0)
+            break;
+         column = (column_t *)columnptr;
+      } while (1);
    } while (++x <= stopx);
 }
 
@@ -224,14 +230,17 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
          continue;
 
       src = columnptr + 2;
+      column = (column_t *)columnptr;
+      if ((columnofs & COLUMN_INLINE) != 0)
+         columnptr = NULL;
+
       do {
-         column = (column_t *)columnptr;
          int top    = column->topdelta * spryscale + sprtop;
          int bottom = ((column->length & 0x7f) + 1) * spryscale + top;
          fixed_t frac;
          int temp = FRACUNIT-1;
 
-         if ((columnofs & COLUMN_INLINE) == 0)
+         if (columnptr != NULL)
          {
             byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
             int dataofs = BIGSHORT((dataofsofs[0] << 8) | dataofsofs[1]);
@@ -265,7 +274,11 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
          // CALICO: invoke column drawer
          dcol(x, top, bottom, light, frac, iscale, src, 128);
-      } while (column->length >= 0);
+
+         if (column->length < 0)
+            break;
+         column = (column_t *)columnptr;
+      } while (1);
    } while(++x < stopx);
 }
 

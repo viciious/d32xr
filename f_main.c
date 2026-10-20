@@ -145,7 +145,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		int 	colx;
 		byte	*columnptr;
 		column_t *column;
-		unsigned columnofs = BIGSHORT(patch->columnofs[texturecolumn]);
+		unsigned columnofs;
 
 		if (sprleft+x < 0)
 			continue;
@@ -157,6 +157,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		else
 			texturecolumn = x;
 
+		columnofs = BIGSHORT(patch->columnofs[texturecolumn]);
 		columnptr = (byte *)patch + (columnofs & ~COLUMN_INLINE);
 		if (*columnptr == 0xff)
 			continue;
