@@ -160,6 +160,11 @@ typedef struct
 	unsigned short	dataofs;	/* from data start in patch_t */
 } column_t;
 
+/* top bit of patch_t.columnofs marks a column that carries its own pixels
+   right after a two byte header (topdelta, pixel count). The rest of the
+   entry is the offset of that header, relative to the start of the patch */
+#define COLUMN_INLINE	0x8000
+
 /* a patch holds one or more columns */
 /* patches are used for sprites and all masked pictures */
 typedef struct 
