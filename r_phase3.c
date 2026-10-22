@@ -33,6 +33,7 @@ static void R_PrepMobj(mobj_t *thing)
    vissprite_t  *vis;
    const state_t* state;
    boolean      fullbright;
+   fixed_t      topoffset, leftoffset;
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd->viewx;
@@ -109,11 +110,20 @@ static void R_PrepMobj(mobj_t *thing)
    xscale = FixedDiv(PROJECTION, tz);
    gzt = thing->z - vd->viewz;
 
+   leftoffset = BIGSHORT(patch->leftoffset);
+   topoffset = BIGSHORT(patch->topoffset);
+
+   if (thing->flags & MF_ATTACHED)
+   {
+      leftoffset += thing->radius;
+      topoffset += thing->height;
+   }
+
    // calculate edges of the shape
    if (flip)
-      tx -= ((fixed_t)BIGSHORT(patch->width)-(fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+      tx -= ((fixed_t)BIGSHORT(patch->width)-leftoffset) << FRACBITS;
    else
-      tx -= ((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS;
+      tx -= leftoffset << FRACBITS;
 
    x1 = FixedMul(tx, xscale);
    x1 = (centerXFrac + x1) >> FRACBITS;
@@ -135,7 +145,7 @@ static void R_PrepMobj(mobj_t *thing)
    if (tz > centerYFrac)
        return;
 
-   texmid = gzt + ((fixed_t)BIGSHORT(patch->topoffset) << FRACBITS);
+   texmid = gzt + ((fixed_t)topoffset << FRACBITS);
    tz = FixedMul(texmid, xscale);
    if (tz < viewportHeight - centerYFrac)
        return;
@@ -158,6 +168,11 @@ static void R_PrepMobj(mobj_t *thing)
    vis->xscale   = xscale;
    vis->yscale   = FixedMul(xscale, stretch);
    vis->texturemid = texmid>>HEIGHTINTBITS;
+
+   if (thing->flags & MF_ATTACHED)
+   {
+      vis->xscale +=1;
+   }
 
    if(flip)
    {

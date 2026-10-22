@@ -371,6 +371,8 @@ typedef struct degenmobj_s
 
 #define MF_COUNTCUBE    0x20000000
 
+#define MF_ATTACHED     0x40000000  /* use radius and height as left and top offsets respectively + nudge screen Z */
+
 /*============================================================================= */
 typedef enum
 {

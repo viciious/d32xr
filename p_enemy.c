@@ -1409,6 +1409,24 @@ void A_Fall (mobj_t *actor)
 	actor->flags &= ~MF_SOLID;
 }
 
+void A_SpawnSpiderExplosions (mobj_t *actor)
+{
+	int i;
+	static const int8_t xoffsets[] = { 79, 42, -18, -60 };
+	static const int8_t yoffsets[] = { 37, 40, 38, 37 };
+	static const int8_t states[] = { 0, 1, 0, 0 };
+
+	for (i = 0; i < 4; i++)
+	{
+		mobj_t *expl = P_SpawnMobj (actor->x, actor->y, actor->z, MT_ROCKET);
+		expl->flags &= ~(MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL);
+		expl->flags |= MF_ATTACHED;
+		expl->radius = xoffsets[i];
+		expl->height = yoffsets[i];
+		P_SetMobjState (expl, S_SPIDEXPLODE1+states[i]);
+	}
+}
+
 
 /*
 ================
