@@ -105,11 +105,12 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		I_Error ("BufferedDrawSprite: invalid sprite frame %i : %i "
 		,sprite,frame);
 	sprframe = &spriteframes[sprdef->firstframe + (frame & FF_FRAMEMASK)];
-	sprlump = &spritelumps[sprframe->lump];
-
-	lump = sprlump[0];
-	if(!(lump & SL_SINGLESIDED))
+	lump = sprframe->lump;
+	if (!(lump & SL_SINGLESIDED))
+	{
+		sprlump = &spritelumps[lump];
 		lump = sprlump[rotation];
+	}
 
 	flip = false;
 	if (lump & SL_FLIPPED)
@@ -162,17 +163,20 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		if (*columnptr == 0xff)
 			continue;
 
+		src = columnptr + 2;
+		column = (column_t *)columnptr;
+		if ((columnofs & COLUMN_INLINE) != 0)
+			columnptr = NULL;
+
 /* */
 /* draw a masked column */
 /* */
-		src = columnptr + 2;
 		do
 		{
-			column = (column_t *)columnptr;
 			int top    = column->topdelta + sprtop;
 			int bottom = top + ((column->length & 0x7f) + 1) - 1;
 
-			if ((columnofs & COLUMN_INLINE) == 0)
+			if (columnptr != NULL)
 			{
 				byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
 				int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
@@ -185,14 +189,20 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 
 			if (top < 0) top = 0;
 			if (bottom >= height) bottom = height - 1;
-			if (top > bottom) continue;
 
-			colx = sprleft + x;
-			colx += colx;
+			if (top <= bottom)
+			{
+				colx = sprleft + x;
+				colx += colx;
 
-			fin->drcol(colx, top, bottom, light, 0, spriscale, src, 128);
-			fin->drcol(colx+1, top, bottom, light, 0, spriscale, src, 128);
-		} while (column->length >= 0);
+				fin->drcol(colx, top, bottom, light, 0, spriscale, src, 128);
+				fin->drcol(colx+1, top, bottom, light, 0, spriscale, src, 128);
+			}
+
+			if (column->length < 0)
+				break;
+			column = (column_t *)columnptr;
+		} while (1);
 	}
 }
 
@@ -712,4 +722,3 @@ void F_Drawer (void)
 			break;
 	}
 }
-
