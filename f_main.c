@@ -55,6 +55,7 @@ typedef struct
 	int			castframes;
 	int			castonmelee;
 	boolean		castattacking;
+	int			spiderExplosionTics;
 	final_e		status;
 	boolean 	textprint;	/* is endtext done printing? */
 	int			textindex;
@@ -495,11 +496,15 @@ int F_Ticker (void)
 			fin->casttics = fin->caststate->tics;
 			fin->castframes = 0;
 			fin->castattacking = false;
+			fin->spiderExplosionTics = 0;
 		}
 	}
 
 	if (ticon & 1)
 		return 0;
+
+	if (fin->spiderExplosionTics > 0)
+		fin->spiderExplosionTics--;
 
 /* */
 /* advance state */
@@ -521,6 +526,7 @@ int F_Ticker (void)
 			break;
 		} while (fin->castnum != oldnum);
 		fin->castdeath = false;
+		fin->spiderExplosionTics = 0;
 #ifndef JAGUAR
 		if (mobjinfo[castorder[fin->castnum].type].seesound)
 			S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound);
@@ -535,6 +541,10 @@ int F_Ticker (void)
 		st = fin->caststate->nextstate;
 		fin->caststate = &states[st];
 		fin->castframes++;
+		if (fin->castdeath
+		&& castorder[fin->castnum].type == MT_SPIDER
+		&& st == S_SPID_DIE7)
+			fin->spiderExplosionTics = 15;
 #if 1
 /*============================================== */
 /* sound hacks.... */
@@ -614,6 +624,29 @@ stopattack:
 		fin->casttics = 15;
 		
 	return 0;
+}
+
+static void F_DrawSpiderExplosions(int top, int left)
+{
+	static const int xoffsets[] = { 79, 42, -18, -60 };
+	static const int yoffsets[] = { 37, 40, 38, 37 };
+	static const int initialFrames[] = { 0, 1, 0, 0 };
+	int elapsed = 15 - fin->spiderExplosionTics;
+	int i;
+
+	for (i = 0; i < 4; i++)
+	{
+		int frame = initialFrames[i] + elapsed / 5;
+		const state_t *state;
+
+		if (frame >= 3)
+			continue;
+
+		state = &states[S_SPIDEXPLODE1 + frame];
+		BufferedDrawSprite(state->sprite,
+				state->frame & FF_FRAMEMASK, 0,
+				top - yoffsets[i], left - xoffsets[i]);
+	}
 }
 
 static void F_DrawBackground(void)
@@ -714,6 +747,10 @@ void F_Drawer (void)
 			}
 			BufferedDrawSprite (fin->caststate->sprite,
 					fin->caststate->frame&FF_FRAMEMASK,0,top,left);
+			if (fin->castdeath
+			&& castorder[fin->castnum].type == MT_SPIDER
+			&& fin->spiderExplosionTics > 0)
+				F_DrawSpiderExplosions(top, left);
 			F_CastPrint (castorder[fin->castnum].name);
 			break;
 
