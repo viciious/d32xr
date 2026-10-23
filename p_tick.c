@@ -644,6 +644,7 @@ void P_Stop (void)
 {
 	M_Stop();
 	Z_FreeTags (mainzone);
+	HUD_Init();
 }
 
 void P_Update (void)
