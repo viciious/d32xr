@@ -46,6 +46,8 @@ typedef enum
 #define SPACEWIDTH	8
 #define NUMENDOBJ	30
 
+void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+
 typedef struct
 {
 	int			castnum;
@@ -64,10 +66,12 @@ typedef struct
 	VINT		text_y;
 	VINT		drawbg;
 	jagobj_t	**endobj;
-	drawcol_t	drcol;
-	void 		*drcolormaps;
 	int 		endFlat;
 	jagobj_t	*bossback;
+	drawcol_t	oldDrawcol;
+	drawcol_t	oldDrawfuzzcol;
+	int8_t		*oldDcColormaps;
+	int8_t		*oldDcColormaps2;
 } finale_t;
 
 finale_t *fin;
@@ -89,14 +93,12 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	spriteframe_t	*sprframe;
 	VINT 		*sprlump;
 	patch_t		*patch;
-	byte		*pixels, *src;
-	int			x, sprleft, sprtop, spryscale;
-	fixed_t 	spriscale;
+	vissprite_t	vis = {0};
+	unsigned short spropening[SCREENWIDTH];
+	fixed_t 	xscale;
+	int			x, x1, x2, spriteWidth;
 	int			lump;
 	boolean		flip;
-	int			texturecolumn;
-	int			light = HWLIGHT(143);
-	int 		height = I_FrameBufferHeight();
 
 	if ((unsigned)sprite >= NUMSPRITES)
 		I_Error ("BufferedDrawSprite: invalid sprite number %i "
@@ -122,89 +124,46 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
       return;
 
 	patch = (patch_t *)W_POINTLUMPNUM(lump);
-	pixels = R_CheckSpritePixels(lump);
 
 	S_UpdateSounds ();
-	 	
-/* */
-/* coordinates are in a 160*112 screen (doubled pixels) */
-/* */
-	sprtop = top;
-	sprleft = left;
-	spryscale = 2;
-	spriscale = FRACUNIT/spryscale;
 
-	sprtop -= patch->topoffset;
-	sprleft -= patch->leftoffset;
+	spriteWidth = BIGSHORT(patch->width);
+	xscale = FRACUNIT;
+	x1 = left - BIGSHORT(patch->leftoffset);
+	x2 = x1 + spriteWidth - 1;
 
-	I_SetThreadLocalVar(DOOMTLS_COLORMAP, fin->drcolormaps);
+	if (x1 >= viewportWidth || x2 < 0)
+		return;
 
-/* */
-/* draw it by hand */
-/* */
-	for (x=0 ; x<patch->width ; x++)
-	{
-		int 	colx;
-		byte	*columnptr;
-		column_t *column;
-		unsigned columnofs;
+	vis.patchnum = lump;
+#ifndef MARS
+	vis.pixels = R_CheckPixels(lump + 1);
+#endif
+	vis.x1 = x1 < 0 ? 0 : x1;
+	vis.x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
+	vis.xscale = xscale;
+	vis.xiscale = flip ? -FRACUNIT : FRACUNIT;
+	vis.yscale = 2 * FRACUNIT;
+	vis.texturemid = (centerYFrac -
+			((top - BIGSHORT(patch->topoffset)) * 2 * FRACUNIT))
+			/ (2 << HEIGHTINTBITS);
+	vis.startfrac = flip ? (spriteWidth << FRACBITS) - 1 : 0;
+	if (x1 < 0)
+		vis.startfrac += vis.xiscale * -x1;
 
-		if (sprleft+x < 0)
-			continue;
-		if (sprleft+x >= 160)
-			break;
+	vis.colormap = (mobjinfo[castorder[fin->castnum].type].flags & MF_SHADOW)
+			? -HWLIGHT(143) : HWLIGHT(143);
+	vis.colormap2 = (mobjinfo[castorder[fin->castnum].type].flags & MF_COLORMAP2)
+			? 1 : 0;
 
-		if (flip)
-			texturecolumn = patch->width-1-x;
-		else
-			texturecolumn = x;
+	for (x = vis.x1; x <= vis.x2; ++x)
+		spropening[x] = viewportHeight;
 
-		columnofs = BIGSHORT(patch->columnofs[texturecolumn]);
-		columnptr = (byte *)patch + (columnofs & ~COLUMN_INLINE);
-		if (*columnptr == 0xff)
-			continue;
-
-		src = columnptr + 2;
-		column = (column_t *)columnptr;
-		if ((columnofs & COLUMN_INLINE) != 0)
-			columnptr = NULL;
-
-/* */
-/* draw a masked column */
-/* */
-		do
-		{
-			int top    = column->topdelta + sprtop;
-			int bottom = top + ((column->length & 0x7f) + 1) - 1;
-
-			if (columnptr != NULL)
-			{
-				byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
-				int dataofs = (dataofsofs[0] << 8) | dataofsofs[1];
-				src = pixels + dataofs;
-				columnptr += sizeof(column_t);
-			}
-
-			top *= spryscale;
-			bottom *= spryscale;
-
-			if (top < 0) top = 0;
-			if (bottom >= height) bottom = height - 1;
-
-			if (top <= bottom)
-			{
-				colx = sprleft + x;
-				colx += colx;
-
-				fin->drcol(colx, top, bottom, light, 0, spriscale, src, 128);
-				fin->drcol(colx+1, top, bottom, light, 0, spriscale, src, 128);
-			}
-
-			if (column->length < 0)
-				break;
-			column = (column_t *)columnptr;
-		} while (1);
-	}
+	drawcol = I_DrawColumnLow;
+	drawfuzzcol = I_DrawFuzzColumnLow;
+	R_DrawVisSprite(&vis, spropening, 0);
+	drawcol = fin->oldDrawcol;
+	drawfuzzcol = fin->oldDrawfuzzcol;
 }
 
 
@@ -356,6 +315,15 @@ void F_Start (void)
 	fin = Z_Malloc(sizeof(*fin), PU_STATIC);
 	D_memset(fin, 0, sizeof(*fin));
 
+	fin->oldDrawcol = drawcol;
+	fin->oldDrawfuzzcol = drawfuzzcol;
+	fin->oldDcColormaps = dc_colormaps;
+	fin->oldDcColormaps2 = dc_colormaps2;
+	drawcol = I_DrawColumnLow;
+	drawfuzzcol = I_DrawFuzzColumnLow;
+	dc_colormaps = dc_lcolormaps;
+	dc_colormaps2 = dc_lcolormaps2;
+
 #ifdef MARS
 	Z_FreeTags (mainzone);
 
@@ -410,6 +378,11 @@ void F_Start (void)
 void F_Stop (void)
 {
 	int	i;
+	drawcol = fin->oldDrawcol;
+	drawfuzzcol = fin->oldDrawfuzzcol;
+	dc_colormaps = fin->oldDcColormaps;
+	dc_colormaps2 = fin->oldDcColormaps2;
+
 	for (i = 0;i < NUMENDOBJ; i++)
 		Z_Free(fin->endobj[i]);
 	Z_Free(fin->endobj);
@@ -675,14 +648,6 @@ static void F_DrawBackground(void)
 void F_Drawer (void)
 {
 	int	top, left;
-
-	fin->drcol = I_DrawColumn;
-	if (mobjinfo[castorder[fin->castnum].type].flags & MF_SHADOW)
-		fin->drcol = I_DrawFuzzColumn;
-
-	fin->drcolormaps = dc_hcolormaps;
-	if (mobjinfo[castorder[fin->castnum].type].flags & MF_COLORMAP2)
-		fin->drcolormaps = dc_hcolormaps2;
 
 	// HACK
 	if (finale)
