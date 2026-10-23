@@ -122,6 +122,9 @@ typedef enum
   sfx_ppopai,
   sfx_ppodth,
   sfx_ppoact,
+  sfx_pesit,
+  sfx_pepain,
+  sfx_pedth,
   NUMSFX 
 } sfxenum_t; 
  

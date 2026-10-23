@@ -25,6 +25,7 @@ void A_Look (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 void A_Chase (mobj_t *actor) ATTR_DATA_CACHE_ALIGN;
 void A_SpawnFly(mobj_t *mo);
 void P_Telefrag (mobj_t *thing, fixed_t x, fixed_t y);
+void A_Fall (mobj_t *actor);
 
 /*
 ================
@@ -976,6 +977,9 @@ static int A_RaiseStateForMobjType(int mtype)
 		case MT_SPIDER:
 			raisestate = S_BSPI_RAISE1;
 			break;
+		case MT_PAIN:
+			raisestate = S_PAIN_RAISE1;
+			break;
 		default:
 			break;
 	}
@@ -1348,6 +1352,86 @@ void A_SkullAttack (mobj_t *actor)
 	if (dist < 1)
 		dist = 1;
 	actor->momz = (dest->z+((dest->height*FRACUNIT)>>1) - actor->z) / dist;
+}
+
+//
+// A_PainShootSkull
+// Spawn a lost soul and launch it at the target
+//
+void
+A_PainShootSkull
+( mobj_t*	actor,
+  angle_t	angle )
+{
+	fixed_t x;
+	fixed_t y;
+	fixed_t z;
+	mobj_t	*mo2;
+	mobj_t *newmobj;
+	angle_t an;
+	int prestep;
+	int count;
+	pmovework_t tm;
+	const mobjinfo_t* ainfo = &mobjinfo[actor->type];
+
+	// count total number of skull currently on the level
+	count = 0;
+
+	for (mo2=SPTR_TO_NNLPTR(mobjhead.next) ; mo2 != (void *)&mobjhead ; mo2=SPTR_TO_NNLPTR(mo2->next))
+	{
+		if (mo2->type == MT_SKULL && mo2->health > 0)
+			count++;
+	}
+
+	// if there are allready 20 skulls on the level,
+	// don't spit another one
+	if (count > 20)
+		return;
+
+	// okay, there's playe for another one
+	an = angle >> ANGLETOFINESHIFT;
+
+	prestep = (4 + 3 * (ainfo->radius + mobjinfo[MT_SKULL].radius)) * FRACUNIT / 2;
+
+	x = actor->x + FixedMul(prestep, finecosine(an));
+	y = actor->y + FixedMul(prestep, finesine(an));
+	z = actor->z + 8 * FRACUNIT;
+
+	newmobj = P_SpawnMobj(x, y, z, MT_SKULL);
+
+	// Check for movements.
+	if (!P_TryMove(&tm, newmobj, newmobj->x, newmobj->y))
+	{
+		// kill it immediately
+		P_DamageMobj(newmobj, actor, actor, 10000);
+		return;
+	}
+
+	newmobj->target = actor->target;
+	A_SkullAttack(newmobj);
+}
+
+
+//
+// A_PainAttack
+// Spawn a lost soul and launch it at the target
+// 
+void A_PainAttack (mobj_t* actor)
+{
+	if (!actor->target)
+		return;
+
+	A_FaceTarget (actor);
+	A_PainShootSkull (actor, actor->angle);
+}
+
+
+void A_PainDie (mobj_t* actor)
+{
+	A_Fall (actor);
+	A_PainShootSkull (actor, actor->angle+ANG90);
+	A_PainShootSkull (actor, actor->angle+ANG180);
+	A_PainShootSkull (actor, actor->angle+ANG270);
 }
 
 void A_Scream (mobj_t *actor)

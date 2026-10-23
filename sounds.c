@@ -116,7 +116,11 @@ const char * const S_sfxnames[NUMSFX] =
   "keenpn",
   "keendt",
   "ppopai",
-  "ppodth"
+  "ppodth",
+  "ppoact",
+  "pesit",
+  "pepain",
+  "pedth"
 };
 
 #ifdef MARS
@@ -228,6 +232,12 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, boscub, 70 ),
   SOUND( false, secret, 60 ),
   SOUND( false, keenpn, 70 ),
-  SOUND( false, keendt, 70 )
+  SOUND( false, keendt, 70 ),
+  SOUND( true, ppopai, 96 ),
+  SOUND( true, ppodth, 32 ),
+  SOUND( false, ppoact, 70 ),
+  SOUND( false, pesit, 90 ),
+  SOUND( false, pepain, 96 ),
+  SOUND( false, pedth, 32 )
 }; 
  
