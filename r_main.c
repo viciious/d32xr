@@ -723,6 +723,7 @@ static void R_Setup (int displayplayer, sector_t **vissectors_)
 	player = &players[displayplayer];
 
 	vd->psprites = player->psprites;
+	vd->lastpsprite = &player->psprites[NUMPSPRITES];
 	vd->viewx = player->mo->x;
 	vd->viewy = player->mo->y;
 	vd->viewz = player->viewz;

@@ -608,6 +608,8 @@ typedef struct vissprite_s
 
 #define	MAXVISSPRITES	MAXWALLCMDS
 
+void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+
 #define	MAXOPENINGS		SCREENWIDTH*18
 
 #define	MAXVISSSEC		128
@@ -653,7 +655,7 @@ __attribute__((aligned(16)))
 	fixed_t		viewx, viewy, viewz;
 	angle_t		viewangle;
 	fixed_t		viewcos, viewsin;
-	pspdef_t	*psprites;
+	pspdef_t	*psprites, *lastpsprite;
 	VINT		lightlevel;
 	VINT		extralight;
 	VINT		displayplayer;

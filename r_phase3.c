@@ -34,6 +34,7 @@ static void R_PrepMobj(mobj_t *thing)
    const state_t* state;
    boolean      fullbright;
    fixed_t      topoffset, leftoffset;
+   int          numpsprites = vd->lastpsprite - vd->psprites;
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd->viewx;
@@ -151,7 +152,7 @@ static void R_PrepMobj(mobj_t *thing)
        return;
 
    // get a new vissprite
-   if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES - NUMPSPRITES)
+   if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES - numpsprites)
       return; // too many visible sprites already, leave room for psprites
 
    vis = (vissprite_t *)vd->vissprite_p;
@@ -318,7 +319,6 @@ void R_SpritePrep(void)
 {
    sector_t **pse = vd->vissectors;
    pspdef_t     *psp;
-   int i;
 
    while(pse < vd->lastvissector)
    {
@@ -337,7 +337,7 @@ void R_SpritePrep(void)
    vd->lastsprite_p = vd->vissprite_p;
 
    // draw player weapon sprites
-   for(i = 0, psp = vd->psprites; i < NUMPSPRITES; i++, psp++)
+   for(psp = vd->psprites; psp < vd->lastpsprite; psp++)
    {
       if(psp->state)
          R_PrepPSprite(psp);

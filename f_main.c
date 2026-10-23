@@ -46,8 +46,6 @@ typedef enum
 #define SPACEWIDTH	8
 #define NUMENDOBJ	30
 
-void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
-
 typedef struct
 {
 	int			castnum;
@@ -99,6 +97,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	int			x, x1, x2, spriteWidth;
 	int			lump;
 	boolean		flip;
+	int 		flags;
 
 	if ((unsigned)sprite >= NUMSPRITES)
 		I_Error ("BufferedDrawSprite: invalid sprite number %i "
@@ -124,8 +123,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
       return;
 
 	patch = (patch_t *)W_POINTLUMPNUM(lump);
-
-	S_UpdateSounds ();
+	flags = mobjinfo[castorder[fin->castnum].type].flags;
 
 	spriteWidth = BIGSHORT(patch->width);
 	xscale = FRACUNIT;
@@ -151,10 +149,15 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	if (x1 < 0)
 		vis.startfrac += vis.xiscale * -x1;
 
-	vis.colormap = (mobjinfo[castorder[fin->castnum].type].flags & MF_SHADOW)
-			? -HWLIGHT(143) : HWLIGHT(143);
-	vis.colormap2 = (mobjinfo[castorder[fin->castnum].type].flags & MF_COLORMAP2)
-			? 1 : 0;
+	vis.colormap = HWLIGHT(143);
+	vis.colormap2 = 0;
+
+	if (flags & MF_SHADOW) {
+		vis.colormap = -vis.colormap;
+	}
+	if (flags & MF_COLORMAP2) {
+		vis.colormap = 1;
+	}
 
 	for (x = vis.x1; x <= vis.x2; ++x)
 		spropening[x] = viewportHeight;
