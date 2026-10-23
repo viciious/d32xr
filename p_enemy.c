@@ -1424,9 +1424,29 @@ void A_SpawnSpiderExplosions (mobj_t *actor)
 		expl->radius = xoffsets[i];
 		expl->height = yoffsets[i];
 		P_SetMobjState (expl, S_SPIDEXPLODE1+states[i]);
+		expl->tics++;
 	}
 }
 
+void A_CybrFall (mobj_t *actor)
+{
+	int i;
+	static const int8_t xoffsets[] = { 18, -5, -15 };
+	static const int8_t yoffsets[] = { 38, 82, 41 };
+
+	for (i = 0; i < 3; i++)
+	{
+		mobj_t *expl = P_SpawnMobj (actor->x, actor->y, actor->z, MT_ROCKET);
+		expl->flags &= ~(MF_SOLID | MF_SHOOTABLE | MF_COUNTKILL);
+		expl->flags |= MF_ATTACHED;
+		expl->radius = xoffsets[i];
+		expl->height = yoffsets[i];
+		P_SetMobjState (expl, S_CYBREXPLODE2);
+		expl->tics++;
+	}
+
+	A_Fall(actor);
+}
 
 /*
 ================
