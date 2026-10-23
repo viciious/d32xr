@@ -56,6 +56,7 @@ typedef struct
 	int			castonmelee;
 	boolean		castattacking;
 	int			spiderExplosionTics;
+	int			cyberExplosionTics;
 	final_e		status;
 	boolean 	textprint;	/* is endtext done printing? */
 	int			textindex;
@@ -473,6 +474,7 @@ int F_Ticker (void)
 			fin->castframes = 0;
 			fin->castattacking = false;
 			fin->spiderExplosionTics = 0;
+			fin->cyberExplosionTics = 0;
 		}
 	}
 
@@ -481,6 +483,8 @@ int F_Ticker (void)
 
 	if (fin->spiderExplosionTics > 0)
 		fin->spiderExplosionTics--;
+	if (fin->cyberExplosionTics > 0)
+		fin->cyberExplosionTics--;
 
 /* */
 /* advance state */
@@ -503,6 +507,7 @@ int F_Ticker (void)
 		} while (fin->castnum != oldnum);
 		fin->castdeath = false;
 		fin->spiderExplosionTics = 0;
+		fin->cyberExplosionTics = 0;
 #ifndef JAGUAR
 		if (mobjinfo[castorder[fin->castnum].type].seesound)
 			S_StartSound (NULL, mobjinfo[castorder[fin->castnum].type].seesound);
@@ -521,6 +526,10 @@ int F_Ticker (void)
 		&& castorder[fin->castnum].type == MT_SPIDER
 		&& st == S_SPID_DIE7)
 			fin->spiderExplosionTics = 15;
+		if (fin->castdeath
+		&& castorder[fin->castnum].type == MT_CYBORG
+		&& st == S_CYBER_DIE6)
+			fin->cyberExplosionTics = 11;
 #if 1
 /*============================================== */
 /* sound hacks.... */
@@ -625,6 +634,21 @@ static void F_DrawSpiderExplosions(int top, int left)
 	}
 }
 
+static void F_DrawCyberExplosions(int top, int left)
+{
+	static const int xoffsets[] = { 18, -5, -15 };
+	static const int yoffsets[] = { 38, 82, 41 };
+	int elapsed = 11 - fin->cyberExplosionTics;
+	int frame = elapsed < 6 ? 2 : 3;
+	int i;
+	const state_t *state = &states[S_CYBREXPLODE1 + frame - 1];
+
+	for (i = 0; i < 3; i++)
+		BufferedDrawSprite(state->sprite,
+				state->frame & FF_FRAMEMASK, 0,
+				top - yoffsets[i], left - xoffsets[i]);
+}
+
 static void F_DrawBackground(void)
 {
 #ifdef MARS
@@ -719,6 +743,10 @@ void F_Drawer (void)
 			&& castorder[fin->castnum].type == MT_SPIDER
 			&& fin->spiderExplosionTics > 0)
 				F_DrawSpiderExplosions(top, left);
+			if (fin->castdeath
+			&& castorder[fin->castnum].type == MT_CYBORG
+			&& fin->cyberExplosionTics > 0)
+				F_DrawCyberExplosions(top, left);
 			F_CastPrint (castorder[fin->castnum].name);
 			break;
 
