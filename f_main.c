@@ -22,9 +22,10 @@ static const castinfo_t castorder[] = {
 {"hell knight", MT_KNIGHT, 2},
 {"baron of hell", MT_BRUISER},
 {"arachnotron", MT_BABY, 2},
+{"pain elemental", MT_PAIN, 2},
 {"revenant", MT_UNDEAD, 2},
 {"mancubus", MT_FATSO, 2},
-{"arch-vile", MT_VILE, 2},
+{"arch vile", MT_VILE, 2},
 {"cyberdemon", MT_CYBORG, 1},
 {"spider mastermind", MT_SPIDER, 1},
 {"our hero", MT_PLAYER, 1},
@@ -157,7 +158,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 		vis.colormap = -vis.colormap;
 	}
 	if (flags & MF_COLORMAP2) {
-		vis.colormap = 1;
+		vis.colormap2 = 1;
 	}
 
 	for (x = vis.x1; x <= vis.x2; ++x)
@@ -562,7 +563,7 @@ int F_Ticker (void)
 		case S_CYBER_ATK2:
 		case S_CYBER_ATK4:
 		case S_CYBER_ATK6: sfx = sfx_rlaunc; break;
-		//case S_PAIN_ATK3: sfx = sfx_sklatk; break;
+		case S_PAIN_ATK3: sfx = sfx_sklatk; break;
 		default: sfx = 0; break;
 		}
 		
