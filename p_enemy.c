@@ -1819,8 +1819,10 @@ void A_SpawnFly(mobj_t *mo)
 	else if (r < 120)
 		type = MT_SHADOWS;
 	else if (r < 130)
+		type = MT_PAIN;
+	else if (r < 160)
 		type = MT_HEAD;
-    else if (r < 162)
+	else if (r < 162)
 		type = MT_VILE;
 	else if (r < 172)
 		type = MT_UNDEAD;
