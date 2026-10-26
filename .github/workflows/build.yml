@@ -14,7 +14,7 @@ jobs:
         makeflags: ["", "DISABLE_CDFS=1 ENABLE_FIRE_ANIMATION=1 ENABLE_DMA_SOUND=1 USE_SMALL_LUMPS=1 MIPLEVELS=4", "ENABLE_SSF_MAPPER=1 DISABLE_CDFS=1 ENABLE_DMA_SOUND=1 USE_SMALL_LUMPS=1"]
 
     steps:
-      - uses: actions/cache@v3
+      - uses: actions/cache@v6
         id: devkit-cache
         with:
           path: /opt/toolchains
@@ -34,7 +34,7 @@ jobs:
         run: |
           ls -la ./chillys-sega-devkit-20220418-opt.tar.zst && \
           zstdcat ./chillys-sega-devkit-20220418-opt.tar.zst | sudo tar -C / -xa
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: make debug MARS
         run: |
           dd if=/dev/zero bs=1K count=2324 of=doom32x.wad && \
