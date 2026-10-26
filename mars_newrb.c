@@ -29,18 +29,9 @@
 #include "mars_newrb.h"
 #include "marshw.h"
 
-#define ringbuf_delay() do { __asm volatile \
-        ( \
-            "mov #2, r0\n\t" \
-            "shll8 r0\n\t" \
-            "1:\n\t" \
-            "nop\n\t" \
-            "dt r0\n\t" \
-            "bf 1b\n\t" \
-            : : : "r0" \
-        ); \
-    } while(0)
-        
+#define ringbuf_sdelay() SH2_Delay64()
+#define ringbuf_ldelay() SH2_Delay512()
+
 static void ringbuf_lock(marsrbuf_t *buf) 
 {
     if (buf->nolock) {
@@ -112,7 +103,7 @@ void *ringbuf_walloc(marsrbuf_t *buf, int size)
     if (rem < size) {
         ringbuf_unlock(buf);
         if (!buf->nolock)
-            ringbuf_delay();
+            ringbuf_ldelay();
         return NULL;
     }
 
@@ -173,7 +164,7 @@ void *ringbuf_ralloc(marsrbuf_t *buf, int size)
     if (rem < size) {
         ringbuf_unlock(buf);
         if (!buf->nolock)
-            ringbuf_delay();
+            ringbuf_ldelay();
         return NULL;
     }
 
@@ -217,7 +208,7 @@ void ringbuf_wait(marsrbuf_t *buf)
 
         ringbuf_unlock(buf);
 
-        ringbuf_delay();
+        ringbuf_ldelay();
     }
 
     ringbuf_unlock(buf);

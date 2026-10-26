@@ -435,8 +435,10 @@ void R_SegCommands(void)
 #ifdef MARS
         if (*addedsegs == -1)
             return; // the other cpu is done drawing segments, so should we
-        while (*readysegs <= i)
+        while (*readysegs <= i) {
+            SH2_Delay64();
             continue;
+        }
 #endif
 
 #ifdef MARS

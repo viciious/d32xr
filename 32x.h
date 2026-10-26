@@ -233,6 +233,32 @@ extern "C" {
 		} \
 	} while (0)
 
+#define SH2_Delay64() do { __asm volatile \
+        ( \
+            "mov #1, r0\n\t" \
+            "shll8 r0\n\t" \
+            "shlr2 r0\n\t" \
+            "1:\n\t" \
+            "dt r0\n\t" \
+            "bf/s 1b\n\t" \
+            "nop\n\t" \
+            : : : "r0" \
+        ); \
+    } while(0)
+
+#define SH2_Delay512() do { __asm volatile \
+        ( \
+            "mov #1, r0\n\t" \
+            "shll8 r0\n\t" \
+            "1:\n\t" \
+            "nop\n\t" \
+            "dt r0\n\t" \
+            "bf/s 1b\n\t" \
+            "nop\n\t" \
+            : : : "r0" \
+        ); \
+    } while(0)
+
 /* global functions in crt0.s */
 extern int SetSH2SR(int level);
 extern void fast_memcpy(void* dst, const void* src, int len);

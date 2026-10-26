@@ -79,7 +79,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
 void Mars_Sec_AM_Drawer(void);
 
-#define Mars_R_SecWait() do { while (MARS_SYS_COMM4 != MARS_SECCMD_NONE); } while(0)
+#define Mars_R_SecWait() do { while (MARS_SYS_COMM4 != MARS_SECCMD_NONE) { SH2_Delay64(); } } while(0)
 
 static inline void Mars_CommSlaveClearCache(void)
 {

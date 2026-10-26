@@ -268,7 +268,8 @@ static void roq_snddma1_load_samples(void)
         i += num_samples;
     }
 
-    while (atomic_flag_test_and_set(&snd_lock));
+    while (atomic_flag_test_and_set(&snd_lock)) {
+    }
     snd_samples_count += i;
     atomic_flag_clear(&snd_lock);
 
@@ -503,7 +504,9 @@ static void *roq_dma_dest(roq_file *fp, void *dest, int length, int dmaarg)
 static void roq_request(roq_file* fp, int sync)
 {
     // wait for ongoing transfer to finish
-    while ((MARS_SYS_COMM8 & MARS_ROQFL_REQ) != 0);
+    while ((MARS_SYS_COMM8 & MARS_ROQFL_REQ) != 0) {
+        SH2_Delay512();
+    }
 
     // EOF is reached and there's no data left
     if ((MARS_SYS_COMM8 & (MARS_ROQFL_EOF|MARS_ROQFL_NOD)) == (MARS_ROQFL_EOF|MARS_ROQFL_NOD))
@@ -535,7 +538,9 @@ static void roq_request(roq_file* fp, int sync)
     // request a new chunk
     MARS_SYS_COMM8 |= MARS_ROQFL_REQ;
     if (sync) {
-        while ((MARS_SYS_COMM8 & MARS_ROQFL_REQ) != 0);
+        while ((MARS_SYS_COMM8 & MARS_ROQFL_REQ) != 0) {
+            SH2_Delay512();
+        }
     }
 }
 
@@ -614,6 +619,7 @@ static void roq_return_chunk(roq_file* fp)
 
 static void roq_lazybuffer(roq_file* fp)
 {
+    SH2_Delay64();
     if ((MARS_SYS_COMM8 & MARS_ROQFL_REQ) == 0 && !fp->oom && !fp->eof) {
         if (ringbuf_nfree(schunks) > 0x400 && ringbuf_nfree(vchunks) > 0x400) {
             roq_request(fp, 0);
@@ -895,7 +901,8 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
                 // sync video to audio
 
-                while (atomic_flag_test_and_set(&snd_lock));
+                while (atomic_flag_test_and_set(&snd_lock)) {
+                }
                 Mars_ClearCacheLines(&snd_samples_count, 1);
                 samplecount = snd_samples_count;
                 atomic_flag_clear(&snd_lock);

@@ -412,6 +412,8 @@ void Mars_Sec_R_WallPrep(void)
 
             *readysegs = *readysegs + 1;
         }
+
+        SH2_Delay64();
     }
 }
 
