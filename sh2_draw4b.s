@@ -33,18 +33,17 @@ _I_Draw4bColumnA:
         mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r5
         mov.l   @(8,r15),r2     /* frac */
-        mov     r0,r8           /* frame buffer start */
         mov.l   @(12,r15),r3    /* fracstep */
-        add     r4,r8           /* fb += dc_x */
-        mov.l   @(20,r15),r4
-        add     r5,r8
+        add     r0,r4           /* fb += dc_x */
+        mov.l   @(20,r15),r8
+        add     r5,r4
         shlr2   r5
-        add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
+        add     r5,r4           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(16,r15),r5    /* dc_source */
-        add     #-1,r4          /* heightmask = texheight - 1 */
+        add     #-1,r8          /* heightmask = texheight - 1 */
         mov.l   draw_width,r1
         swap.w  r2,r0           /* (frac >> 16) */
-        sub     r1,r8           /* fb -= SCREENWIDTH */
+        sub     r1,r4           /* fb -= SCREENWIDTH */
 
         /* test if count & 1 */
         shlr    r6
@@ -54,7 +53,7 @@ _I_Draw4bColumnA:
 
         .p2alignw 1, 0x0009
 do_col4b_loop:
-        and     r4,r0           /* (frac >> 16) & heightmask */
+        and     r8,r0           /* (frac >> 16) & heightmask */
         shlr    r0              /* convert nibble to byte */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
@@ -62,7 +61,7 @@ do_col4b_loop:
         # note that the upper and lower nibbles are pre-swapped
         # in the texture data to avoid doing more address math here
         bt/s    do_col4b_loop_noshift
-        add     r1,r8           /* fb += SCREENWIDTH */
+        add     r1,r4           /* fb += SCREENWIDTH */
         shlr2   r0
         shlr2   r0
 do_col4b_loop_noshift:
@@ -70,10 +69,10 @@ do_col4b_loop_noshift:
         add     r0,r0
         mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         swap.w  r2,r0           /* (frac >> 16) */
-        mov.b   r9,@r8          /* *fb = dpix */
+        mov.b   r9,@r4          /* *fb = dpix */
 
 do_col4b_loop_odd:
-        and     r4,r0           /* (frac >> 16) & heightmask */
+        and     r8,r0           /* (frac >> 16) & heightmask */
         shlr    r0              /* convert nibble to byte */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
@@ -81,7 +80,7 @@ do_col4b_loop_odd:
         # note that the upper and lower nibbles are pre-swapped
         # in the texture data to avoid doing more address math here
         bt/s    do_col4b_loop_odd_noshift
-        add     r1,r8           /* fb += SCREENWIDTH */
+        add     r1,r4           /* fb += SCREENWIDTH */
         shlr2   r0
         shlr2   r0
 do_col4b_loop_odd_noshift:
@@ -89,7 +88,7 @@ do_col4b_loop_odd_noshift:
         add     r0,r0
         mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
         dt      r6
-        mov.b   r9,@r8          /* *fb = dpix */
+        mov.b   r9,@r4          /* *fb = dpix */
 
         bf/s    do_col4b_loop
         swap.w  r2,r0           /* (frac >> 16) */
@@ -126,36 +125,35 @@ _I_Draw4bColumnNPo2A:
         mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
         shll8   r5
         mov.l   @(4,r15),r2     /* frac */
-        mov     r0,r8           /* frame buffer start */
         mov.l   @(8,r15),r3     /* fracstep */
-        add     r4,r8           /* fb += dc_x */
-        mov.l   @(16,r15),r4
-        add     r5,r8
+        add     r0,r4           /* fb += dc_x */
+        mov.l   @(16,r15),r8
+        add     r5,r4
         shlr2   r5
-        add     r5,r8           /* fb += (dc_yl*256 + dc_yl*64) */
+        add     r5,r4           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(12,r15),r5    /* dc_source */
-        shll16  r4              /* heightmask = texheight << FRACBITS */
+        shll16  r8              /* heightmask = texheight << FRACBITS */
 
         mov     #0,r0
         cmp/ge  r0,r2
         bt      3f
         /* if (frac < 0) */
 2:
-        add     r4,r2           /* frac += heightmask */
+        add     r8,r2           /* frac += heightmask */
         cmp/ge  r0,r2
         bf      2b
         bt      5f
 3:
-        cmp/ge  r4,r2
+        cmp/ge  r8,r2
         bf      5f
         /* if (frac >= heightmask) */
 4:
-        sub     r4,r2           /* frac -= heightmask */
-        cmp/ge  r4,r2
+        sub     r8,r2           /* frac -= heightmask */
+        cmp/ge  r8,r2
         bt      4b
 5:
         mov.l   draw_width,r1
-        sub     r1,r8           /* fb -= SCREENWIDTH */
+        sub     r1,r4           /* fb -= SCREENWIDTH */
         mov     r2,r0
 
         /* test if count & 1 */
@@ -174,19 +172,19 @@ do_cnp4b_loop:
         # in the texture data to avoid doing more address math here
         add     r3,r2           /* frac += fracstep */
         bt/s    do_cnp4b_loop_noshift
-        add     r1,r8           /* fb += SCREENWIDTH */
+        add     r1,r4           /* fb += SCREENWIDTH */
         shlr2   r0
         shlr2   r0
 do_cnp4b_loop_noshift:
         and     #15,r0
         add     r0,r0
         mov.b   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
-        cmp/ge  r4,r2
+        cmp/ge  r8,r2
         bf      1f
         /* if (frac >= heightmask) */
-        sub     r4,r2           /* frac -= heightmask */
+        sub     r8,r2           /* frac -= heightmask */
 1:
-        mov.b   r0,@r8          /* *fb = dpix */
+        mov.b   r0,@r4          /* *fb = dpix */
         mov     r2,r0
 
 do_cnp4b_loop_odd:
@@ -198,19 +196,19 @@ do_cnp4b_loop_odd:
         # in the texture data to avoid doing more address math here
         add     r3,r2           /* frac += fracstep */
         bt/s    do_cnp4b_loop_odd_noshift
-        add     r1,r8           /* fb += SCREENWIDTH */
+        add     r1,r4           /* fb += SCREENWIDTH */
         shlr2   r0
         shlr2   r0
 do_cnp4b_loop_odd_noshift:
         and     #15,r0
         add     r0,r0
         mov.b   @(r0,r7),r0     /* dpix = dc_colormap[pix] */
-        cmp/ge  r4,r2
+        cmp/ge  r8,r2
         bf      2f
         /* if (frac >= heightmask) */
-        sub     r4,r2           /* frac -= heightmask */
+        sub     r8,r2           /* frac -= heightmask */
 2:
-        mov.b   r0,@r8          /* *fb = dpix */
+        mov.b   r0,@r4          /* *fb = dpix */
         dt      r6              /* count-- */
         bf/s    do_cnp4b_loop
         mov     r2,r0
