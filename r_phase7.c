@@ -44,19 +44,20 @@ static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
 
-static int  R_TryLockPln(void) ATTR_DATA_CACHE_ALIGN;
-static void R_LockPln(void) ATTR_DATA_CACHE_ALIGN;
-static void R_UnlockPln(void) ATTR_DATA_CACHE_ALIGN;
 static visplane_t* R_GetNextPlane(uint16_t *sortedvisplanes) ATTR_DATA_CACHE_ALIGN;
 
 void R_DrawPlanes(void) __attribute__((noinline));
 
-static char pl_lock = 0;
+static atomic_flag pl_lock = ATOMIC_FLAG_INIT;
 #ifdef MARS
 #define pl_next MARS_SYS_COMM6
 #else
 static int pl_next = 0;
 #endif
+
+#define R_TryLockPln() (atomic_flag_test_and_set(&pl_lock) == 0)
+#define R_LockPln() do { while (atomic_flag_test_and_set(&pl_lock)); } while (0)
+#define R_UnlockPln() do { atomic_flag_clear(&pl_lock); } while (0)
 
 //
 // Render the horizontal spans determined by R_PlaneLoop
@@ -254,21 +255,6 @@ static void R_PlaneLoop(localplane_t *lpl)
    while(1);
 }
 
-static int R_TryLockPln(void)
-{
-    return atomic_flag_test_and_set(&pl_lock) == 0;
-}
-
-static void R_LockPln(void)
-{
-    while (!R_TryLockPln());
-}
-
-static void R_UnlockPln(void)
-{
-    atomic_flag_clear(&pl_lock);
-}
-
 static visplane_t *R_GetNextPlane(uint16_t *sortedvisplanes)
 {
     int p;
@@ -302,8 +288,7 @@ static void R_DrawPlanes2(void)
     int8_t *colormaps, *colormaps2;
 
 #ifdef MARS
-    Mars_ClearCacheLine(&vd->lastvisplane);
-    Mars_ClearCacheLine(&vd->gsortedvisplanes);
+    Mars_ClearCacheLine(&vd->visplanes); // this also takes care of lastvisplane, gsortedvisplanes, sortedvisplanes
     Mars_ClearCacheLines(vd->gsortedvisplanes, ((vd->lastvisplane - vd->visplanes - 1) * sizeof(*vd->gsortedvisplanes) + 31) / 16);
 #endif
 
@@ -513,8 +498,7 @@ static void R_PreDrawPlanes(void)
 {
     int numplanes;
 
-    Mars_ClearCacheLine(&vd->lastvisplane);
-    Mars_ClearCacheLine(&vd->gsortedvisplanes);
+    Mars_ClearCacheLine(&vd->visplanes); // this also takes care of lastvisplane, gsortedvisplanes, sortedvisplanes
 
     // check to see if we still need to fill the sorted planes list
     numplanes = vd->lastvisplane - vd->visplanes; // visplane 0 is a dummy plane

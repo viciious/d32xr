@@ -220,6 +220,7 @@ void ringbuf_init(marsrbuf_t *buf, void *data, int size, int lock)
     buf->data = data;
     buf->size = size;
     buf->nolock = lock ? 0 : 1;
+    atomic_flag_clear(&buf->lock);
 }
 
 int ringbuf_size(const marsrbuf_t *buf)

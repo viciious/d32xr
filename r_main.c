@@ -932,8 +932,10 @@ static void R_Setup (int displayplayer, sector_t **vissectors_)
 	vd->vissprite_p = vd->vissprites;
 	vd->lastsprite_p = vd->vissprite_p;
 
-	vd->vissectors = vissectors_;
+	vd->vissectors = (volatile sector_t **)vissectors_;
 	vd->lastvissector = vd->vissectors;	/* no subsectors visible yet */
+	vd->pvissector = vd->vissectors - 1;
+	vd->psecthing = NULL;
 
 #ifndef MARS
 	phasetime[0] = samplecount;
@@ -944,12 +946,7 @@ static void R_Setup (int displayplayer, sector_t **vissectors_)
 
 void Mars_Sec_R_Setup(void)
 {
-	Mars_ClearCacheLines(&vd, 1);
-	Mars_ClearCacheLines(vd, (sizeof(*vd) + 31) / 16);
-	Mars_ClearCacheLine(&viewportbuffer);
-
-	//Mars_ClearCacheLines(vd->visplanes, (sizeof(visplane_t)*MAXVISPLANES+31)/16);
-
+	Mars_ClearCache();
 	I_SetThreadLocalVar(DOOMTLS_FRAMEBUFFER, viewportbuffer);
 	I_SetThreadLocalVar(DOOMTLS_COLUMNCACHE, vd->columncache[1]);
 }
@@ -1039,6 +1036,7 @@ visplane_t* R_FindPlane(fixed_t height,
 void R_BSP (void) __attribute__((noinline));
 void R_WallPrep (void) __attribute__((noinline));
 void R_SpritePrep (void) __attribute__((noinline));
+void R_PSpritePrep (void) __attribute__((noinline));
 boolean R_LatePrep (void) __attribute__((noinline));
 void R_Cache (void) __attribute__((noinline));
 void R_SegCommands (void) __attribute__((noinline));
@@ -1070,7 +1068,7 @@ extern	ref8_start;
 
 void R_RenderPlayerView(int displayplayer)
 {
-	sector_t *vissectors_[MAXVISSSEC];
+	sector_t *vissectors_[MAXVISSSEC+1];
 
 	/* make sure its done now */
 #if defined(JAGUAR)
@@ -1084,7 +1082,7 @@ void R_RenderPlayerView(int displayplayer)
 	if (debugscreenactive)
 		I_DebugScreen();
 
-	R_Setup(displayplayer, vissectors_);
+	R_Setup(displayplayer, vissectors_+1);
 
 #ifndef JAGUAR
 	R_BSP();
@@ -1126,11 +1124,11 @@ void R_RenderPlayerView(int displayplayer)
 {
 	int t_bsp, t_prep, t_segs, t_planes, t_sprites, t_total;
 	boolean drawworld = !(players[consoleplayer].automapflags & AF_ACTIVE);
-	sector_t *vissectors_[MAXVISSSEC];
+	sector_t *vissectors_[MAXVISSSEC+1];
 
 	t_total = I_GetFRTCounter();
 
-	R_Setup(displayplayer, vissectors_);
+	R_Setup(displayplayer, vissectors_+1);
 
 	Mars_R_BeginWallPrep(drawworld);
 
@@ -1167,6 +1165,7 @@ void R_RenderPlayerView(int displayplayer)
 
 	t_sprites = I_GetFRTCounter();
 	R_SpritePrep();
+	R_PSpritePrep();
 	R_Sprites();
 	t_sprites = I_GetFRTCounter() - t_sprites;
 	

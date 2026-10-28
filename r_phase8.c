@@ -526,10 +526,7 @@ static void R_DrawPSprites(int sprscreenhalf)
 #ifdef MARS
 void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 {  
-    Mars_ClearCacheLine(&vd->vissprites);
-    Mars_ClearCacheLine(&vd->lastsprite_p);
-    Mars_ClearCacheLine(&vd->vissprite_p);
-    Mars_ClearCacheLine(&vd->gsortedsprites);
+    Mars_ClearCacheLine(&vd->vissprites); // this will also take care of lastsprite_p, vissprite_p & gsortedsprites
 
     // mobj sprites
     //Mars_ClearCacheLines(vd->gsortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*vd->gsortedsprites) + 31) / 16);
@@ -553,6 +550,8 @@ void R_Sprites(void)
    int sortedsprites[MAXVISSPRITES+1];
    viswall_t *wc;
    mapvertex_t *verts;
+
+   Mars_ClearCacheLine(&vd->vissprites); // this will also take care of lastsprite_p, vissprite_p & gsortedsprites
 
    // sort mobj sprites by distance (back to front)
    // find approximate average middle point for all

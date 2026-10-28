@@ -57,15 +57,15 @@ typedef struct
 #endif
 } seglocal_t;
 
-static char seg_lock = 0;
+static atomic_flag seg_lock = ATOMIC_FLAG_INIT;
+
+#define R_LockSeg() do { while (atomic_flag_test_and_set(&seg_lock)); } while (0)
+#define R_UnlockSeg() do { atomic_flag_clear(&seg_lock); } while (0)
 
 static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
-
-static void R_LockSeg(void) ATTR_DATA_CACHE_ALIGN;
-static void R_UnlockSeg(void) ATTR_DATA_CACHE_ALIGN;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -322,17 +322,6 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     } while (++x <= stop);
 
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
-}
-
-static void R_LockSeg(void)
-{
-    while (atomic_flag_test_and_set(&seg_lock)) {
-    }
-}
-
-static void R_UnlockSeg(void)
-{
-    atomic_flag_clear(&seg_lock);
 }
 
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, 

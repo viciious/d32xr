@@ -674,29 +674,42 @@ __attribute__((aligned(16)))
 	/* */
 	/* sprites */
 	/* */
-	viswall_t	* volatile vissprites/*[MAXVISSPRITES]*/, * volatile  lastsprite_p, * volatile vissprite_p;
+#ifdef MARS
+	__attribute__((aligned(16)))
+#endif
+	viswall_t	* volatile vissprites/*[MAXVISSPRITES]*/;
+	viswall_t   * volatile  lastsprite_p, * volatile vissprite_p;
+	int * volatile gsortedsprites;
 
 	/* */
 	/* subsectors */
 	/* */
-	sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
+	volatile sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
 
 	/* */
 	/* planes */
 	/* */
-	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/, * volatile lastvisplane;
-	visplane_t **visplanes_hash; /* only accessible by the second SH2! */
+#ifdef MARS
+	__attribute__((aligned(16)))
+#endif
+	visplane_t		* volatile visplanes/*[MAXVISPLANES]*/;
+	visplane_t		* volatile lastvisplane;
 	int * volatile gsortedvisplanes; // becomes non-NULL when sorted
 	int * volatile sortedvisplanes;
+	visplane_t **visplanes_hash; /* only accessible by the second SH2! */
 
 	/* */
 	/* openings / misc refresh memory */
 	/* */
 	unsigned short	* volatile segclip, * volatile lastsegclip;
 
-	int * volatile gsortedsprites;
-
 	uint8_t *columncache[2]; // composite column cache for both CPUs
+
+#ifdef MARS
+	__attribute__((aligned(16)))
+#endif
+	volatile sector_t **pvissector;
+	volatile mobj_t *psecthing;
 } viewdef_t;
 
 extern	viewdef_t	*vd;

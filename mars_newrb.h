@@ -25,13 +25,14 @@
 */
 
 #include <stdint.h>
+#include <stdatomic.h>
 
 typedef struct {
     volatile int readpos, writepos;
     volatile int n_writepos; // the value writepos is going to take after the next commit
     volatile uint16_t maxreadpos;
     volatile char ropen, wopen;
-    volatile char lock;
+    atomic_flag lock;
     char nolock;
     uint16_t size;
     uint8_t *data;

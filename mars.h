@@ -65,6 +65,7 @@ void Mars_Sec_R_WallPrep(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_SegCommands(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_PreDrawPlanes(void) ATTR_DATA_CACHE_ALIGN;
+void Mars_Sec_R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void Mars_Sec_P_CheckSights(void) ATTR_DATA_CACHE_ALIGN;
