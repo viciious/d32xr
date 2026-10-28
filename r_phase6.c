@@ -392,7 +392,8 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
 
 void R_SegCommands(void)
 {
-    int i, segcount;
+    int i;
+    viswall_t *segl, *last;
     seglocal_t lseg;
     drawtex_t* toptex, * bottomtex;
     int extralight;
@@ -424,13 +425,13 @@ void R_SegCommands(void)
     bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;
 
     extralight = vd->extralight;
+    last = vd->lastwallcmd;
+    i = 0;
 
-    segcount = vd->lastwallcmd - vd->viswalls;
-    for (i = 0; i < segcount; i++)
+    for (segl = vd->viswalls; segl < last; segl++)
     {
         int seglight;
         int actionbits;
-        viswall_t* segl = vd->viswalls + i;
 
 #ifdef MARS
         if (*addedsegs == -1)
@@ -440,6 +441,7 @@ void R_SegCommands(void)
             continue;
         }
 #endif
+        i++;
 
 #ifdef MARS
         R_LockSeg();

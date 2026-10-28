@@ -34,7 +34,7 @@ static void R_PrepMobj(mobj_t *thing)
    const state_t* state;
    boolean      fullbright;
    fixed_t      topoffset, leftoffset;
-   int          numpsprites = vd->lastpsprite - vd->psprites;
+   int          numpsprites = NUMPSPRITES;
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd->viewx;
@@ -186,8 +186,6 @@ static void R_PrepMobj(mobj_t *thing)
       vis->startfrac = 0;
    }
 
-   if (vis->xiscale < 0)
-       vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
    if (x1 < 0)
        vis->startfrac += vis->xiscale * -x1;
 
