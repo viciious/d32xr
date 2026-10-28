@@ -56,7 +56,7 @@ static int8_t snd_flip = 0;
 static int8_t snd_channels = 0;
 static int16_t snd_samples_rem = 0;
 static int16_t snd_lr[2];
-static char snd_lock = 0;
+static atomic_flag snd_lock = ATOMIC_FLAG_INIT;
 static uint32_t snd_samples_count = 0;
 
 static marsrbuf_t *vchunks;

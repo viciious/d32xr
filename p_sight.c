@@ -384,7 +384,8 @@ static boolean P_MobjCanSightCheck(mobj_t *mobj)
 }
 
 #ifdef MARS
-static char ps_lock = 0;
+
+static atomic_flag ps_lock = ATOMIC_FLAG_INIT;
 static volatile mobj_t * volatile next_sight;
 
 static void P_LockSight(void)
