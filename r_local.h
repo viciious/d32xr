@@ -679,7 +679,7 @@ __attribute__((aligned(16)))
 	/* */
 	/* subsectors */
 	/* */
-	sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
+	volatile sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
 
 	/* */
 	/* planes */
@@ -697,6 +697,12 @@ __attribute__((aligned(16)))
 	int * volatile gsortedsprites;
 
 	uint8_t *columncache[2]; // composite column cache for both CPUs
+
+#ifdef MARS
+	__attribute__((aligned(16)))
+#endif
+	volatile sector_t **pvissector;
+	volatile mobj_t *psecthing;
 } viewdef_t;
 
 extern	viewdef_t	*vd;

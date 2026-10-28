@@ -554,6 +554,9 @@ void R_Sprites(void)
    viswall_t *wc;
    mapvertex_t *verts;
 
+   Mars_ClearCacheLine(&vd->lastsprite_p);
+   Mars_ClearCacheLine(&vd->vissprite_p);
+
    // sort mobj sprites by distance (back to front)
    // find approximate average middle point for all
    // sprites - this will be used to split the draw 

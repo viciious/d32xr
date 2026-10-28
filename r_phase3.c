@@ -6,10 +6,17 @@
 
 #include "doomdef.h"
 #include "r_local.h"
+#include "mars.h"
+
+static atomic_flag spr_lock = ATOMIC_FLAG_INIT;
 
 static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_PrepPSprite(pspdef_t* psp) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+void R_PSpritePrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+
+#define R_LockSpr() do { while (atomic_flag_test_and_set(&spr_lock)); } while(0)
+#define R_UnlockSpr() do { atomic_flag_clear(&spr_lock); } while(0)
 
 //
 // Project vissprite for potentially visible actor
@@ -34,7 +41,6 @@ static void R_PrepMobj(mobj_t *thing)
    const state_t* state;
    boolean      fullbright;
    fixed_t      topoffset, leftoffset;
-   int          numpsprites = NUMPSPRITES;
 
    // transform origin relative to viewpoint
    tr_x = thing->x - vd->viewx;
@@ -151,12 +157,20 @@ static void R_PrepMobj(mobj_t *thing)
    if (tz < viewportHeight - centerYFrac)
        return;
 
-   // get a new vissprite
-   if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES - numpsprites)
-      return; // too many visible sprites already, leave room for psprites
-
+   R_LockSpr();
+   Mars_ClearCacheLine(&vd->vissprite_p);
    vis = (vissprite_t *)vd->vissprite_p;
+
+   // get a new vissprite
+   if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES - NUMPSPRITES) {
+      R_UnlockSpr();
+      return; // too many visible sprites already, leave room for psprites
+   }
    vd->vissprite_p++;
+
+   // remember end of actor vissprites
+   vd->lastsprite_p = vd->vissprite_p;
+   R_UnlockSpr();
 
    vis->patchnum = lump;
 #ifndef MARS
@@ -271,7 +285,7 @@ static void R_PrepPSprite(pspdef_t *psp)
        return;
 
    // store information in vissprite
-   if(vd->vissprite_p == vd->vissprites + MAXVISSPRITES)
+   if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES)
       return; // out of vissprites
 
    vis = (vissprite_t *)vd->vissprite_p;
@@ -315,24 +329,75 @@ static void R_PrepPSprite(pspdef_t *psp)
 //
 void R_SpritePrep(void)
 {
-   sector_t **pse = vd->vissectors;
+   volatile sector_t * volatile *pse;
+
+   while(1)
+   {
+      volatile mobj_t *thing;
+
+      R_LockSpr();
+#ifdef MARS      
+      Mars_ClearCacheLine(&vd->pvissector); // this also takes care of psecthing because of the alignment
+#endif
+
+      pse = vd->pvissector;
+      if (vd->psecthing == NULL) {
+         pse = ++vd->pvissector;
+         if (pse >= vd->lastvissector) {
+            R_UnlockSpr();
+            break;
+         }
+         vd->psecthing = SPTR_TO_LPTR((*pse)->thinglist);
+      }
+
+      R_UnlockSpr();
+
+      while(1) // walk sector thing list
+      {
+        volatile mobj_t *next;
+
+        R_LockSpr();
+
+#ifdef MARS
+        Mars_ClearCacheLine(&vd->pvissector); // this also takes care of psecthing because of the alignment
+#endif
+        if (vd->psecthing == NULL) {
+         R_UnlockSpr();
+         break;
+        }
+
+        thing = vd->psecthing;
+        next = SPTR_TO_LPTR(thing->snext);
+        vd->psecthing = next;
+
+        R_UnlockSpr();
+
+        R_PrepMobj((mobj_t *)thing);
+      }
+   }
+}
+
+#ifdef MARS
+
+void Mars_Sec_R_SpritePrep(void)
+{
+   R_SpritePrep();
+}
+
+#endif
+
+//
+// Process actors in all visible subsectors
+//
+void R_PSpritePrep(void)
+{
    pspdef_t     *psp;
 
-   while(pse < vd->lastvissector)
-   {
-      sector_t    *se = *pse;
-      mobj_t *thing = SPTR_TO_LPTR(se->thinglist);
-
-      while(thing) // walk sector thing list
-      {
-        R_PrepMobj(thing);
-        thing = SPTR_TO_LPTR(thing->snext);
-      }
-      ++pse;
-   }
-
-   // remember end of actor vissprites
-   vd->lastsprite_p = vd->vissprite_p;
+#ifdef MARS
+   Mars_R_SecWait();
+   Mars_ClearCacheLine(&vd->vissprite_p);
+   Mars_ClearCacheLine(&vd->lastsprite_p);
+#endif
 
    // draw player weapon sprites
    for(psp = vd->psprites; psp < vd->lastpsprite; psp++)
