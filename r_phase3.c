@@ -395,8 +395,7 @@ void R_PSpritePrep(void)
 
 #ifdef MARS
    Mars_R_SecWait();
-   Mars_ClearCacheLine(&vd->vissprite_p);
-   Mars_ClearCacheLine(&vd->lastsprite_p);
+   Mars_ClearCacheLine(&vd->vissprites); // this will also take care of lastsprite_p, vissprite_p & gsortedsprites
 #endif
 
    // draw player weapon sprites

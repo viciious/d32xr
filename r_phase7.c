@@ -288,8 +288,7 @@ static void R_DrawPlanes2(void)
     int8_t *colormaps, *colormaps2;
 
 #ifdef MARS
-    Mars_ClearCacheLine(&vd->lastvisplane);
-    Mars_ClearCacheLine(&vd->gsortedvisplanes);
+    Mars_ClearCacheLine(&vd->visplanes); // this also takes care of lastvisplane, gsortedvisplanes, sortedvisplanes
     Mars_ClearCacheLines(vd->gsortedvisplanes, ((vd->lastvisplane - vd->visplanes - 1) * sizeof(*vd->gsortedvisplanes) + 31) / 16);
 #endif
 
@@ -499,8 +498,7 @@ static void R_PreDrawPlanes(void)
 {
     int numplanes;
 
-    Mars_ClearCacheLine(&vd->lastvisplane);
-    Mars_ClearCacheLine(&vd->gsortedvisplanes);
+    Mars_ClearCacheLine(&vd->visplanes); // this also takes care of lastvisplane, gsortedvisplanes, sortedvisplanes
 
     // check to see if we still need to fill the sorted planes list
     numplanes = vd->lastvisplane - vd->visplanes; // visplane 0 is a dummy plane
