@@ -168,20 +168,23 @@ int D_strncasecmp (const char *s1, const char *s2, int len)
 // insertion sort
 void D_isort(int* a, int len)
 {
-	int i, j;
-	for (i = 1; i < len; i++)
-	{
-		int t = a[i];
-		for (j = i - 1; j >= 0; j--)
-		{
-			if (a[j] <= t)
-				break;
-			a[j+1] = a[j];
-		}
-		a[j+1] = t;
-	}
-}
+	int i;
 
+	if (len <= 1) return;
+
+    for (i = 1; i < len; i++)
+    {
+        int t = a[i];
+        int* p = &a[i - 1];
+
+        while (p >= a && *p > t)
+        {
+            *(p + 1) = *p;
+            p--;
+        }
+        *(p + 1) = t;
+    }
+}
 
 
 /*
