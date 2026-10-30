@@ -167,9 +167,6 @@ static void R_PrepMobj(mobj_t *thing)
       return; // too many visible sprites already, leave room for psprites
    }
    vd->vissprite_p++;
-
-   // remember end of actor vissprites
-   vd->lastsprite_p = vd->vissprite_p;
    R_UnlockSpr();
 
    vis->patchnum = lump;
@@ -397,6 +394,9 @@ void R_PSpritePrep(void)
    Mars_R_SecWait();
    Mars_ClearCacheLine(&vd->vissprites); // this will also take care of lastsprite_p, vissprite_p & gsortedsprites
 #endif
+
+   // remember end of actor vissprites
+   vd->lastsprite_p = vd->vissprite_p;
 
    // draw player weapon sprites
    for(psp = vd->psprites; psp < vd->lastpsprite; psp++)
