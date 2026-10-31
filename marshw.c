@@ -159,17 +159,17 @@ static char Mars_UploadPalette(const uint8_t* palette)
 		return 0;
 
 	for (i = 0; i < 256; i++) {
-		int r = 1 + *palette++;
-		int g = 1 + *palette++;
-		int b = 1 + *palette++;
+		unsigned r = 1 + *palette++;
+		unsigned g = 1 + *palette++;
+		unsigned b = 1 + *palette++;
 
 		if (r > 255) r = 255;
 		if (g > 255) g = 255;
 		if (b > 255) b = 255;
 
-		r = ((r >> 3) & 0x1f) << 10;
+		b = ((b >> 3) & 0x1f) << 10;
 		g = ((g >> 3) & 0x1f) << 5;
-		b = ((b >> 3) & 0x1f) << 0;
+		r = ((r >> 3) & 0x1f) << 0;
 
 		cram[i] = r | g | b;
 	}
