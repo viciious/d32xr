@@ -196,7 +196,6 @@ _I_DrawFuzzColumnLowA:
 3:
         mov.l   @(DOOMTLS_COLORMAP, gbr),r0
         mov.l   r8,@-r15
-        mov.l   r9,@-r15
         add     r7,r7
         add     r0,r7           /* dc_colormap = colormap + light */
         mov.l   @(DOOMTLS_FRAMEBUFFER, gbr),r0
@@ -212,6 +211,7 @@ _I_DrawFuzzColumnLowA:
         add     r0,r0
         mov     r0,r3
         and     #126,r0         /* fuzzpos &= FUZZMASK */
+        sub     r1,r4           /* fb += SCREENWIDTH */
 
         .p2alignw 1, 0x0009
 do_fuzz_col_loop:
@@ -219,17 +219,17 @@ do_fuzz_col_loop:
         add     #2,r3
         mov.b   @(r0,r4),r0     /* pix = dest[pix] */
         dt      r6              /* count-- */
-        mov.b   @(r0,r7),r8     /* dpix = dc_colormap[pix] */
-        mov     r3,r0
-        mov.b   r8,@r4          /* *fb = dpix */
-        and     #126,r0       /* fuzzpos &= FUZZMASK */
-        bf/s    do_fuzz_col_loop
+        add     r0,r0
         add     r1,r4           /* fb += SCREENWIDTH */
+        mov.w   @(r0,r7),r8     /* dpix = dc_colormap[pix] */
+        mov     r3,r0
+        mov.w   r8,@r4          /* *fb = dpix */
+        bf/s    do_fuzz_col_loop
+        and     #126,r0       /* fuzzpos &= FUZZMASK */
 
         shlr    r3
         mov     r3,r0
         mov.l   r0,@(DOOMTLS_FUZZPOS, gbr)
-        mov.l   @r15+,r9
         rts
         mov.l   @r15+,r8
 
