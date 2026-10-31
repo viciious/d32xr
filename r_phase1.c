@@ -48,7 +48,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl) ATTR_DATA_CACHE_A
 #ifdef MARS
 __attribute__((aligned(4)))
 #endif
-static VINT checkcoord[12][4] =
+static int8_t checkcoord[12][4] =
 {
    { 3, 0, 2, 1 },
    { 3, 0, 2, 0 },
