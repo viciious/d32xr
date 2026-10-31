@@ -388,16 +388,8 @@ static boolean P_MobjCanSightCheck(mobj_t *mobj)
 static atomic_flag ps_lock = ATOMIC_FLAG_INIT;
 static volatile mobj_t * volatile next_sight;
 
-static void P_LockSight(void)
-{
-   while (atomic_flag_test_and_set(&ps_lock)) {
-   }
-}
-
-static void P_UnlockSight(void)
-{
-   atomic_flag_clear(&ps_lock);
-}
+#define P_LockSight() do { while (atomic_flag_test_and_set(&ps_lock)); { while (0)
+#define P_UnlockSight() do { atomic_flag_clear(&ps_lock); } while (0)
 
 static mobj_t *P_GetSightMobj(int c)
 {
