@@ -313,7 +313,7 @@ extern	const boolean		blocklinksadjust;		/* use larger blocks if 1 */
 extern	VINT		numthings;
 extern	spawnthing_t* spawnthings;
 
-extern	VINT		*validcount;		/* (0 - increment every time a check is made, [1..numlines]) x 2 */
+extern	VINT		*validcount;		/* 0 - increment every time a check is made, [1..numlines] */
 
 /*
 ===============================================================================

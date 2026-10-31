@@ -2,9 +2,9 @@
 
 .section .sdata
 
-.equ DOOMTLS_COLORMAP, 16
-.equ DOOMTLS_FUZZPOS,  20
-.equ DOOMTLS_FRAMEBUFFER, 24
+.equ DOOMTLS_COLORMAP, 12
+.equ DOOMTLS_FUZZPOS,  16
+.equ DOOMTLS_FRAMEBUFFER, 20
 
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Source is the top of the column to scale.

@@ -205,7 +205,7 @@ boolean PIT_CheckPosition(pmovework_t *w)
    if(tmflags & MF_NOCLIP) // thing has no clipping?
       return true;
 
-   I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+   lvalidcount = validcount;
    *lvalidcount = *lvalidcount + 1;
 
    // Check things first, possibly picking things up.

@@ -219,7 +219,7 @@ void P_UseLines (player_t *player)
 	lu.closeline = NULL;
 	lu.closedist = FRACUNIT;
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+	lvalidcount = validcount;
 	*lvalidcount = *lvalidcount + 1;
 
 	for (y=yl ; y<=yh ; y++)

@@ -45,7 +45,6 @@ typedef struct {
 	uint16_t bank;
 	uint16_t bankpage;
 	setbankpage_t setbankpage;
-	VINT *validcount;
 	void *columncache;
 	void *colormaps;
 	int  *fuzzpos;
@@ -357,7 +356,6 @@ void Mars_Secondary(void)
 	while (1)
 	{
 		int cmd;
-		extern VINT *validcount;
 
 		while ((cmd = MARS_SYS_COMM4) == MARS_SECCMD_NONE) {
 			SH2_Delay512();
@@ -367,8 +365,6 @@ void Mars_Secondary(void)
 		switch (cmd) {
 		case MARS_SECCMD_CLEAR_CACHE:
 			Mars_ClearCache();
-			// FIXME: find a better place for this
-			I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, validcount + numlines + 1);
 			break;
 		case MARS_SECCMD_BREAK:
 			// break current command

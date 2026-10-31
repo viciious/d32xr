@@ -431,7 +431,7 @@ boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t func, void *userp )
 	
 	offset = *(blockmaplump+4+offset);
 
-	I_GetThreadLocalVar(DOOMTLS_VALIDCOUNT, lvalidcount);
+	lvalidcount = validcount;
 	vc = *lvalidcount;
 	++lvalidcount;
 

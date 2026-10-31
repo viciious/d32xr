@@ -992,10 +992,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 
 	validcount = Z_Malloc((numlines + 1) * sizeof(*validcount), PU_LEVEL);
 	D_memset(validcount, 0, (numlines + 1) * sizeof(*validcount));
-	validcount[0] = 1; // cpu 0
-
-	// G_DeathMatchSpawnPlayer is going to need this
-	I_SetThreadLocalVar(DOOMTLS_VALIDCOUNT, &validcount[0]);
+	validcount[0] = 1;
 
 	P_GroupLines ();
 
