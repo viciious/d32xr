@@ -45,7 +45,6 @@ void Mars_Init(void);
 void Mars_InitVideo(int lines);
 void Mars_InitPWM(int sample_rate, int min_sample, int max_sample) __attribute__((optimize("Os")));
 void Mars_InitLineTable(void) __attribute__((optimize("Os")));
-void Mars_SetBrightness(int16_t brightness);
 int Mars_BackBuffer(void);
 void Mars_SetPalette(const uint8_t *palette);
 int Mars_PollMouse(void);

@@ -472,8 +472,6 @@ void I_Init (void)
 
 	__asm volatile("mov %0, r0\n\tldc r0,gbr" : : "rm"(&mars_tls_pri) : "r0", "gbr");
 
-	Mars_SetBrightness(1);
-
 	doompalette = W_POINTLUMPNUM(W_GetNumForName("PLAYPALS"));
 	I_SetPalette(doompalette);
 
