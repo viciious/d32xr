@@ -92,7 +92,9 @@ int Mars_FRTCounter2Msec(int c)
 
 void Mars_WaitFrameBuffersFlip(void)
 {
-	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != MARS_ACTIVE_SCREEN);
+	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != MARS_ACTIVE_SCREEN) {
+		SH2_Delay512();
+	}
 }
 
 void Mars_FlipFrameBuffers(char wait)
