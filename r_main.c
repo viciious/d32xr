@@ -27,6 +27,7 @@ drawcol_t drawcolnpo2;
 drawspan_t drawspan[2];
 drawcol_t draw4bcol;
 drawcol_t draw4bcolnpo2;
+boolean drawspan_lowres;
 
 short fuzzoffset[FUZZTABLE] =
 {
@@ -84,6 +85,8 @@ VINT t_ref_cnt = 0;
 int t_ref_bsp[4], t_ref_prep[4], t_ref_segs[4], t_ref_planes[4], t_ref_sprites[4], t_ref_total[4];
 
 r_texcache_t r_texcache;
+
+static uint8_t *drawcode_ram;
 
 /*
 ===============================================================================
@@ -297,14 +300,95 @@ void R_SetViewportSize(int num)
 	clearscreen = 2;
 
 	// refresh func pointers
-	R_SetDrawFuncs();
+	R_SetDrawFuncs(false);
 
 #ifdef MARS
 	Mars_CommSlaveClearCache();
 #endif
 }
 
-void R_SetDrawFuncs(void)
+static drawcol_t R_CopyDrawColCode_(const uint8_t *start, const uint8_t *end, uint8_t **next)
+{
+	union {
+		uint8_t *dest;
+		drawcol_t func;
+	} u = { .dest = *next };
+	size_t size = (size_t)((uintptr_t)end - (uintptr_t)start);
+
+	D_memcpy(u.dest, start, size);
+	*next = u.dest + ((size + 3) & ~(size_t)3);
+	return u.func;
+}
+
+static drawspan_t R_CopyDrawSpanCode_(const uint8_t *start, const uint8_t *end, uint8_t **next)
+{
+	union {
+		uint8_t *dest;
+		drawspan_t func;
+	} u = { .dest = *next };
+	size_t size = (size_t)((uintptr_t)end - (uintptr_t)start);
+
+	D_memcpy(u.dest, start, size);
+	*next = u.dest + ((size + 3) & ~(size_t)3);
+	return u.func;
+}
+
+#define R_CopyDrawColCode(name,next) R_CopyDrawColCode_(name ## _start,name ## _end,next)
+#define R_CopyDrawSpanCode(name,next) R_CopyDrawSpanCode_(name ## _start,name ## _end,next)
+
+static void R_LoadDrawCode(boolean finale)
+{
+#if defined(MARS) && !defined(USE_C_DRAW)
+	uint8_t *next;
+
+	if (!drawcode_ram)
+		drawcode_ram = Z_Malloc(DRAWCODE_RAM_SIZE, PU_STATIC);
+
+	next = drawcode_ram;
+
+	if (drawcol == I_DrawColumnLow || finale)
+		drawcol = R_CopyDrawColCode(I_DrawColumnLowA, &next);
+	else if (drawcol == I_DrawColumn)
+		drawcol = R_CopyDrawColCode(I_DrawColumnA, &next);
+
+	if (drawcolnpo2 == I_DrawColumnNPo2Low)
+		drawcolnpo2 = R_CopyDrawColCode(I_DrawColumnNPo2LowA, &next);
+	else if (drawcolnpo2 == I_DrawColumnNPo2)
+		drawcolnpo2 = R_CopyDrawColCode(I_DrawColumnNPo2A, &next);
+
+	if (drawfuzzcol == I_DrawFuzzColumnLow || finale)
+		drawfuzzcol = R_CopyDrawColCode(I_DrawFuzzColumnLowA, &next);
+	else if (drawfuzzcol == I_DrawFuzzColumn)
+		drawfuzzcol = R_CopyDrawColCode(I_DrawFuzzColumnA, &next);
+
+	if (draw4bcol == I_Draw4bColumnLow)
+		draw4bcol = R_CopyDrawColCode(I_Draw4bColumnLowA, &next);
+	else if (draw4bcol == I_Draw4bColumn)
+		draw4bcol = R_CopyDrawColCode(I_Draw4bColumnA, &next);
+
+	if (draw4bcolnpo2 == I_Draw4bColumnNPo2Low)
+		draw4bcolnpo2 = R_CopyDrawColCode(I_Draw4bColumnNPo2LowA, &next);
+	else if (draw4bcolnpo2 == I_Draw4bColumnNPo2)
+		draw4bcolnpo2 = R_CopyDrawColCode(I_Draw4bColumnNPo2A, &next);
+
+	if (drawspan[0] == I_DrawSpanLow)
+	{
+		drawspan[0] = R_CopyDrawSpanCode(I_DrawSpanLowA, &next);
+		if (drawspan[1] == I_DrawSpanLow)
+			drawspan[1] = drawspan[0];
+		else if (drawspan[1] == I_DrawSpanLowSwap)
+			drawspan[1] = R_CopyDrawSpanCode(I_DrawSpanLowSwapA, &next);
+	}
+	else if (drawspan[0] == I_DrawSpan)
+	{
+		drawspan[0] = R_CopyDrawSpanCode(I_DrawSpanA, &next);
+		if (drawspan[1] == I_DrawSpan)
+			drawspan[1] = drawspan[0];
+	}
+#endif
+}
+
+void R_SetDrawFuncs(boolean finale)
 {
 	if (debugmode == DEBUGMODE_NODRAW)
 	{
@@ -314,7 +398,8 @@ void R_SetDrawFuncs(void)
 		drawspan[0] = drawspan[1] = I_DrawSpanNoDraw;
 		draw4bcol = I_DrawColumnNoDraw;
 		draw4bcolnpo2 = I_DrawColumnNoDraw;
-		return;
+		drawspan_lowres = false;
+		goto done;
 	}
 
 	if (detailmode < detmode_potato || detailmode >= MAXDETAILMODES)
@@ -361,6 +446,12 @@ void R_SetDrawFuncs(void)
 		}
 	}
 
+done:
+	drawspan_lowres = drawspan[0] == I_DrawSpanLow ||
+		drawspan[0] == I_DrawSpanPotatoLow;
+
+	R_LoadDrawCode(finale);
+
 #ifdef MARS
 	Mars_ClearCache();
 	Mars_CommSlaveClearCache();
@@ -403,7 +494,7 @@ D_printf ("Done\n");
 
 	framecount = 0;
 
-	R_SetDrawFuncs();
+	R_SetDrawFuncs(false);
 }
 
 /*

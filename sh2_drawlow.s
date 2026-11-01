@@ -1,6 +1,6 @@
 ! Original code by Chilly Willy
 
-.section .sdata
+.section .text.sh2_draw,"ax"
 
 .equ DOOMTLS_COLORMAP, 12
 .equ DOOMTLS_FUZZPOS,  16
@@ -12,6 +12,8 @@
 !void I_DrawColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 !                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
         .align 2
+        .global _I_DrawColumnLowA_start
+_I_DrawColumnLowA_start:
         .global _I_DrawColumnLowA
 _I_DrawColumnLowA:
 
@@ -42,7 +44,7 @@ _I_DrawColumnLowA:
         add     r5,r4           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(16,r15),r5    /* dc_source */
         add     #-1,r8          /* heightmask = texheight - 1 */
-        mov.l   draw_width,r1
+        mov.l   draw_column_low_width,r1
         sub     r1,r4           /* fb -= SCREENWIDTH */
 
         swap.w  r2,r0           /* (frac >> 16) */
@@ -80,12 +82,20 @@ do_col_loop_1px:
         rts
         mov.l   @r15+,r8
 
+        .align  2
+draw_column_low_width:
+        .long   320
+        .global _I_DrawColumnLowA_end
+_I_DrawColumnLowA_end:
+
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Non-power of 2 texture height.
 !
 !void I_DrawColumnNPO2(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 !                      fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
         .align 2
+        .global _I_DrawColumnNPo2LowA_start
+_I_DrawColumnNPo2LowA_start:
         .global _I_DrawColumnNPo2LowA
 _I_DrawColumnNPo2LowA:
 	add	#1,r6
@@ -134,7 +144,7 @@ _I_DrawColumnNPo2LowA:
         cmp/ge  r8,r2
         bt      4b
 5:
-        mov.l   draw_width,r1
+        mov.l   draw_npcolumn_low_width,r1
 
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
@@ -162,6 +172,12 @@ do_cnp_loop:
         rts
         mov.l   @r15+,r8
 
+        .align  2
+draw_npcolumn_low_width:
+        .long   320
+        .global _I_DrawColumnNPo2LowA_end
+_I_DrawColumnNPo2LowA_end:
+
 ! Draw a vertical column of distorted background pixels.
 ! Source is the top of the column to scale.
 ! Low detail (doubl-wide pixels) mode.
@@ -169,6 +185,8 @@ do_cnp_loop:
 !void I_DrawFuzzColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
 !       fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
         .align 2
+        .global _I_DrawFuzzColumnLowA_start
+_I_DrawFuzzColumnLowA_start:
         .global _I_DrawFuzzColumnLowA
 _I_DrawFuzzColumnLowA:
 
@@ -177,7 +195,7 @@ _I_DrawFuzzColumnLowA:
         bf      0f
         mov     #1,r5
 0:
-        mov.l   draw_height,r0
+        mov.l   draw_fuzz_low_height,r0
         mov.w   @r0,r0
         add     #-2,r0
         cmp/gt  r0,r6
@@ -205,8 +223,8 @@ _I_DrawFuzzColumnLowA:
         add     r5,r4
         shlr2   r5
         add     r5,r4           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   draw_fuzzoffset,r5
-        mov.l   draw_width,r1
+        mov.l   draw_fuzz_low_offsets,r5
+        mov.l   draw_fuzz_low_width,r1
         mov.l   @(DOOMTLS_FUZZPOS, gbr),r0 /* pfuzzpos */
         add     r0,r0
         mov     r0,r3
@@ -233,12 +251,24 @@ do_fuzz_col_loop:
         rts
         mov.l   @r15+,r8
 
+        .align  2
+draw_fuzz_low_width:
+        .long   320
+draw_fuzz_low_height:
+        .long   _viewportHeight
+draw_fuzz_low_offsets:
+        .long   _fuzzoffset
+        .global _I_DrawFuzzColumnLowA_end
+_I_DrawFuzzColumnLowA_end:
+
 ! Draw a horizontal row of pixels from a projected flat (floor/ceiling) texture.
 !
 !void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 !                fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep,
 !                inpixel_t *ds_source, int ds_height)
         .align 2
+        .global _I_DrawSpanLowA_start
+_I_DrawSpanLowA_start:
         .global _I_DrawSpanLowA
 _I_DrawSpanLowA:
 
@@ -344,6 +374,8 @@ do_span_loop_1px:
         mov.l   @r15+,r9
         rts
         mov.l   @r15+,r8
+        .global _I_DrawSpanLowA_end
+_I_DrawSpanLowA_end:
 
 ! Draw a horizontal row of pixels from a projected flat (floor/ceiling) texture.
 !
@@ -351,6 +383,8 @@ do_span_loop_1px:
 !                fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep,
 !                inpixel_t *ds_source, int ds_height)
         .align 2
+        .global _I_DrawSpanLowSwapA_start
+_I_DrawSpanLowSwapA_start:
         .global _I_DrawSpanLowSwapA
 _I_DrawSpanLowSwapA:
 
@@ -457,11 +491,5 @@ do_spansw_loop_1px:
         mov.l   @r15+,r9
         rts
         mov.l   @r15+,r8
-
-        .align  2
-draw_width:
-        .long   320
-draw_height:
-        .long   _viewportHeight
-draw_fuzzoffset:
-        .long   _fuzzoffset
+        .global _I_DrawSpanLowSwapA_end
+_I_DrawSpanLowSwapA_end:

@@ -1,6 +1,6 @@
 ! Original code by Chilly Willy
 
-.section .sdata
+.section .text.sh2_draw,"ax"
 
 .equ DOOMTLS_COLORMAP, 12
 .equ DOOMTLS_FUZZPOS,  16
@@ -13,6 +13,8 @@
 !                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
+        .global _I_DrawColumnA_start
+_I_DrawColumnA_start:
         .global _I_DrawColumnA
 _I_DrawColumnA:
 	add	#1,r6
@@ -41,7 +43,7 @@ _I_DrawColumnA:
         add     r5,r4           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(16,r15),r5    /* dc_source */
         add     #-1,r8          /* heightmask = texheight - 1 */
-        mov.l   draw_width,r1
+        mov.l   draw_column_width,r1
 
         swap.w  r2,r0           /* (frac >> 16) */
         and     r8,r0           /* (frac >> 16) & heightmask */
@@ -76,6 +78,12 @@ do_col_loop_1px:
         rts
         mov.l   @r15+,r8
 
+        .align  2
+draw_column_width:
+        .long   320
+        .global _I_DrawColumnA_end
+_I_DrawColumnA_end:
+
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Non-power of 2 texture height.
 !
@@ -83,6 +91,8 @@ do_col_loop_1px:
 !                      fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
+        .global _I_DrawColumnNPo2A_start
+_I_DrawColumnNPo2A_start:
         .global _I_DrawColumnNPo2A
 _I_DrawColumnNPo2A:
 	add	#1,r6
@@ -129,7 +139,7 @@ _I_DrawColumnNPo2A:
         cmp/ge  r8,r2
         bt      4b
 5:
-        mov.l   draw_width,r1
+        mov.l   draw_npcolumn_width,r1
 
         .p2alignw 1, 0x0009
 do_cnp_loop:
@@ -151,6 +161,11 @@ do_cnp_loop:
         rts
         mov.l   @r15+,r8
 
+        .align  2
+draw_npcolumn_width:
+        .long   320
+        .global _I_DrawColumnNPo2A_end
+_I_DrawColumnNPo2A_end:
 
 ! Draw a vertical column of distorted background pixels.
 ! Source is the top of the column to scale.
@@ -160,6 +175,8 @@ do_cnp_loop:
 !       fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
+        .global _I_DrawFuzzColumnA_start
+_I_DrawFuzzColumnA_start:
         .global _I_DrawFuzzColumnA
 _I_DrawFuzzColumnA:
         mov     #0,r0
@@ -167,7 +184,7 @@ _I_DrawFuzzColumnA:
         bf      0f
         mov     #1,r5
 0:
-        mov.l   draw_height,r0
+        mov.l   draw_fuzz_height,r0
         mov.w   @r0,r0
         add     #-2,r0
         cmp/gt  r0,r6
@@ -193,8 +210,8 @@ _I_DrawFuzzColumnA:
         add     r5,r4
         shlr2   r5
         add     r5,r4           /* fb += (dc_yl*256 + dc_yl*64) */
-        mov.l   draw_fuzzoffset,r5
-        mov.l   draw_width,r1
+        mov.l   draw_fuzz_offsets,r5
+        mov.l   draw_fuzz_width,r1
         mov.l   @(DOOMTLS_FUZZPOS, gbr),r0 /* pfuzzpos */
         add     r0,r0
         mov     r0,r3
@@ -219,6 +236,16 @@ do_fuzz_col_loop:
         rts
         mov.l   @r15+,r8
 
+        .align  2
+draw_fuzz_width:
+        .long   320
+draw_fuzz_height:
+        .long   _viewportHeight
+draw_fuzz_offsets:
+        .long   _fuzzoffset
+        .global _I_DrawFuzzColumnA_end
+_I_DrawFuzzColumnA_end:
+
 ! Draw a horizontal row of pixels from a projected flat (floor/ceiling) texture.
 !
 !void I_DrawSpan(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
@@ -226,6 +253,8 @@ do_fuzz_col_loop:
 !                inpixel_t *ds_source, int ds_height)
 
         .align  4
+        .global _I_DrawSpanA_start
+_I_DrawSpanA_start:
         .global _I_DrawSpanA
 _I_DrawSpanA:
 	add	#1,r6
@@ -329,11 +358,5 @@ do_span_loop_1px:
         mov.l   @r15+,r9
         rts
         mov.l   @r15+,r8
-
-        .align  2
-draw_width:
-        .long   320
-draw_height:
-        .long   _viewportHeight
-draw_fuzzoffset:
-        .long   _fuzzoffset
+        .global _I_DrawSpanA_end
+_I_DrawSpanA_end:

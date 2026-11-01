@@ -803,7 +803,7 @@ goback:
 
 				if (olddetailmode != detailmode)
 				{
-					R_SetDrawFuncs();
+					R_SetDrawFuncs(false);
 					sound = sfx_stnmov;
 				}
 				if (oldanamorphicview != anamorphicview)

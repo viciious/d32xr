@@ -68,8 +68,6 @@ typedef struct
 	jagobj_t	**endobj;
 	int 		endFlat;
 	jagobj_t	*bossback;
-	drawcol_t	oldDrawcol;
-	drawcol_t	oldDrawfuzzcol;
 	int8_t		*oldDcColormaps;
 	int8_t		*oldDcColormaps2;
 } finale_t;
@@ -164,11 +162,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	for (x = vis.x1; x <= vis.x2; ++x)
 		spropening[x] = viewportHeight;
 
-	drawcol = I_DrawColumnLow;
-	drawfuzzcol = I_DrawFuzzColumnLow;
 	R_DrawVisSprite(&vis, spropening, 0);
-	drawcol = fin->oldDrawcol;
-	drawfuzzcol = fin->oldDrawfuzzcol;
 }
 
 
@@ -320,14 +314,11 @@ void F_Start (void)
 	fin = Z_Malloc(sizeof(*fin), PU_STATIC);
 	D_memset(fin, 0, sizeof(*fin));
 
-	fin->oldDrawcol = drawcol;
-	fin->oldDrawfuzzcol = drawfuzzcol;
 	fin->oldDcColormaps = dc_colormaps;
 	fin->oldDcColormaps2 = dc_colormaps2;
-	drawcol = I_DrawColumnLow;
-	drawfuzzcol = I_DrawFuzzColumnLow;
 	dc_colormaps = dc_lcolormaps;
 	dc_colormaps2 = dc_lcolormaps2;
+	R_SetDrawFuncs(true);
 
 #ifdef MARS
 	Z_FreeTags (mainzone);
@@ -383,8 +374,8 @@ void F_Start (void)
 void F_Stop (void)
 {
 	int	i;
-	drawcol = fin->oldDrawcol;
-	drawfuzzcol = fin->oldDrawfuzzcol;
+
+	R_SetDrawFuncs(false);
 	dc_colormaps = fin->oldDcColormaps;
 	dc_colormaps2 = fin->oldDcColormaps2;
 

@@ -578,7 +578,7 @@ static void ML_Ticker(msglist_t *list)
 static void ML_Init(msglist_t *list, int basey, msgitem_t *items, int nitems)
 {
 	int i;
-	
+
 	list->items = items;
 	list->nitems = nitems;
 	list->basey = basey;
@@ -1086,7 +1086,7 @@ void I_Update(void)
 				R_ClearTexCache(&r_texcache);
 			}
 
-			R_SetDrawFuncs();
+			R_SetDrawFuncs(false);
 
 			if (!prevdebugmode)
 			{

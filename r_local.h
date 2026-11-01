@@ -319,7 +319,7 @@ static inline int R_PointOnSide (int x, int y, node_t *node)
 void	R_InitData (void);
 void	R_SetViewportSize(int num);
 int		R_DefaultViewportSize(void); // returns the viewport id for fullscreen, low detail mode
-void	R_SetDrawFuncs(void);
+void	R_SetDrawFuncs(boolean finale);
 void 	R_SetTextureData(texture_t *tex, uint8_t *start, int size, boolean skipheader);
 void 	R_SetFlatData(int f, uint8_t *start, int size);
 void	R_ClearTextures(void);
@@ -340,6 +340,27 @@ extern drawcol_t drawcolnpo2;
 extern drawspan_t drawspan[2];
 extern drawcol_t draw4bcol;
 extern drawcol_t draw4bcolnpo2;
+extern boolean drawspan_lowres;
+
+#define DRAWCODE_RAM_SIZE 1024
+
+#define DECLARE_DRAWCODERANGE(name) \
+	extern const unsigned char name##_start[]; \
+	extern const unsigned char name##_end[]
+
+DECLARE_DRAWCODERANGE(I_DrawColumnLowA);
+DECLARE_DRAWCODERANGE(I_DrawColumnNPo2LowA);
+DECLARE_DRAWCODERANGE(I_DrawFuzzColumnLowA);
+DECLARE_DRAWCODERANGE(I_DrawSpanLowA);
+DECLARE_DRAWCODERANGE(I_DrawSpanLowSwapA);
+DECLARE_DRAWCODERANGE(I_Draw4bColumnLowA);
+DECLARE_DRAWCODERANGE(I_Draw4bColumnNPo2LowA);
+DECLARE_DRAWCODERANGE(I_DrawColumnA);
+DECLARE_DRAWCODERANGE(I_DrawColumnNPo2A);
+DECLARE_DRAWCODERANGE(I_DrawFuzzColumnA);
+DECLARE_DRAWCODERANGE(I_DrawSpanA);
+DECLARE_DRAWCODERANGE(I_Draw4bColumnA);
+DECLARE_DRAWCODERANGE(I_Draw4bColumnNPo2A);
 
 #define FUZZTABLE		64
 #define FUZZMASK		(FUZZTABLE-1)
@@ -715,4 +736,3 @@ __attribute__((aligned(16)))
 extern	viewdef_t	*vd;
 
 #endif		/* __R_LOCAL__ */
-

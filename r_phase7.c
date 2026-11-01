@@ -297,7 +297,7 @@ static void R_DrawPlanes2(void)
 
     cXf = centerXFrac;
     lpl.lowres = false;
-    if (!lowres && (drawspan[0] == I_DrawSpanLow || drawspan[0] == I_DrawSpanPotatoLow))
+    if (!lowres && drawspan_lowres)
     {
         cXf >>= 1;
         lpl.lowres = true;
@@ -550,4 +550,3 @@ void R_DrawPlanes(void)
 }
 
 // EOF
-

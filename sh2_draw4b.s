@@ -1,6 +1,6 @@
 ! Original code by Chilly Willy
 
-.section .sdata
+.section .text.sh2_draw,"ax"
 
 .equ DOOMTLS_COLORMAP, 12
 .equ DOOMTLS_FRAMEBUFFER, 20
@@ -12,6 +12,8 @@
 !                  fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
+        .global _I_Draw4bColumnA_start
+_I_Draw4bColumnA_start:
         .global _I_Draw4bColumnA
 _I_Draw4bColumnA:
 	add	#1,r6
@@ -41,7 +43,7 @@ _I_Draw4bColumnA:
         add     r5,r4           /* fb += (dc_yl*256 + dc_yl*64) */
         mov.l   @(16,r15),r5    /* dc_source */
         add     #-1,r8          /* heightmask = texheight - 1 */
-        mov.l   draw_width,r1
+        mov.l   draw_4bcolumn_width,r1
         swap.w  r2,r0           /* (frac >> 16) */
         sub     r1,r4           /* fb -= SCREENWIDTH */
 
@@ -97,6 +99,12 @@ do_col4b_loop_odd_noshift:
         rts
         mov.l   @r15+,r8
 
+        .align  2
+draw_4bcolumn_width:
+        .long   320
+        .global _I_Draw4bColumnA_end
+_I_Draw4bColumnA_end:
+
 ! Draw a vertical column of pixels from a projected wall texture.
 ! Non-power of 2 texture height.
 !
@@ -104,6 +112,8 @@ do_col4b_loop_odd_noshift:
 !                      fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
 
         .align  4
+        .global _I_Draw4bColumnNPo2A_start
+_I_Draw4bColumnNPo2A_start:
         .global _I_Draw4bColumnNPo2A
 _I_Draw4bColumnNPo2A:
 	add	#1,r6
@@ -152,7 +162,7 @@ _I_Draw4bColumnNPo2A:
         cmp/ge  r8,r2
         bt      4b
 5:
-        mov.l   draw_width,r1
+        mov.l   draw_4bnpcolumn_width,r1
         sub     r1,r4           /* fb -= SCREENWIDTH */
         mov     r2,r0
 
@@ -217,5 +227,7 @@ do_cnp4b_loop_odd_noshift:
         mov.l   @r15+,r8
 
         .align  2
-draw_width:
+draw_4bnpcolumn_width:
         .long   320
+        .global _I_Draw4bColumnNPo2A_end
+_I_Draw4bColumnNPo2A_end:
