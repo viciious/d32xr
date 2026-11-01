@@ -27,25 +27,10 @@ int wipe_InitMelt(short *y)
 }
 
 #ifdef MARS
-static char wipe_lock = 0;
+static atomic_flag wipe_lock = ATOMIC_FLAG_INIT;
 
-static void wipe_lockMelt(void)
-{
-    int res;
-    do {
-        __asm volatile (\
-        "tas.b %1\n\t" \
-            "movt %0\n\t" \
-            : "=&r" (res) \
-            : "m" (wipe_lock) \
-            );
-    } while (res == 0);
-}
-
-static void wipe_unlockMelt(void)
-{
-   wipe_lock = 0;
-}
+#define wipe_lockMelt() do { while (atomic_flag_test_and_set(&wipe_lock)); } while (0)
+#define wipe_unlockMelt() do { atomic_flag_clear(&wipe_lock); } while (0)
 
 static int wipe_getNextMeltCol(void)
 {
