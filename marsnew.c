@@ -538,6 +538,7 @@ typedef struct {
 	msgitem_t *items;
 	int16_t nitems;
 	int16_t next;
+	int16_t basex;
 	int16_t basey;
 	uint8_t lasty;
 	boolean redraw;
@@ -577,14 +578,18 @@ static void ML_Ticker(msglist_t *list)
 static void ML_Init(msglist_t *list, int basey, msgitem_t *items, int nitems)
 {
 	int i;
+	
 	list->items = items;
 	list->nitems = nitems;
 	list->basey = basey;
 	list->redraw = false;
 	list->lasty = 0;
 	list->next = 0;
+	list->basex = 2;
+
 	for (i = 0; i < list->nitems; i++) {
 		list->items[i].expire = 0;
+		Mars_MDPutString(list->basex, list->basey+i, " ");
 	}
 }
 
