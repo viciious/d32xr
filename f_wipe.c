@@ -47,19 +47,23 @@ static void wipe_meltBottomUp(void)
 {
     int i;
     short   *yy = melt_yy;
-    int     width = WIPEWIDTH;
-    int     height = I_FrameBufferHeight();
+    short   width = WIPEWIDTH;
+    short   height = I_FrameBufferHeight();
     short   *fb = (short *)I_FrameBuffer();
 
 #ifdef MARS
     __asm volatile("mov %1,%0\n\t" : "=&r" (width) : "r"(WIPEWIDTH));
 #endif
 
-   for (i=0;i<width;i++)
-   {
+   i = 0;
+   do {
         int j;
-        unsigned dy, oy;
-        unsigned n;
+        int dispatch;
+#ifdef MARS
+        int pixel;
+#endif
+        int dy, oy;
+        int n;
         short*	s;
         short*	d;
 
@@ -73,26 +77,57 @@ static void wipe_meltBottomUp(void)
         if (dy == 0)
             continue;
 
-        oy = (dy >> 8) & 0xff;
+        oy = ((unsigned)dy >> 8) & 0xff;
         dy = dy & 0xff;
 
-        d = &fb[(height -      1)*width + i];
+        d = &fb[(height -      0)*width + i];
         s = &fb[(height - dy - 1)*width + i];
 
         j = height - oy - dy - 1;
         if (j <= 0)
             continue;
 
-        n = ((unsigned)j + 3) >> 2;
+        n = j + 3;
+#ifdef MARS
+        dispatch = ((4 - (j & 3)) & 3) * 8;
+        __asm volatile(
+            "braf %[dispatch]\n\t"
+            "shlr2 %[n]\n\t"
+            "1:\n\t"
+            "mov.w @%[s],%[pixel]\n\t"
+            "sub %[step],%[d]\n\t"
+            "mov.w %[pixel],@%[d]\n\t"
+            "sub %[step],%[s]\n\t"
+            "mov.w @%[s],%[pixel]\n\t"
+            "sub %[step],%[d]\n\t"
+            "mov.w %[pixel],@%[d]\n\t"
+            "sub %[step],%[s]\n\t"
+            "mov.w @%[s],%[pixel]\n\t"
+            "sub %[step],%[d]\n\t"
+            "mov.w %[pixel],@%[d]\n\t"
+            "sub %[step],%[s]\n\t"
+            "mov.w @%[s],%[pixel]\n\t"
+            "sub %[step],%[d]\n\t"
+            "mov.w %[pixel],@%[d]\n\t"
+            "dt %[n]\n\t"
+            "bf/s 1b\n\t"
+            "sub %[step],%[s]\n\t"
+            : [d] "+&r"(d), [s] "+&r"(s), [n] "+&r"(n), [pixel] "=&r"(pixel)
+            : [step] "r"(width*2), [dispatch] "r"(dispatch)
+            : "memory"
+        );
+#else
+        n = n >> 2;
         switch (j & 3)
         {
-        case 0: do { *d = *s, d -= width, s -= width;
-        case 3:      *d = *s, d -= width, s -= width;
-        case 2:      *d = *s, d -= width, s -= width;
-        case 1:      *d = *s, d -= width, s -= width;
+        case 0: do { d -= width, *d = *s, s -= width;
+        case 3:      d -= width, *d = *s, s -= width;
+        case 2:      d -= width, *d = *s, s -= width;
+        case 1:      d -= width, *d = *s, s -= width;
         } while (--n > 0);
         }
-    }
+#endif
+    } while (1);
 }
 
 static int wipe_doMelt(short *y, short *yy, int ticks, int step)
