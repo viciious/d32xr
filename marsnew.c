@@ -753,7 +753,7 @@ void* I_RemapPtr(void *ptr)
 ==================== 
 */ 
  
-#define BASE_ZONE_SIZE 0x33000
+#define BASE_ZONE_SIZE 0x33400
 
 #ifdef DISABLE_DMA_SOUND
 #define ZONE_SIZE (BASE_ZONE_SIZE+0x1800)
