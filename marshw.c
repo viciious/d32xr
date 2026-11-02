@@ -795,11 +795,38 @@ void Mars_StoreWordColumnInMDVRAM(int c)
 	MARS_SYS_COMM0 = 0x1A00|c;		/* sel = to VRAM, column in LB of comm0, start move */
 }
 
-void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len)
+void Mars_LoadWordColumnFromMDVRAM(int c, const uint16_t *length_offsets, int count)
 {
+	int i;
+	int offset;
+	volatile short *line_table =
+		(volatile short *)(&MARS_FRAMEBUFFER + 0x0F0);
+
+	for (offset = 0; offset < count; offset += 16) {
+		int bcount = count - offset;
+		int hascols = 0;
+
+		if (bcount > 16)
+			bcount = 16;
+
+		for (i = 0; i < bcount; i++) {
+			if (length_offsets[offset + i] != 0) {
+				hascols = 1;
+				break;
+			}
+		}
+		if (!hascols)
+			continue;
+
+		while (MARS_SYS_COMM0 != 0);
+		for (i = 0; i < bcount; i++) {
+			line_table[i] = length_offsets[offset + i];
+		}
+		MARS_SYS_COMM2 = bcount;
+		MARS_SYS_COMM0 = 0x1B00 | (c + offset);
+	}
+
 	while (MARS_SYS_COMM0 != 0);
-	MARS_SYS_COMM2 = (((uint16_t)len)<<8) | offset;  /* (length<<8)|offset */
-	MARS_SYS_COMM0 = 0x1B00|c;		/* sel = to VRAM, column in LB of comm0, start move */
 }
 
 void Mars_SwapWordColumnWithMDVRAM(int c)

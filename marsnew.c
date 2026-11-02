@@ -1444,8 +1444,13 @@ void I_StoreScreenCopy(void)
 void I_RestoreScreenCopy(void)
 {
 	int i;
-	for (i = 0; i < 160; i++) {
-		Mars_LoadWordColumnFromMDVRAM(i, 0, 224);
+	uint16_t length_offsets[16];
+
+	for (i = 0; i < 16; i++) {
+		length_offsets[i] = (short)(224 << 8);
+	}
+	for (i = 0; i < 160; i += 16) {
+		Mars_LoadWordColumnFromMDVRAM(i, length_offsets, 16);
 	}
 	Mars_Finish();
 }

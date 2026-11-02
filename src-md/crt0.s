@@ -1781,15 +1781,33 @@ cpy_md_vram:
         bra     main_loop
 
 5:
-        moveq   #0,d0
-        move.w  2(a1), d0
+        movem.l d6-d7,-(sp)
+        moveq   #0,d6
+        move.w  2(a1),d6           /* number of columns in COMM2 */
+        moveq   #0,d7
+        move.b  d0,d7              /* first column number */
+        lea     MARS_UNUSED_LNTBL,a3
+copy_from_column:
+        move.w  (a3)+,d5           /* length in high byte, offset in low byte */
+        move.w  d5,d4
+        lsr.w   #8,d4               /* length in words */
+        andi.w  #255,d4
+        tst.w   d4
+        beq.w   copy_from_next     /* empty columns are skipped */
 
-        andi.w  #0xFF,d0            /* column offset in words */
+        moveq   #0,d0
+        move.w  d5,d0
+        andi.w  #255,d0             /* column offset in words */
         add.l   d0,d0
+        moveq   #0,d1
+        move.w  d7,d1
+        add.w   d1,d1
+        lea     MARS_FRAMEBUFFER,a2
+        lea     0(a2,d1.l),a2
 
         /* COPY FROM VRAM */
-        cmpi.l  #280,d1           /* vram or wram? */
-        bhs.w   7f                  /* wram */
+        cmpi.l  #280,d1             /* vram or wram? */
+        bhs.w   copy_from_wram
 
         #mulu.w  #224,d1
         lsl.w   #5,d1
@@ -1818,15 +1836,13 @@ cpy_md_vram:
         swap    d1
         move.l  d1,4(a0)            /* cmd port <- read VRAM from offset */
 
-        move.w  2(a1), d0           /* length in words */
-        lsr.w   #8,d0
-        andi.w  #255,d0
+        move.w  d4,d0
         subq.w  #1,d0
         cmpi.w  #223,d0
-        bne.b   6f
+        bne.b   copy_from_vram_short
 
         move.w  #27,d0
-60:
+copy_from_vram_full:
         move.w  (a0),(a2)           /* next word */
         move.w  (a0),320(a2)        /* next word */
         move.w  (a0),640(a2)        /* next word */
@@ -1836,14 +1852,15 @@ cpy_md_vram:
         move.w  (a0),1920(a2)       /* next word */
         move.w  (a0),2240(a2)       /* next word */
         lea     2560(a2),a2
-        dbra    d0,60b
-        bra     9f                  /* done */
-6:
-        move.w  (a0), (a2)
+        dbra    d0,copy_from_vram_full
+        bra.w   copy_from_next
+copy_from_vram_short:
+        move.w  (a0),(a2)
         lea     320(a2),a2
-        dbra    d0,6b
-        bra     9f                  /* done */
-7:
+        dbra    d0,copy_from_vram_short
+        bra.w   copy_from_next
+
+copy_from_wram:
         subi.l  #280,d1
         #mulu.w  #224,d1
         lsl.w   #5,d1
@@ -1864,25 +1881,23 @@ cpy_md_vram:
 
         lea     aux_store,a0
         tst.w   cd_ok
-        beq     70f                 /* couldn't init cd */
+        beq     copy_from_wram_source
 
         moveq   #0,d0
         move.l  d0,-(sp)
         jsr     scd_switch_to_bank
         lea     4(sp),sp
         lea     COL_STORE,a0        /* use the word ram for column storage */
-70:
+copy_from_wram_source:
         lea     0(a0,d1.l),a0
 
-        move.w  2(a1), d0           /* length in words */
-        lsr.w   #8,d0
-        andi.w  #255,d0
+        move.w  d4,d0
         subq.w  #1,d0
         cmpi.w  #223,d0
-        bne.b   8f
+        bne.b   copy_from_wram_short
 
         move.w  #27,d0
-80:
+copy_from_wram_full:
         move.w  (a0)+,(a2)          /* next word */
         move.w  (a0)+,320(a2)       /* next word */
         move.w  (a0)+,640(a2)       /* next word */
@@ -1892,13 +1907,18 @@ cpy_md_vram:
         move.w  (a0)+,1920(a2)      /* next word */
         move.w  (a0)+,2240(a2)      /* next word */
         lea     2560(a2),a2
-        dbra    d0,80b
-        bra     9f                  /* done */
-8:
-        move.w  (a0)+, (a2)
+        dbra    d0,copy_from_wram_full
+        bra.w   copy_from_next
+copy_from_wram_short:
+        move.w  (a0)+,(a2)
         lea     320(a2),a2
-        dbra    d0,8b
-9:
+        dbra    d0,copy_from_wram_short
+copy_from_next:
+        addq.w  #1,d7
+        subq.w  #1,d6
+        bne.w   copy_from_column
+
+        movem.l (sp)+,d6-d7
         move.w  0xA15100,d0
         or.w    #0x8000,d0
         move.w  d0,0xA15100         /* set FM - allow SH2 access to FB */

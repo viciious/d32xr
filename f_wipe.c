@@ -77,8 +77,8 @@ static void wipe_meltBottomUp(void)
         if (dy == 0)
             continue;
 
-        oy = ((unsigned)dy >> 8) & 0xff;
-        dy = dy & 0xff;
+        oy = (unsigned)dy & 0xff;
+        dy = ((unsigned)dy >> 8) & 0xff;
 
         d = &fb[(height -      0)*width + i];
         s = &fb[(height - dy - 1)*width + i];
@@ -142,27 +142,18 @@ static int wipe_doMelt(short *y, short *yy, int ticks, int step)
 #endif
     boolean	done;
 
+    if (step > 0)
+    {
+#ifdef MARS
+        Mars_LoadWordColumnFromMDVRAM(0, (const uint16_t *)yy, width);
+#endif
+    }
+
     done = true;
     for (i=0;i<width;i++)
     {
         int t;
         int dy, oy;
-
-        if (step > 0)
-        {
-            /* restore columns from the previous step */
-            dy = (uint16_t)yy[i];
-            if (dy > 0)
-            {
-                done = false;
-
-                oy = ((unsigned)dy >> 8) & 0xff;
-                dy = (unsigned)dy & 0xff;
-#ifdef MARS
-                Mars_LoadWordColumnFromMDVRAM(i, oy, dy);
-#endif
-            }
-        }
 
         oy = y[i];
 
@@ -190,7 +181,7 @@ static int wipe_doMelt(short *y, short *yy, int ticks, int step)
             dy = oy = 0;
         dy = dy - oy;
 
-        yy[i] = ((unsigned)oy<<8)|dy;
+        yy[i] = (dy << 8) | oy;
     }
 
 #ifdef MARS

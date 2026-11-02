@@ -123,8 +123,9 @@ void Mars_SetStringBufferOffset(int offset);
 char *Mars_StringToFramebuffer(const char *str);
 
 void Mars_StoreWordColumnInMDVRAM(int c);
-// both offset and length are in words, not in bytes
-void Mars_LoadWordColumnFromMDVRAM(int c, int offset, int len);
+// Each entry packs length (high byte) and offset (low byte), both in words.
+// The loader submits consecutive columns in batches of up to 16.
+void Mars_LoadWordColumnFromMDVRAM(int c, const uint16_t *length_offsets, int count);
 void Mars_SwapWordColumnWithMDVRAM(int c);
 void Mars_RWMDVRAM(short *buf, int wcount, int read);
 
