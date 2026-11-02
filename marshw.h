@@ -127,7 +127,6 @@ void Mars_StoreWordColumnInMDVRAM(int c);
 // The loader submits consecutive columns in batches of up to 16.
 void Mars_LoadWordColumnFromMDVRAM(int c, const uint16_t *length_offsets, int count);
 void Mars_SwapWordColumnWithMDVRAM(int c);
-void Mars_RWMDVRAM(short *buf, int wcount, int read);
 
 int Mars_OpenCDFileByName(const char *name, int *poffset);
 void Mars_OpenCDFileByOffset(int length, int offset);
