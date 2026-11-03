@@ -1692,19 +1692,25 @@ cpy_md_vram:
 
         lea     0xA15120,a1         /* 32x comm0 port */
 
-        moveq   #0,d1
-        move.b  d0,d1               /* column number */
-        add.w   d1,d1
-
-        lea     MARS_FRAMEBUFFER,a2 /* frame buffer */
-        lea     0(a2,d1.l),a2
-
         cmpi.w  #0x1C00,d0
-        bhs.w   10f                 /* swap with vram */
+        bhs.w   swap_column_setup  /* swap with vram */
         cmpi.w  #0x1B00,d0
         bhs.w   5f                  /* copy from vram */
 
         /* COPY TO VRAM */
+        movem.l d6-d7,-(sp)
+        move.w  2(a1),d6           /* number of columns in COMM2 */
+        moveq   #0,d7
+        move.b  d0,d7              /* first column number */
+        tst.w   d6
+        beq.w   store_columns_done
+store_column_loop:
+        moveq   #0,d1
+        move.w  d7,d1
+        add.w   d1,d1
+        lea     MARS_FRAMEBUFFER,a2
+        lea     0(a2,d1.l),a2
+
         cmpi.l  #280,d1           /* vram or wram? */
         bhs.b   2f                  /* wram */
 
@@ -1736,7 +1742,7 @@ cpy_md_vram:
         move.w  2240(a2),(a0)       /* next word */
         lea     2560(a2),a2
         dbra    d0,1b
-        bra     4f                  /* done */
+        bra.w   store_column_next
 2:
         subi.l  #280,d1
         #mulu.w  #224,d1
@@ -1770,6 +1776,14 @@ cpy_md_vram:
         move.w  2240(a2),(a0)+      /* next word */
         lea     2560(a2),a2
         dbra    d0,3b
+store_column_next:
+        addq.w  #1,d7
+        subq.w  #1,d6
+        bne.w   store_column_loop
+store_columns_done:
+        movem.l (sp)+,d6-d7
+        bra.w   4f
+
 4:
         move.w  0xA15100,d0
         or.w    #0x8000,d0
@@ -1928,6 +1942,20 @@ copy_from_next:
         move.w  #0,0xA15120         /* done */
         bra     main_loop
 
+swap_column_setup:
+        movem.l d6-d7,-(sp)
+        move.w  2(a1),d6           /* number of columns in COMM2 */
+        moveq   #0,d7
+        move.b  d0,d7              /* first column number */
+        tst.w   d6
+        beq.w   swap_columns_done
+swap_column_loop:
+        moveq   #0,d1
+        move.w  d7,d1
+        add.w   d1,d1
+        lea     MARS_FRAMEBUFFER,a2
+        lea     0(a2,d1.l),a2
+
 10:
         /* SWAP WITH VRAM */
         cmpi.l  #280,d1           /* vram or wram? */
@@ -1995,7 +2023,7 @@ copy_from_next:
         move.w  (a1)+,2240(a2)      /* next word */
         lea     2560(a2),a2
         dbra    d0,112b
-        bra     14f                 /* done */
+        bra.w   swap_column_next
 12:
         subi.l  #280,d1
         #mulu.w  #224,d1
@@ -2061,6 +2089,12 @@ copy_from_next:
         move.w  (a1)+,2240(a2)      /* next word */
         lea     2560(a2),a2
         dbra    d0,132b
+swap_column_next:
+        addq.w  #1,d7
+        subq.w  #1,d6
+        bne.w   swap_column_loop
+swap_columns_done:
+        movem.l (sp)+,d6-d7
 14:
         move.w  0xA15100,d0
         or.w    #0x8000,d0

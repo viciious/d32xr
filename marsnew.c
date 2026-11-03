@@ -1434,9 +1434,10 @@ void I_DrawSbar(void)
 void I_StoreScreenCopy(void)
 {
 	int i;
+
 	Mars_SetVDPPri(1);
-	for (i = 0; i < 160; i++) {
-		Mars_StoreWordColumnInMDVRAM(i);
+	for (i = 0; i < 160; i += 16) {
+		Mars_StoreWordColumnInMDVRAM(i, 16);
 	}
 	Mars_Finish();
 }
@@ -1457,10 +1458,10 @@ void I_RestoreScreenCopy(void)
 
 void I_SwapScreenCopy(void)
 {
-    int i;
-    for (i = 0; i < 160; i++) {
-        Mars_SwapWordColumnWithMDVRAM(i);
-    }
+	int i;
+	for (i = 0; i < 160; i += 16) {
+		Mars_SwapWordColumnWithMDVRAM(i, 16);
+	}
     Mars_Finish();
 }
 
