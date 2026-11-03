@@ -116,8 +116,6 @@ void GS_Start(void)
         I_Error("No playable WADs found on the CD");
 
     S_StartSound(NULL, sfx_swtchn);
-
-    HUD_Init();
 }
 
 void GS_Stop(void)

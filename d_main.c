@@ -344,6 +344,7 @@ int MiniLoop ( void (*start)(void),  void (*stop)(void)
 	{
 		wipe_StartScreen();
 	} else {
+		HUD_Init();
 		I_LoadFonts();
 	}
 

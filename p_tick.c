@@ -630,8 +630,6 @@ void P_Start (void)
 	}
 	M_ClearRandom ();
 
-	HUD_Init();
-
 	if (!demoplayback && !demorecording)
 		if (!netgame || splitscreen)
 			P_RandomSeed(I_GetTime());

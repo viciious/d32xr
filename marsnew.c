@@ -596,7 +596,7 @@ static void ML_Init(msglist_t *list, int basey, msgitem_t *items, int nitems)
 static void ML_Drawer(msglist_t *list)
 {
 	int i, y, nexty;
-	const int x = 2;
+	const int x = list->basex;
 	const int basey = list->basey;
 	int first = -1;
 
