@@ -276,7 +276,9 @@ void S_SPCM_UpdateTrack(s_spcm_t *spcm)
             delay_sectors += SPCM_BUF_NUM_SECTORS; // wait 1/2 of playback time
 
         if (painted_sectors < spcm->mix.paint_sector + delay_sectors) {
-            seek_cd(spcm->block);
+            // ROMREADN takes the LBA directly; repeated ROMSEEK requests can
+            // keep the BIOS CDD command slot busy while the drive is settling.
+            //seek_cd(spcm->block);
             return;
         }
 
