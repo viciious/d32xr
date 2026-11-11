@@ -56,7 +56,7 @@ _I_DrawColumnLowA:
         bt/s    do_col_loop_1px
         add     r9,r6
 
-        .p2alignw 1, 0x0009
+        .p2alignw 2, 0x0009
 do_col_loop:
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
         add     r3,r2           /* frac += fracstep */
@@ -149,7 +149,7 @@ _I_DrawColumnNPo2LowA:
         mov     r2,r0
         shlr16  r0              /* frac >> 16 */
 
-        .p2alignw 1, 0x0009
+        .p2alignw 2, 0x0009
 do_cnp_loop:
         mov.b   @(r0,r5),r0     /* pix = dc_source[frac >> 16] */
         cmp/ge  r8,r2
@@ -161,7 +161,7 @@ do_cnp_loop:
         /* if (frac >= heightmask) */
         dt      r6              /* count-- */
         sub     r8,r2           /* frac -= heightmask */
-        .p2alignw 1, 0x0009
+        .p2alignw 2, 0x0009
 1:
         mov.w   r9,@r4          /* *fb = dpix */
         shlr16  r0              /* frac >> 16 */
@@ -231,7 +231,7 @@ _I_DrawFuzzColumnLowA:
         and     #126,r0         /* fuzzpos &= FUZZMASK */
         sub     r1,r4           /* fb += SCREENWIDTH */
 
-        .p2alignw 1, 0x0009
+        .p2alignw 2, 0x0009
 do_fuzz_col_loop:
         mov.w   @(r0,r5),r0     /* pix = fuzztable[fuzzpos] */
         add     #2,r3
@@ -340,7 +340,7 @@ _I_DrawSpanLowA:
         bt/s    do_span_loop_1px
         add     r1,r6
 
-        .p2alignw 1, 0x0009
+        .p2alignw 2, 0x0009
 do_span_loop:
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         sub     r3,r2           /* xfrac -= xstep */
@@ -455,7 +455,7 @@ _I_DrawSpanLowSwapA:
         bt/s    do_spansw_loop_1px
         add     r1,r6
 
-        .p2alignw 1, 0x0009
+        .p2alignw 2, 0x0009
 do_spansw_loop:
         mov.b   @(r0,r9),r0     /* pix = ds_source[spot] */
         sub     r3,r2           /* xfrac -= xstep */

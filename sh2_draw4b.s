@@ -53,7 +53,7 @@ _I_Draw4bColumnA:
         bt/s    do_col4b_loop_odd
         add     r9,r6
 
-        .p2alignw 1, 0x0009
+        .p2alignw 2, 0x0009
 do_col4b_loop:
         and     r8,r0           /* (frac >> 16) & heightmask */
         shlr    r0              /* convert nibble to byte */
@@ -74,6 +74,7 @@ do_col4b_loop_noshift:
         mov.b   r9,@r4          /* *fb = dpix */
 
 do_col4b_loop_odd:
+        add     r1,r4           /* fb += SCREENWIDTH */
         and     r8,r0           /* (frac >> 16) & heightmask */
         shlr    r0              /* convert nibble to byte */
         mov.b   @(r0,r5),r0     /* pix = dc_source[(frac >> 16) & heightmask] */
@@ -82,18 +83,16 @@ do_col4b_loop_odd:
         # note that the upper and lower nibbles are pre-swapped
         # in the texture data to avoid doing more address math here
         bt/s    do_col4b_loop_odd_noshift
-        add     r1,r4           /* fb += SCREENWIDTH */
+        dt      r6
         shlr2   r0
         shlr2   r0
 do_col4b_loop_odd_noshift:
         and     #15,r0
         add     r0,r0
         mov.b   @(r0,r7),r9     /* dpix = dc_colormap[pix] */
-        dt      r6
-        mov.b   r9,@r4          /* *fb = dpix */
-
-        bf/s    do_col4b_loop
         swap.w  r2,r0           /* (frac >> 16) */
+        bf/s    do_col4b_loop
+        mov.b   r9,@r4          /* *fb = dpix */
 
         mov.l   @r15+,r9
         rts
@@ -172,7 +171,7 @@ _I_Draw4bColumnNPo2A:
         bt/s    do_cnp4b_loop_odd
         add     r0,r6
 
-        .p2alignw 1, 0x0009
+        .p2alignw 2, 0x0009
 do_cnp4b_loop:
         shlr16  r0              /* frac >> 16 */
         shlr    r0              /* convert nibble to byte */
