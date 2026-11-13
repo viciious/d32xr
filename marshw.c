@@ -37,7 +37,9 @@ volatile unsigned mars_pwdt_ovf_count = 0;
 volatile unsigned mars_swdt_ovf_count = 0;
 static unsigned mars_frtc2msec_frac = 0;
 
-static const volatile uint8_t* mars_newpalette = NULL;
+static volatile char mars_have_newpalette = 0;
+__attribute__((aligned(16)))
+static volatile int16_t mars_newpalette[256];
 
 int16_t mars_requested_lines = 224;
 uint16_t mars_framebuffer_height = 224;
@@ -81,7 +83,7 @@ static void (*sci_dma1_cb)(void) = &intr_handler_stub;
 static void Mars_HandleBeginDMARequest(void) MARS_ATTR_DATA_CACHE_ALIGN;
 static void Mars_HandleEndDMARequest(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
-static char Mars_UploadPalette(const uint8_t* palette) __attribute__((section(".sdata"), aligned(16), optimize("Os")));
+static char Mars_UploadPalette(void) MARS_ATTR_DATA_CACHE_ALIGN;
 
 #define MARS_ACTIVE_SCREEN (*(volatile uint16_t *)(((intptr_t)&mars_activescreen) | 0x20000000))
 
@@ -143,20 +145,7 @@ void Mars_InitLineTable(void)
 
 void Mars_SetPalette(const uint8_t *palette)
 {
-	mars_newpalette = (const volatile uint8_t*)palette;
-}
-
-int Mars_BackBuffer(void) {
-	return MARS_ACTIVE_SCREEN;
-}
-
-static char Mars_UploadPalette(const uint8_t* palette)
-{
 	int	i;
-	unsigned short* cram = (unsigned short *)&MARS_CRAM;
-
-	if ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0)
-		return 0;
 
 	for (i = 0; i < 256; i++) {
 		unsigned r = 1 + *palette++;
@@ -171,9 +160,31 @@ static char Mars_UploadPalette(const uint8_t* palette)
 		g = ((g >> 3) & 0x1f) << 5;
 		r = ((r >> 3) & 0x1f) << 0;
 
-		cram[i] = r | g | b;
+		mars_newpalette[i] = r | g | b;
 	}
 
+	mars_have_newpalette = 1;
+}
+
+int Mars_BackBuffer(void) {
+	return MARS_ACTIVE_SCREEN;
+}
+
+static char Mars_UploadPalette(void)
+{
+	int i;
+	volatile int* newpal = (volatile int *)mars_newpalette;
+	volatile int* cram = (volatile int *)&MARS_CRAM;
+
+	if ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0)
+		return 0;
+	for (i = 0; i < 128; i += 4)
+	{
+		cram[i+0] = newpal[i+0];
+		cram[i+1] = newpal[i+1];
+		cram[i+2] = newpal[i+2];
+		cram[i+3] = newpal[i+3];
+	}
 	return 1;
 }
 
@@ -1068,7 +1079,7 @@ void Mars_SetPriDreqDMACallbacks(void *(*cb)(void *, void *, int , int), void (*
 
 void Mars_SetSecCmdCallback(void (*cb)(void))
 {
-	pri_cmd_cb = cb;
+	sci_cmd_cb = cb;
 }
 
 void Mars_SetSecDMA1Callback(void (*cb)(void))
@@ -1082,10 +1093,10 @@ void pri_vbi_handler(void)
 {
 	mars_vblank_count++;
 
-	if (mars_newpalette)
+	if (mars_have_newpalette)
 	{
-		if (Mars_UploadPalette((const uint8_t *)mars_newpalette))
-			mars_newpalette = NULL;
+		if (Mars_UploadPalette())
+			mars_have_newpalette = 0;
 	}
 }
 

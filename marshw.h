@@ -42,11 +42,11 @@ void Mars_FlipFrameBuffers(char wait);
 void Mars_WaitFrameBuffersFlip(void);
 char Mars_FramebuffersFlipped(void);
 void Mars_Init(void);
-void Mars_InitVideo(int lines);
+void Mars_InitVideo(int lines) __attribute__((optimize("Os")));
 void Mars_InitPWM(int sample_rate, int min_sample, int max_sample) __attribute__((optimize("Os")));
 void Mars_InitLineTable(void) __attribute__((optimize("Os")));
 int Mars_BackBuffer(void);
-void Mars_SetPalette(const uint8_t *palette);
+void Mars_SetPalette(const uint8_t *palette) __attribute__((optimize("Os")));
 int Mars_PollMouse(void);
 int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy);
 
