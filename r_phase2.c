@@ -189,8 +189,8 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     {
         scale2 = R_ScaleFromGlobalAngle(rw_distance, vd->viewangle + (xtoviewangle[wc->stop]<<FRACBITS), normalangle);
 #ifdef MARS
-        SH2_DIVU_DVSR = wc->stop - wc->start;  // set 32-bit divisor
-        SH2_DIVU_DVDNT = scale2 - scalefrac;   // set 32-bit dividend, start divide
+        sh2_divu->dvsr = wc->stop - wc->start;  // set 32-bit divisor
+        sh2_divu->dvdnt = scale2 - scalefrac;   // set 32-bit dividend, start divide
 #else
         wc->scalestep = IDiv(scale2 - scalefrac, wc->stop - wc->start);
 #endif
@@ -224,7 +224,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 #ifdef MARS
     if (wc->stop > wc->start)
     {
-        wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
+        wc->scalestep = sh2_divu->dvdnt; // get 32-bit quotient
     }
 #endif
 }
@@ -368,7 +368,7 @@ void Mars_Sec_R_WallPrep(void)
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
     mapvertex_t *verts;
-    volatile uint8_t *addedsegs = (volatile uint8_t *)&MARS_SYS_COMM6;
+    volatile uint8_t *addedsegs = (volatile uint8_t *)&mars_sys_comm->comm6;
     volatile uint8_t *readysegs = addedsegs + 1;
 
     // clear visplane 0

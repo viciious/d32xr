@@ -78,8 +78,8 @@ extern VINT tictics, drawtics;
 extern int ticstart;
 
 // framebuffer start is after line table AND a single blank line
-static pixel_t* framebuffer = (pixel_t*)(&MARS_FRAMEBUFFER + 0x100);
-static pixel_t *framebufferend = (pixel_t*)(&MARS_FRAMEBUFFER + 0x10000);
+static pixel_t* framebuffer = (pixel_t*)(mars_framebuffer + 0x100);
+static pixel_t *framebufferend = (pixel_t*)(mars_framebuffer + 0x10000);
 
 static jagobj_t* jo_stbar;
 static VINT jo_stbar_height;
@@ -338,26 +338,26 @@ void Mars_Secondary(void)
 	__asm volatile("mov %0, r0\n\tldc r0,gbr" : : "rm"(&mars_tls_sec) : "r0", "gbr");
 
 	// init DMA
-	SH2_DMA_SAR0 = 0;
-	SH2_DMA_DAR0 = 0;
-	SH2_DMA_TCR0 = 0;
-	SH2_DMA_CHCR0 = 0;
-	SH2_DMA_DRCR0 = 0;
-	SH2_DMA_SAR1 = 0;
-	SH2_DMA_DAR1 = 0;
-	SH2_DMA_TCR1 = 0;
-	SH2_DMA_CHCR1 = 0;
-	SH2_DMA_DRCR1 = 0;
-	SH2_DMA_DMAOR = 1; // enable DMA transfers on all channels
+	sh2_dma->sar0 = 0;
+	sh2_dma->dar0 = 0;
+	sh2_dma->tcr0 = 0;
+	sh2_dma->chcr0 = 0;
+	sh2_dma_drcr->drcr0 = 0;
+	sh2_dma->sar1 = 0;
+	sh2_dma->dar1 = 0;
+	sh2_dma->tcr1 = 0;
+	sh2_dma->chcr1 = 0;
+	sh2_dma_drcr->drcr1 = 0;
+	sh2_dma->dmaor = 1; // enable DMA transfers on all channels
 
-	SH2_DMA_VCR1 = 66; 	// set exception vector for DMA channel 1
-	SH2_INT_IPRA = (SH2_INT_IPRA & 0xF0FF) | 0x0400; // set DMA INT to priority 4
+	sh2_dma->vcr1 = 66; 	// set exception vector for DMA channel 1
+	*sh2_int_ipra = (*sh2_int_ipra & 0xF0FF) | 0x0400; // set DMA INT to priority 4
 
 	while (1)
 	{
 		int cmd;
 
-		while ((cmd = MARS_SYS_COMM4) == MARS_SECCMD_NONE) {
+		while ((cmd = mars_sys_comm->comm4) == MARS_SECCMD_NONE) {
 			SH2_Delay512();
 			continue;
 		}
@@ -384,13 +384,13 @@ void Mars_Secondary(void)
 			Mars_Sec_R_SpritePrep();
 			break;
 		case MARS_SECCMD_R_DRAW_SPRITES:
-			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6);
+			Mars_Sec_R_DrawSprites(mars_sys_comm->comm6);
 			break;
 		case MARS_SECCMD_M_ANIMATE_FIRE:
 			Mars_Sec_M_AnimateFire();
 			break;
 		case MARS_SECCMD_S_INIT_DMA:
-			Mars_Sec_InitSoundDMA(MARS_SYS_COMM6);
+			Mars_Sec_InitSoundDMA(mars_sys_comm->comm6);
 			break;
 		case MARS_SECCMD_AM_DRAW:
 			Mars_Sec_AM_Drawer();
@@ -402,13 +402,13 @@ void Mars_Secondary(void)
 			Mars_Sec_wipe_doMelt();
 			break;
 		case MARS_SECCMD_S_INIT_ROQ_DMA:
-			Mars_Sec_RoQ_InitSound(MARS_SYS_COMM6);
+			Mars_Sec_RoQ_InitSound(mars_sys_comm->comm6);
 			break;
 		default:
 			break;
 		}
 
-		MARS_SYS_COMM4 = MARS_SECCMD_NONE;
+		mars_sys_comm->comm4 = MARS_SECCMD_NONE;
 	}
 }
 
@@ -432,7 +432,7 @@ void C_Init (void)
 
 	/* set a two color palette */
 	Mars_FlipFrameBuffers(false);
-	palette = (short *)&MARS_CRAM;
+	palette = (short *)mars_cram;
 	for (i = 0; i < 256; i++)
 		palette[i] = 0;
 	palette[COLOR_WHITE] = 0x7fff;
@@ -906,7 +906,7 @@ int I_IsPAL(void) {
 
 pixel_t* I_OverwriteBuffer(void)
 {
-	return (pixel_t*)&MARS_OVERWRITE_IMG + 0x100;
+	return (pixel_t*)mars_overwrite_img + 0x100;
 }
 
 int I_ViewportYPos(void)
@@ -1090,12 +1090,12 @@ void I_Update(void)
 
 			if (!prevdebugmode)
 			{
-				SH2_WDT_WTCSR_TCNT = 0x5A00; /* WDT TCNT = 0 */
-				SH2_WDT_WTCSR_TCNT = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
+				sh2_wdt->wtcsr_tcnt = 0x5A00; /* WDT TCNT = 0 */
+				sh2_wdt->wtcsr_tcnt = 0xA53E; /* WDT TCSR = clr OVF, IT mode, timer on, clksel = Fs/4096 */
 			}
 			else if (!debugmode)
 			{
-				SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+				sh2_wdt->wtcsr_tcnt = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
 			}
 
 			clearscreen = 2;

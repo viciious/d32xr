@@ -36,8 +36,8 @@ static int wipe_getNextMeltCol(void)
 {
     int col;
     wipe_lockMelt();
-    col = MARS_SYS_COMM6;
-    MARS_SYS_COMM6 = col + 1;
+    col = mars_sys_comm->comm6;
+    mars_sys_comm->comm6 = col + 1;
     wipe_unlockMelt();
     return col;
 }

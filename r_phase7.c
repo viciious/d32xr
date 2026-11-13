@@ -50,7 +50,7 @@ void R_DrawPlanes(void) __attribute__((noinline));
 
 static atomic_flag pl_lock = ATOMIC_FLAG_INIT;
 #ifdef MARS
-#define pl_next MARS_SYS_COMM6
+#define pl_next mars_sys_comm->comm6
 #else
 static int pl_next = 0;
 #endif

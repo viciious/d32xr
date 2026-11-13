@@ -389,7 +389,7 @@ void R_SegCommands(void)
     uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
 #ifdef MARS
-    volatile int8_t *addedsegs = (volatile int8_t *)&MARS_SYS_COMM6;
+    volatile int8_t *addedsegs = (volatile int8_t *)&mars_sys_comm->comm6;
     volatile uint8_t *readysegs = (volatile uint8_t *)addedsegs + 1;
 #endif
 
