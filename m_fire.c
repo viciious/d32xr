@@ -160,7 +160,7 @@ void Mars_Sec_M_AnimateFire(void)
 	Mars_ClearCache();
 
 	start = I_GetTime();
-	while (MARS_SYS_COMM4 == MARS_SECCMD_M_ANIMATE_FIRE)
+	while (mars_sys_comm->comm4 == MARS_SECCMD_M_ANIMATE_FIRE)
 	{
 		int x, y;
 

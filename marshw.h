@@ -81,7 +81,7 @@ int Mars_GetWDTCount(void);
 
 uint16_t *Mars_FrameBufferLines(void);
 
-#define Mars_IsPAL() ((MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) == 0)
+#define Mars_IsPAL() ((mars_vdp->dispmode & MARS_NTSC_FORMAT) == 0)
 
 #define Mars_RefreshHZ() (mars_refresh_hz)
 

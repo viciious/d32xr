@@ -1206,9 +1206,9 @@ static void S_Sec_DMA1Handler(void)
 	}
 
 	// start DMA on buffer and fill the other one
-	SH2_DMA_SAR1 = (uintptr_t)snd_buffer[snd_bufidx];
-	SH2_DMA_TCR1 = MAX_SAMPLES; // number longs
-	SH2_DMA_CHCR1 = 0x18E5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
+	sh2_dma->sar1 = (uintptr_t)snd_buffer[snd_bufidx];
+	sh2_dma->tcr1 = MAX_SAMPLES; // number longs
+	sh2_dma->chcr1 = 0x18E5; // dest fixed, src incr, size long, ext req, dack mem to dev, dack hi, dack edge, dreq rising edge, cycle-steal, dual addr, intr enabled, clear TE, dma enabled
 
 	snd_bufidx ^= 1; // flip audio buffer
 
@@ -1460,11 +1460,11 @@ void Mars_Sec_InitSoundDMA(int initfull)
 	if (initfull)
 	{
 		// init DMA
-		SH2_DMA_SAR1 = 0;
-		SH2_DMA_DAR1 = (uint32_t)&MARS_PWM_STEREO; // storing a long here will set the left and right channels
-		SH2_DMA_TCR1 = 0;
-		SH2_DMA_CHCR1 = 0;
-		SH2_DMA_DRCR1 = 0;
+		sh2_dma->sar1 = 0;
+		sh2_dma->dar1 = (uint32_t)&mars_pwm->stereo; // storing a long here will set the left and right channels
+		sh2_dma->tcr1 = 0;
+		sh2_dma->chcr1 = 0;
+		sh2_dma_drcr->drcr1 = 0;
 
 		// init the sound hardware
 	 	Mars_InitPWM(SAMPLE_RATE, SAMPLE_MIN, SAMPLE_MAX);
@@ -1502,7 +1502,7 @@ static void S_Pri_CmdHandler(void)
 	((volatile short *)pcm_cachethru)[7] = 0;	/* make sure data array isn't being read */
 
 	// check comm0 for command
-	if (MARS_SYS_COMM0 == 0xFFFF)
+	if (mars_sys_comm->comm0 == -1)
 	{
 		/* stop pcm channel */
 		pcm_cachethru[2] = -1;
@@ -1510,19 +1510,19 @@ static void S_Pri_CmdHandler(void)
 	}
 	else
 	{
-		freq = (unsigned)MARS_SYS_COMM0;
+		freq = (unsigned)mars_sys_comm->comm0;
 
 		/* top 8 bits of COMM2 */
-		offs = ((unsigned)(MARS_SYS_COMM2 & 0x00FF) << 16);
+		offs = ((unsigned)(mars_sys_comm->comm2 & 0x00FF) << 16);
 		/* lower 8 bits of COMM2 */
-		len = ((unsigned)(MARS_SYS_COMM2 & 0xFF00) << 8);
+		len = ((unsigned)(mars_sys_comm->comm2 & 0xFF00) << 8);
 
 		/* handshake */
-		for (MARS_SYS_COMM0 = 0; MARS_SYS_COMM0 == 0; );
+		for (mars_sys_comm->comm0 = 0; mars_sys_comm->comm0 == 0; );
 
-		offs = offs | (unsigned)MARS_SYS_COMM2;
+		offs = offs | (unsigned)mars_sys_comm->comm2;
 		/* COMM0 has the LSB set to 1 */ 
-		len = len | ((unsigned)MARS_SYS_COMM0 >> 1);
+		len = len | ((unsigned)mars_sys_comm->comm0 >> 1);
 
 		/* limit offset and length to 1M since that's our block size */
 		offs &= 0xFFFFF;
