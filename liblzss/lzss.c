@@ -10,7 +10,7 @@
 static void lzss_copy(int8_t *dst, const int8_t *src, USHORT size) __attribute__((optimize("O2"))) __attribute__((noinline));
 #else
 #define SSHORT int
-#define USHORT int
+#define USHORT unsigned
 static void lzss_copy(int8_t *dst, const int8_t *src, USHORT size) __attribute__((optimize("Os"))) __attribute__((noinline));
 #endif
 
@@ -37,25 +37,117 @@ void lzss_setup(lzss_state_t* lzss, uint8_t* base, uint8_t* buf, uint32_t buf_si
 
 static void lzss_copy(int8_t *dst, const int8_t *src, USHORT size)
 {
-	if ( ((intptr_t)src & 1) == ((intptr_t)dst & 1) ) {
-		SSHORT r;
+	USHORT r, t;
+#ifdef MARS
+	USHORT dispatch, tmp;
+#endif
 
+	if ( size > 4 && ( ((intptr_t)src ^ (intptr_t)dst ) & 1) == 0 ) {
 		if ( ((intptr_t)src & 1) ) {
 			*dst++ = *src++;
 			size--;
 		}
 
-		for (r = size / 2; r > 0; r--) {
-			*((int16_t *)dst) = *((int16_t *)src);
-			dst += 2, src += 2;
+		r = size / 2;
+		t = (r + 3) >> 2;
+
+#ifdef MARS
+		dispatch = ((4 - (r & 3)) & 3) * 8;
+		__asm volatile(
+			"braf %[dispatch]\n\t"
+			"0:\n\t"
+			".align 2\n\t"
+
+			"mov.w @%[src],%[tmp]\n\t"
+			"add #2,%[src]\n\t"
+			"mov.w %[tmp],@%[dst]\n\t"
+			"add #2,%[dst]\n\t"
+
+			"mov.w @%[src],%[tmp]\n\t"
+			"add #2,%[src]\n\t"
+			"mov.w %[tmp],@%[dst]\n\t"
+			"add #2,%[dst]\n\t"
+
+			"mov.w @%[src],%[tmp]\n\t"
+			"add #2,%[src]\n\t"
+			"mov.w %[tmp],@%[dst]\n\t"
+			"add #2,%[dst]\n\t"
+
+			"mov.w @%[src],%[tmp]\n\t"
+			"add #2,%[src]\n\t"
+			"mov.w %[tmp],@%[dst]\n\t"
+			"dt %[t]\n\t"
+
+			"bf/s 0b\n\t"
+			"add #2,%[dst]\n\t"
+
+			: [dst] "+&r"(dst), [src] "+&r"(src), [t] "+&r"(t), [tmp] "=&r"(tmp)
+			: [dispatch] "r"(dispatch)
+			: "memory"
+		);
+#else
+		switch (r & 3)
+		{
+		case 0: do { *((int16_t *)dst) = *((int16_t *)src), dst += 2, src += 2;
+		case 3:      *((int16_t *)dst) = *((int16_t *)src), dst += 2, src += 2;
+		case 2:      *((int16_t *)dst) = *((int16_t *)src), dst += 2, src += 2;
+		case 1:      *((int16_t *)dst) = *((int16_t *)src), dst += 2, src += 2;
+		} while (--t);
+		}
+#endif
+
+		if (size & 1) {
+			*dst = *src;
 		}
 
-		size = size & 1;
+		return;
 	}
 
-	while (size-- > 0) {
-		*dst++ = *src++;
+	r = size;
+	t = (r + 3) >> 2;
+#ifdef MARS
+	dispatch = ((4 - (size & 3)) & 3) * 8;
+	__asm volatile(
+		"braf %[dispatch]\n\t"
+		"0:\n\t"
+		".align 2\n\t"
+		"mov.b @%[src],%[tmp]\n\t"
+		"add #1,%[src]\n\t"
+		"mov.b %[tmp],@%[dst]\n\t"
+		"add #1,%[dst]\n\t"
+
+		"mov.b @%[src],%[tmp]\n\t"
+		"add #1,%[src]\n\t"
+		"mov.b %[tmp],@%[dst]\n\t"
+		"add #1,%[dst]\n\t"
+
+		"mov.b @%[src],%[tmp]\n\t"
+		"add #1,%[src]\n\t"
+		"mov.b %[tmp],@%[dst]\n\t"
+		"add #1,%[dst]\n\t"
+
+		"mov.b @%[src],%[tmp]\n\t"
+		"add #1,%[src]\n\t"
+		"mov.b %[tmp],@%[dst]\n\t"
+		"dt %[t]\n\t"
+
+		"bf/s 0b\n\t"
+		"add #1,%[dst]\n\t"
+
+		: [dst] "+&r"(dst), [src] "+&r"(src), [t] "+&r"(t),	[tmp] "=&r"(tmp)
+		: [dispatch] "r"(dispatch)
+		: "memory"
+	);
+#else
+	switch (size & 3)
+	{
+	case 0: do { *dst++ = *src++;
+	case 3:      *dst++ = *src++;
+	case 2:      *dst++ = *src++;
+	case 1:      *dst++ = *src++;
+	} while (--r);
 	}
+#endif
 }
 
 int lzss_read(lzss_state_t* lzss, uint16_t chunk)
