@@ -575,23 +575,23 @@ post_draw:
         if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING))
         {
             unsigned w = segl->stop - segl->start + 1;
-            unsigned short *restrict src = segl->clipbounds + segl->start, *restrict dst = clipbounds + segl->start;
+            short *restrict src = (short *)segl->clipbounds + segl->start;
+            short *restrict dst = (short *)clipbounds + segl->start;
 
             if ((actionbits & (AC_NEWFLOOR|AC_NEWCEILING)) == (AC_NEWFLOOR|AC_NEWCEILING)) {
-                --src;
                 do {
-                    *dst++ = *++src;
-                } while (--w > 0);
+                    *dst = *src, src++, dst++;
+                } while (--w);
             }
             else {
-                int8_t *psrc = (int8_t *)src;
-                int8_t *pdst = (int8_t *)dst;
+                int8_t *restrict psrc = (int8_t *)src;
+                int8_t *restrict pdst = (int8_t *)dst;
                 if (actionbits & AC_NEWFLOOR) {
                     psrc++, pdst++;
                 }                 
                 do {
                     *pdst = *psrc, psrc += 2, pdst += 2;
-                } while (--w > 0);
+                } while (--w);
             }
         }
     }
