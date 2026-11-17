@@ -84,7 +84,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       column_t *column;
       unsigned columnofs = BIGSHORT(patch->columnofs[colnum]);
       byte *columnptr = ((byte *)patch + (columnofs & ~COLUMN_INLINE));
-      fixed_t sprtop, iscale;
+      fixed_t sprtop, iscale, fracbase;
 
       sprtop = FixedMul(seg->m_texturemid<<HEIGHTINTBITS, spryscale);
       sprtop = centerYFrac - sprtop;
@@ -101,6 +101,8 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 
       if (*columnptr == 0xff)
          continue;
+
+      fracbase = FixedMul(-sprtop, iscale);
 
       src = columnptr + 2;
       column = (column_t *)columnptr;
@@ -136,20 +138,32 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          bottom -= 1;
          bottom >>= FRACBITS;
 
+         // posts go from top to bottom: once a post starts below the
+         // opening, so do all the posts that follow it
+         if (top > bottomclip)
+            break;
+
          // clip to bottom
          if(bottom > bottomclip)
             bottom = bottomclip;
 
-         frac = 0;
-
          // clip to top
          if(topclip > top)
-         {
-            frac += (topclip - top) * iscale;
             top = topclip;
-         }
 
-         drawcol(x, top, bottom, light, frac, iscale, src, 128);
+         // nothing left of the post after clipping
+         if (top <= bottom)
+         {
+            // The texture position is measured from the top of the column, not
+            // from the post's first screen row, so that posts that touch are 
+            // drawn exactly like a single post
+            // fracbase + top * iscale is FixedMul((top << FRACBITS) - sprtop, iscale)
+            frac = fracbase + top * iscale - (column->topdelta << FRACBITS);
+            if (frac < 0)
+               frac = 0;
+
+            drawcol(x, top, bottom, light, frac, iscale, src, 128);
+         }
 
          if (column->length < 0)
             break;
@@ -161,7 +175,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf)
 {
    patch_t *patch;
-   fixed_t  iscale, xfrac, spryscale, sprtop, fracstep;
+   fixed_t  iscale, xfrac, spryscale, sprtop, fracstep, fracbase;
    int light, x, stopx;
    drawcol_t dcol;
 #ifdef MARS
@@ -183,6 +197,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
    sprtop = FixedMul(vis->texturemid<<HEIGHTINTBITS, spryscale);
    sprtop = centerYFrac - sprtop;
+   fracbase = FixedMul(-sprtop, iscale);
 
    // blitter iinc
    light    = vis->colormap < 0 ? -vis->colormap : vis->colormap;
@@ -259,21 +274,33 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
          bottom -= 1;
          bottom >>= FRACBITS;
 
+         // posts go from top to bottom: once a post starts below the
+         // opening, so do all the posts that follow it
+         if (top > bottomclip)
+            break;
+
          // clip to bottom
          if(bottom > bottomclip)
             bottom = bottomclip;
 
-         frac = 0;
-
          // clip to top
          if(topclip > top)
-         {
-            frac += (topclip - top) * iscale;
             top = topclip;
-         }
 
-         // CALICO: invoke column drawer
-         dcol(x, top, bottom, light, frac, iscale, src, 128);
+         // nothing left of the post after clipping
+         if (top <= bottom)
+         {
+            // The texture position is measured from the top of the column, not
+            // from the post's first screen row, so that posts that touch are 
+            // drawn exactly like a single post
+            // fracbase + top * iscale is FixedMul((top << FRACBITS) - sprtop, iscale)
+            frac = fracbase + top * iscale - (column->topdelta << FRACBITS);
+            if (frac < 0)
+               frac = 0;
+
+            // CALICO: invoke column drawer
+            dcol(x, top, bottom, light, frac, iscale, src, 128);
+         }
 
          if (column->length < 0)
             break;
