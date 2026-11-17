@@ -160,8 +160,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
 
     fixed_t scalefrac = segl->scalefrac;
     const fixed_t scalestep = segl->scalestep;
-
-    const unsigned centerangle = segl->centerangle;
+    const unsigned centerangle = segl->centerangle >> FRACBITS;
     fixed_t offset = segl->offset;
     fixed_t distance = segl->distance;
 
@@ -227,7 +226,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
         }
 
         // calculate texture offset
-        r = finetangent((centerangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOFINESHIFT);
+        r = finetangent((uint16_t)(centerangle + xtoviewangle[x]) >> (ANGLETOFINESHIFT-FRACBITS));
         r = FixedMul(distance, r);
 
         colnum = ((unsigned)(offset - r) >> FRACBITS) & 0xff;
@@ -276,8 +275,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     const int stop = segl->stop;
     const int pitch = lseg->skypitch;
     int x;
-
-    const angle_t viewangle = vd->viewangle;
+    const unsigned viewangle = vd->viewangle >> FRACBITS;
 
     //
     // sky mapping
@@ -310,7 +308,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
         {
             unsigned colnum;
 
-            colnum = ((viewangle + (xtoviewangle[x]<<FRACBITS)) >> ANGLETOSKYSHIFT) & 0xff;
+            colnum = ((uint16_t)(viewangle + xtoviewangle[x]) >> (ANGLETOSKYSHIFT-FRACBITS)) & 0xff;
 
 #ifdef MARS
             inpixel_t* data = skytexturep + colnum * pitch;
