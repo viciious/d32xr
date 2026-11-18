@@ -980,6 +980,9 @@ static int A_RaiseStateForMobjType(int mtype)
 		case MT_PAIN:
 			raisestate = S_PAIN_RAISE1;
 			break;
+		case MT_WOLFSS:
+			raisestate = S_SSWV_RAISE1;
+			break;
 		default:
 			break;
 	}

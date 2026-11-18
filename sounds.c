@@ -120,7 +120,9 @@ const char * const S_sfxnames[NUMSFX] =
   "ppoact",
   "pesit",
   "pepain",
-  "pedth"
+  "pedth",
+  "sssit",
+  "ssdth"
 };
 
 #ifdef MARS
@@ -238,6 +240,8 @@ sfxinfo_t S_sfx[NUMSFX] =
   SOUND( false, ppoact, 70 ),
   SOUND( false, pesit, 90 ),
   SOUND( false, pepain, 96 ),
-  SOUND( false, pedth, 32 )
+  SOUND( false, pedth, 32 ),
+  SOUND( false, sssit, 70 ),
+  SOUND( false, ssdth, 70 )  
 }; 
  
