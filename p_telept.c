@@ -80,7 +80,7 @@ int	EV_Teleport( line_t *line,mobj_t *thing )
 			thing->flags |= MF_TELEPORT;
 			if (thing->type == MT_PLAYER)
 				P_Telefrag (thing, m->x, m->y);
-			flag = P_TryMove (&tm, thing, m->x, m->y);
+			flag = P_TryMove2 (&tm, thing, m->x, m->y, m->subsector);
 			thing->flags &= ~MF_TELEPORT;
 			if (!flag)
 				return 0;	/* move is blocked */

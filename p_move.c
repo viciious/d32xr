@@ -33,10 +33,13 @@ static boolean PIT_CheckThing(mobj_t* thing, pmovework_t *w) ATTR_DATA_CACHE_ALI
 static boolean PIT_CheckLine(line_t* ld, pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
 static boolean PIT_CheckPosition(pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
 
-static boolean P_TryMove2(pmovework_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
+static void PM_ApplySector(pmovework_t *w) ATTR_DATA_CACHE_ALIGN;
+static boolean PM_TryMove(pmovework_t *tm, boolean checkposonly) ATTR_DATA_CACHE_ALIGN;
 
 boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+boolean P_CheckPosition2 (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, subsector_t *ss) ATTR_DATA_CACHE_ALIGN;
 boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
+boolean P_TryMove2 (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, subsector_t *ss) ATTR_DATA_CACHE_ALIGN;
 
 //
 // Check a single mobj in one of the contacted blockmap cells.
@@ -173,6 +176,40 @@ boolean PIT_CheckLine(line_t *ld, pmovework_t *w)
 }
 
 //
+// Fold the floor/ceiling of the destination subsector's sector into the
+// heights gathered from the contacted lines. The subsector is looked up
+// here, after the thing and line passes, so that blocked moves can skip
+// the BSP walk. w->newsubsec may be preset by the caller to skip it too.
+//
+static void PM_ApplySector(pmovework_t *w)
+{
+   subsector_t *newsubsec = w->newsubsec;
+   sector_t *newsec;
+   fixed_t floorh, ceilh;
+
+   if (!newsubsec)
+   {
+      newsubsec = R_PointInSubsector(w->tmx, w->tmy);
+      w->newsubsec = newsubsec;
+   }
+   newsec = SSEC_SECTOR(newsubsec);
+
+   floorh = newsec->floorheight;
+   ceilh = newsec->ceilingheight;
+
+   if (floorh > w->tmfloorz)
+      w->tmfloorz = floorh;
+   if (floorh < w->tmdropoffz)
+      w->tmdropoffz = floorh;
+   if (ceilh <= w->tmceilingz)
+   {
+      // no contacted line is lower than the sector ceiling
+      w->tmceilingz = ceilh;
+      w->ceilingline = NULL;
+   }
+}
+
+//
 // This is purely informative, nothing is modified (except things picked up)
 //
 boolean PIT_CheckPosition(pmovework_t *w)
@@ -181,29 +218,25 @@ boolean PIT_CheckPosition(pmovework_t *w)
    mobj_t *tmthing = w->tmthing;
    int tmflags = tmthing->flags;
    VINT *lvalidcount;
-   subsector_t *newsubsec;
-   sector_t *newsec;
-
-   newsubsec = R_PointInSubsector(w->tmx, w->tmy);
-   newsec = SSEC_SECTOR(newsubsec);
-   w->newsubsec = newsubsec;
 
    w->tmbbox[BOXTOP   ] = w->tmy + (tmthing->radius*FRACUNIT);
    w->tmbbox[BOXBOTTOM] = w->tmy - (tmthing->radius*FRACUNIT);
    w->tmbbox[BOXRIGHT ] = w->tmx + (tmthing->radius*FRACUNIT);
    w->tmbbox[BOXLEFT  ] = w->tmx - (tmthing->radius*FRACUNIT);
 
-   // the base floor/ceiling is from the subsector that contains the point.
-   // Any contacted lines the step closer together will adjust them.
-   w->tmfloorz   = w->tmdropoffz = newsec->floorheight;
-   w->tmceilingz = newsec->ceilingheight;
+   // Contacted lines step these closer together. The base floor/ceiling
+   // from the subsector that contains the point is applied afterwards by
+   // PM_ApplySector (min/max are order-independent).
+   w->tmfloorz   = D_MININT;
+   w->tmdropoffz = D_MAXINT;
+   w->tmceilingz = D_MAXINT;
 
    w->numspechit = 0;
    w->hitthing = NULL;
    w->ceilingline = NULL;
 
    if(tmflags & MF_NOCLIP) // thing has no clipping?
-      return true;
+      goto done;
 
    lvalidcount = validcount;
    *lvalidcount = *lvalidcount + 1;
@@ -222,9 +255,9 @@ boolean PIT_CheckPosition(pmovework_t *w)
 	if(yl < 0)
 		yl = 0;
 	if(yh < 0)
-		return true;
+		goto done;
 	if(xh < 0)
-		return true;
+		goto done;
 
    xl = (unsigned)xl >> MAPBLOCKSHIFT;
    xh = (unsigned)xh >> MAPBLOCKSHIFT;
@@ -250,7 +283,7 @@ boolean PIT_CheckPosition(pmovework_t *w)
       for(by = yl; by <= yh; by++)
       {
          if(!P_BlockThingsIterator(bx, by, (blockthingsiter_t)PIT_CheckThing, w))
-            return false;
+            goto blocked;
       }
    }
 
@@ -265,9 +298,9 @@ boolean PIT_CheckPosition(pmovework_t *w)
    if(yl < 0)
       yl = 0;
 	if(yh < 0)
-		return true;
+		goto done;
 	if(xh < 0)
-		return true;
+		goto done;
 
    xl = (unsigned)xl >> MAPBLOCKSHIFT;
    xh = (unsigned)xh >> MAPBLOCKSHIFT;
@@ -284,22 +317,33 @@ boolean PIT_CheckPosition(pmovework_t *w)
       for(by = yl; by <= yh; by++)
       {
          if(!P_BlockLinesIterator(bx, by, (blocklinesiter_t)PIT_CheckLine, w))
-            return false;
+            goto blocked;
       }
    }
 
+done:
+   PM_ApplySector(w);
    return true;
+
+blocked:
+   // A blocked move only needs the sector heights when the caller reads
+   // them anyway (P_ThingHeightClip), or for the missile sky check on
+   // ceilingline. Everyone else skips the BSP walk.
+   if (w->checkposonly || ((tmflags & MF_MISSILE) && w->ceilingline))
+      PM_ApplySector(w);
+   return false;
 }
 
 //
 // Attempt to move to a new position, crossing special lines unless MF_TELEPORT
 // is set.
 //
-static boolean P_TryMove2(pmovework_t *w, boolean checkposonly)
+static boolean PM_TryMove(pmovework_t *w, boolean checkposonly)
 {
    boolean trymove2; // result from PIT_CheckPosition
    mobj_t *tmthing = w->tmthing;
 
+   w->checkposonly = checkposonly;
    trymove2 = PIT_CheckPosition(w);
    w->floatok = false;
 
@@ -377,7 +421,12 @@ movething
 ==================
 */
 
-boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
+//
+// The *2 variants take the subsector containing (x, y) when the caller
+// already knows it (e.g. the thing's current position), skipping the BSP
+// walk. Pass NULL to look it up.
+//
+boolean P_CheckPosition2 (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, subsector_t *ss)
 {
    pmovework_t tm2;
    if (tm == NULL)
@@ -385,18 +434,30 @@ boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 	tm->tmthing = thing;
 	tm->tmx = x;
 	tm->tmy = y;
-	return P_TryMove2 (tm, true);
+	tm->newsubsec = ss;
+	return PM_TryMove (tm, true);
+}
+
+boolean P_TryMove2 (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, subsector_t *ss)
+{
+   pmovework_t tm2;
+   if (tm == NULL)
+      tm = &tm2;
+	tm->tmthing = thing;
+	tm->tmx = x;
+	tm->tmy = y;
+	tm->newsubsec = ss;
+	return PM_TryMove (tm, false);
+}
+
+boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
+{
+	return P_CheckPosition2 (tm, thing, x, y, NULL);
 }
 
 boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y)
 {
-   pmovework_t tm2;
-   if (tm == NULL)
-      tm = &tm2;
-	tm->tmthing = thing;
-	tm->tmx = x;
-	tm->tmy = y;
-	return P_TryMove2 (tm, false);
+	return P_TryMove2 (tm, thing, x, y, NULL);
 }
 
 // EOF

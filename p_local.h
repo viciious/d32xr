@@ -199,8 +199,8 @@ typedef struct
 	int    	numspechit;
  	line_t	*spechit[MAXSPECIALCROSS];
 	
-	fixed_t tmfloorz;   // current floor z for P_TryMove2
-	fixed_t tmceilingz; // current ceiling z for P_TryMove2
+	fixed_t tmfloorz;   // current floor z for PM_TryMove
+	fixed_t tmceilingz; // current ceiling z for PM_TryMove
 	fixed_t tmdropoffz; // lowest point contacted
 
 	boolean	floatok;	/* if true, move would be ok if */
@@ -347,6 +347,9 @@ void P_RespawnSpecials (void);
 
 boolean P_CheckPosition (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
 boolean P_TryMove (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y);
+// same as above, with ss = the subsector containing (x, y) if already known, or NULL
+boolean P_CheckPosition2 (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, subsector_t *ss);
+boolean P_TryMove2 (pmovework_t *tm, mobj_t *thing, fixed_t x, fixed_t y, subsector_t *ss);
 void P_MoveCrossSpecials(mobj_t *tmthing, int numspechit, line_t **spechit, fixed_t oldx, fixed_t oldy);
 
 typedef struct

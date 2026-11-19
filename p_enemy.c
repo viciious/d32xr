@@ -1020,7 +1020,7 @@ static boolean PIT_VileCheck (mobj_t*	thing, vilecheck_t *vc)
 	vc->corpseraisestate = raisestate;
     thing->momx = thing->momy = 0;
     thing->height <<= 2;
-    check = P_CheckPosition (&tm, thing, thing->x, thing->y);
+    check = P_CheckPosition2 (&tm, thing, thing->x, thing->y, thing->subsector);
     thing->height >>= 2;
 
     if (!check)
@@ -1403,7 +1403,7 @@ A_PainShootSkull
 	newmobj = P_SpawnMobj(x, y, z, MT_SKULL);
 
 	// Check for movements.
-	if (!P_TryMove(&tm, newmobj, newmobj->x, newmobj->y))
+	if (!P_TryMove2(&tm, newmobj, newmobj->x, newmobj->y, newmobj->subsector))
 	{
 		// kill it immediately
 		P_DamageMobj(newmobj, actor, actor, 10000);

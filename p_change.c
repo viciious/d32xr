@@ -49,7 +49,7 @@ boolean P_ThingHeightClip (mobj_t *thing)
 	
 	onfloor = (thing->z == thing->floorz);
 	
-	P_CheckPosition (&tm, thing, thing->x, thing->y);	
+	P_CheckPosition2 (&tm, thing, thing->x, thing->y, thing->subsector);	
 	/* what about stranding a monster partially off an edge? */
 	
 	thing->floorz = tm.tmfloorz;
