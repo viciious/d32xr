@@ -44,7 +44,6 @@ typedef struct
     fixed_t t2x, t2y;
 } sightWork_t;
 
-static fixed_t PS_InterceptVector2(i16divline_t* v2, i16divline_t* v1) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_RejectCheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
@@ -61,56 +60,32 @@ boolean P_CheckSight(mobj_t *t1, mobj_t *t2) ATTR_DATA_CACHE_ALIGN;
 // Returns side 0 (front), 1 (back)
 #define PS_DivlineSide(xx,yy,n) (((n)->dy * ((xx) - (n)->x)) <= (((yy) - (n)->y) * (n)->dx))
 
-//
-// Returns the fractional intercept point
-// along the first divline.
-// This is only called by the addthings and addlines traversers.
-//
-static fixed_t PS_InterceptVector2(i16divline_t *v2, i16divline_t *v1)
+// Returns (h << FRACBITS) / frac, where frac = (num << FRACBITS) / den is the
+// fractional intercept point along strace. The two shifts cancel, so this is
+// h * den / num: a single 64/32 divide instead of computing frac first.
+static inline fixed_t PS_SlopeDiv(fixed_t h, int32_t den, int32_t num)
 {
-   fixed_t frac, num, den;
- #ifdef MARS
-   fixed_t temp;
-
-   den =  (int32_t)v1->dy * v2->dx;
-   den -= (int32_t)v1->dx * v2->dy;
-   if (den == 0)
-     return 0;
-
-   num =  (int32_t)(v1->x - v2->x) * v1->dy;
-   num -= (int32_t)(v1->y - v2->y) * v1->dx;
-
+#ifdef MARS
+   int32_t lo, divunit;
+   fixed_t slope;
    __asm volatile (
-      "mov #-128, %1\n\t"
-      "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
-      "mov.l %3, @(0,%1) /* set 32-bit divisor */ \n\t"
-      "swap.w %2, %0\n\t"
-      "exts.w %0, %0\n\t"
-      "mov.l %0, @(16,%1)\n\t"
-      "shll16 %2\n\t"
-      "mov.l %2, @(20,%1) /* start divide */\n\t"
-      "mov.l @(20,%1), %0 /* get 32-bit quotient */ \n\t"
-      : "=&r" (frac), "=&r" (temp)
-      : "r" (num), "r" (den)
+      "dmuls.l %3, %4\n\t"
+      "mov #-128, %2\n\t"
+      "add %2, %2 /* %2 is now 0xFFFFFF00 */ \n\t"
+      "sts mach, %0\n\t"
+      "sts macl, %1\n\t"
+      "mov.l %5, @(0,%2) /* set 32-bit divisor */ \n\t"
+      "mov.l %0, @(16,%2) /* set high bits of the 64-bit dividend */ \n\t"
+      "mov.l %1, @(20,%2) /* set low bits of the 64-bit dividend, start divide */ \n\t"
+      "mov.l @(20,%2), %0 /* get 32-bit quotient */ \n\t"
+      : "=&r" (slope), "=&r" (lo), "=&r" (divunit)
+      : "r" (h), "r" (den), "r" (num)
+      : "mach", "macl"
    );
+   return slope;
 #else
-   fixed_t temp;
-
-   den = FixedMul(v1->dy<<8,v2->dx<<8);
-   temp = FixedMul(v1->dx<<8, v2->dy<<8);
-
-   den = den - temp;
-   if(den == 0)
-      return 0;
-
-   temp = FixedMul((v2->y - v1->y)< 8, v1->dx<<8);
-   num = FixedMul((v1->x - v2->x)<<8, v1->dy<<8);
-
-   num  = num + temp;
-   frac = FixedDiv(num, den);
+   return FixedDiv(h, FixedDiv(num, den));
 #endif
-
-   return frac;
 }
 
 /*
@@ -136,8 +111,8 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
    fixed_t      openbottom;
    i16divline_t divl;
    mapvertex_t  *v1, *v2;
-   fixed_t      frac;
    fixed_t      slope;
+   fixed_t      inum, iden;
    i16divline_t *strace = &sw->strace;
    int16_t      t2x = sw->t2x, t2y = sw->t2y;
    fixed_t      sightzstart = sw->sightzstart;
@@ -214,18 +189,20 @@ static boolean PS_CrossSubsector(sightWork_t *sw, int num)
       if(openbottom >= opentop)
          return false; // stop
 
-      frac = PS_InterceptVector2(strace, &divl);
+      // intercept point along strace is num / den
+      iden = (fixed_t)divl.dy * strace->dx - (fixed_t)divl.dx * strace->dy;
+      inum = (fixed_t)(divl.x - strace->x) * divl.dy - (fixed_t)(divl.y - strace->y) * divl.dx;
 
       if(front->floorheight != back->floorheight)
       {
-         slope = FixedDiv(openbottom - sightzstart , frac);
+         slope = PS_SlopeDiv(openbottom - sightzstart, iden, inum);
          if(slope > sw->bottomslope)
              sw->bottomslope = slope;
       }
 
       if(front->ceilingheight != back->ceilingheight)
       {
-         slope = FixedDiv (opentop - sightzstart , frac);
+         slope = PS_SlopeDiv(opentop - sightzstart, iden, inum);
          if(slope < sw->topslope)
              sw->topslope = slope;
       }
@@ -297,7 +274,7 @@ static boolean PS_RejectCheckSight(mobj_t *t1, mobj_t *t2)
        s1 = t;
    }
    pnum = s1*numsectors + s2;
-   pnum -= (s1 * (s1 + 1) / 2);
+   pnum -= (unsigned)(s1 * (s1 + 1)) >> 1; // s1 >= 0: plain shift, no signed-divide fixup
    bytenum = pnum >> 3;
 
 #ifdef MARS
@@ -436,13 +413,30 @@ done:
 
 #else
 
+// the last mobj handed out, or NULL once the list is exhausted
+static mobj_t *next_sight;
+
 static mobj_t *P_GetSightMobj(int c)
 {
-   for ( ; mobj != (void*)&mobjhead; mobj = mobj->next)
+   mobj_t *mobj = next_sight;
+
+   if (mobj == NULL)
+      return NULL;
+
+   while (1)
    {
+      mobj = SPTR_TO_NNLPTR(mobj->next);
+      if (mobj == (void*)&mobjhead)
+      {
+         mobj = NULL;
+         break;
+      }
+
       if (P_MobjCanSightCheck(mobj))
          break;
    }
+
+   next_sight = mobj;
    return mobj;
 }
 
@@ -531,6 +525,8 @@ void P_CheckSights (void)
 
 	Mars_P_EndCheckSights();
 #else
+   next_sight = (void*)&mobjhead;
+
 	P_CheckSights2();
 #endif
 }
