@@ -53,6 +53,10 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
    do {
       int light          = maskedcol[x];
       int colnum         = maskedcol[x] & widthmask;
+      fixed_t scale      = scalefrac;
+#ifdef MARS
+      int32_t t, divunit;
+#endif
 
       spryscale = scalefrac;
       scalefrac += fracstep;  
@@ -64,18 +68,15 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       maskedcol[x] = OPENMARK;
 
 #ifdef MARS
-        int32_t t, divunit;
-        __asm volatile (
-           "mov #-128, %1\n\t"
-           "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
-           "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
-           "mov #0, %0\n\t"
-           "mov.l %0, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
-           "mov #-1, %0\n\t"
-           "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-           : "=&r" (t), "=&r"(divunit) : "r" (scalefrac));
-#else
-      fixed_t scale = scalefrac;
+      __asm volatile (
+         "mov #-128, %1\n\t"
+         "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
+         "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
+         "mov #0, %0\n\t"
+         "mov.l %0, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
+         "mov #-1, %0\n\t"
+         "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+         : "=&r" (t), "=&r"(divunit) : "r" (scale));
 #endif
 
       int topclip     = (spropening[x] >> 8);
@@ -99,7 +100,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
          : "=&r" (iscale) : "r"(sprtop), "r"(topclip), "r"(bottomclip));
 #else
-      iscale = 0xffffffffu / scalefrac;
+      iscale = 0xffffffffu / scale;
 #endif
 
       fracbase = FixedMul(-sprtop, iscale);
