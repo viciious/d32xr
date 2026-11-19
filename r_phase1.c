@@ -10,13 +10,12 @@
 #include "mars.h"
 #endif
 
-typedef struct
+// may_alias: entries are moved around as ints
+typedef struct __attribute__((aligned(4), may_alias))
 {
    VINT first;
    VINT last;
-} cliprange_t
-__attribute__((aligned(4)))
-;
+} cliprange_t;
 
 #define MAXSEGS 32
 
@@ -470,7 +469,7 @@ static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boo
                 next = rbsp->newend;
                 ++rbsp->newend;
 
-               if (next != start)
+               // start is never past the right sentinel, so next != start
                {
                   int *s = (int *)start;
                   int n = *s++;
@@ -532,9 +531,11 @@ crunch:
         if (next == start) // post just extended past the bottom of one post
             return;
 
-        if (next != rbsp->newend)
+        // move next+1..newend-1 down to start+1
+        if (++next != rbsp->newend)
         {
             int cnt = rbsp->newend - next;
+            next--;
             do
             {
                start++, next++;
