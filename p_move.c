@@ -238,10 +238,10 @@ boolean PIT_CheckPosition(pmovework_t *w)
 
    if (blocklinksadjust)
    {
-      xl /= 2;
-      xh /= 2;
-      yl /= 2;
-      yh /= 2;
+      xl >>= 1;
+      xh >>= 1;
+      yl >>= 1;
+      yh >>= 1;
    }
 
    // check things
