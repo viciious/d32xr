@@ -11,7 +11,8 @@
 
 #define LIGHTCOEF (0x7ffffu << SLOPEBITS)
 #define MIPSCALE (1<<24)
-#define FLATSIZE 64
+#define FLATBITS 6
+#define FLATSIZE (1<<FLATBITS)
 
 struct localplane_s;
 
@@ -64,17 +65,11 @@ static int pl_next = 0;
 //
 static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 {
-    int remaining;
     fixed_t distance;
     fixed_t xfrac, yfrac, xstep, ystep;
     int light;
     unsigned scale;
     unsigned miplevel, mipsize;
-
-    remaining = x2 - x + 1;
-
-    if (remaining <= 0)
-        return; // nothing to draw (shouldn't happen)
 
     distance = FixedMul(lpl->height, yslope[y]);
 
@@ -104,9 +99,11 @@ static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
 #endif
 
     xfrac = lpl->x + FixedMul(distance, lpl->cols[x*2+0] << PLANECOLSHIFT);
-    yfrac = lpl->y - FixedMul(distance, lpl->cols[x*2+1] << PLANECOLSHIFT);
 #ifdef MARS
-    yfrac *= FLATSIZE;
+    // lpl->y is premultiplied by FLATSIZE
+    yfrac = lpl->y - FixedMul(distance, lpl->cols[x*2+1] << (PLANECOLSHIFT+FLATBITS));
+#else
+    yfrac = lpl->y - FixedMul(distance, lpl->cols[x*2+1] << PLANECOLSHIFT);
 #endif
 
 #if MIPLEVELS > 1
@@ -336,6 +333,7 @@ static void R_DrawPlanes2(void)
         lpl.baseyscale = -baseyscale;
 
 #ifdef MARS
+        lpl.y *= FLATSIZE;
         lpl.baseyscale *= FLATSIZE;
 #endif
 
