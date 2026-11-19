@@ -58,6 +58,7 @@ static int16_t snd_samples_rem = 0;
 static int16_t snd_lr[2];
 static atomic_flag snd_lock = ATOMIC_FLAG_INIT;
 static uint32_t snd_samples_count = 0;
+static const int16_t *snd_sqr; // DPCM deltas indexed by signed byte, set up by Mars_PlayRoQ
 
 static marsrbuf_t *vchunks;
 
@@ -68,6 +69,11 @@ static marsrbuf_t *vchunks;
 
 ===============================================================================
 */
+
+// GCC turns *p++ into add/mov/add/mov @(disp) sequences; use post-increment loads
+// and store + add directly
+#define roq_ldsb_inc(p, v) __asm volatile("mov.b @%1+,%0" : "=r"(v), "+r"(p) : : "memory")
+#define roq_stw_inc(p, v) __asm volatile("mov.w %1,@%0\n\tadd #2,%0" : "+r"(p) : "r"(v) : "memory")
 
 static void roq_snddma1_handler(void) RoQ_ATTR_SDRAM;
 
@@ -90,6 +96,7 @@ static void roq_snddma1_load_samples(void)
     int num_samples;
     uint8_t *buf_start;
     uint16_t *s = (uint16_t *)snd_samples[snd_flip];
+    const int16_t *sqr = snd_sqr;
 
     for (i = 0; i < RoQ_MAX_SAMPLES; )
     {
@@ -166,33 +173,16 @@ static void roq_snddma1_load_samples(void)
         if (snd_channels == 1)
         {
             int l_newval = (uint16_t)snd_lr[0];
-            int c_hi = 0;
-            __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
 
             for (j = 0; j < num_samples; j++)
             {
                 int v;
 
-                v = *b & 127;
-#if 0
-                // gcc uses a mul.l here, which has a slightly higher latency cycles value
-                v *= v;
-                if (*b++ & 128) v = -v;
-#else
-                __asm volatile(
-                    "mulu.w %0,%0\n\t"
-                    "cmp/pz %1\n\t"
-                    "bt/s 1f\n\t"
-                    "sts macl,%0\n\t"
-                    "neg %0,%0\n\t"
-                    "1:\n\t"
-                     : "+r"(v) : "r"(*b++));
-#endif
-                l_newval += v;
-                if (l_newval & c_hi) l_newval = c_hi-1;
-                else if (l_newval < 0) l_newval = 0;
-
-                *s++ = RoQ_SAMPLE_MIN + ((unsigned)l_newval >> 6);
+                roq_ldsb_inc(b, v);
+                l_newval += sqr[v];
+                if ((unsigned)l_newval > 0xffff)
+                    l_newval = l_newval < 0 ? 0 : 0xffff;
+                roq_stw_inc(s, RoQ_SAMPLE_MIN + ((unsigned)l_newval >> 6));
             }
 
             snd_lr[0] = l_newval;
@@ -201,54 +191,22 @@ static void roq_snddma1_load_samples(void)
         {
             int l_newval = (uint16_t)snd_lr[0];
             int r_newval = (uint16_t)snd_lr[1];
-            int c_hi = 0;
-            __asm volatile("mov #1, %0\n\tshll16 %0\n\t" : "=&r"(c_hi) );
 
             for (j = 0; j < num_samples; j++)
             {
                 int v;
 
-                v = *b & 127;
-#if 0
-                v *= v;
-                if (*b++ & 128) v = -v;
-#else
-                __asm volatile(
-                    "mulu.w %0,%0\n\t"
-                    "cmp/pz %1\n\t"
-                    "bt/s 1f\n\t"
-                    "sts macl,%0\n\t"
-                    "neg %0,%0\n\t"
-                    "1:\n\t"
-                     : "+r"(v) : "r"(*b++));
-#endif
+                roq_ldsb_inc(b, v);
+                l_newval += sqr[v];
+                if ((unsigned)l_newval > 0xffff)
+                    l_newval = l_newval < 0 ? 0 : 0xffff;
+                roq_stw_inc(s, RoQ_SAMPLE_MIN + ((unsigned)l_newval >> 6));
 
-                l_newval += v;
-                if (l_newval & c_hi) l_newval = c_hi-1;
-                else if (l_newval < 0) l_newval = 0;
-
-                *s++ = RoQ_SAMPLE_MIN + ((unsigned)l_newval >> 6);
-
-                v = *b & 127;
-#if 0
-                v *= v;
-                if (*b++ & 128) v = -v;
-#else
-                __asm volatile(
-                    "mulu.w %0,%0\n\t"
-                    "cmp/pz %1\n\t"
-                    "bt/s 1f\n\t"
-                    "sts macl,%0\n\t"
-                    "neg %0,%0\n\t"
-                    "1:\n\t"
-                     : "+r"(v) : "r"(*b++));
-#endif
-
-                r_newval += v;
-                if (r_newval & c_hi) r_newval = c_hi-1;
-                else if (r_newval < 0) r_newval = 0;
-
-                *s++ = RoQ_SAMPLE_MIN + ((unsigned)r_newval >> 6);
+                roq_ldsb_inc(b, v);
+                r_newval += sqr[v];
+                if ((unsigned)r_newval > 0xffff)
+                    r_newval = r_newval < 0 ? 0 : 0xffff;
+                roq_stw_inc(s, RoQ_SAMPLE_MIN + ((unsigned)r_newval >> 6));
             }
 
             snd_lr[0] = l_newval;
@@ -732,7 +690,8 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     marsrbuf_t _schunks __attribute__((aligned(16)));
     roq_cell cells_u[256];
     roq_qcell qcells_u[256];
-    int8_t r8clip5[64], gb8clip5[64];
+    int8_t r8clip5[96], gb8clip5[96]; // indices -32..63
+    int16_t sqr[256];
 
 #ifdef DISABLE_CDFS
     return 0;
@@ -752,12 +711,12 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     memset(ri, 0, sizeof(*ri));
     ri->cells_u = cells_u;
     ri->qcells_u = qcells_u;
-    ri->r8clip5 = r8clip5 + 16;
-    ri->gb8clip5 = gb8clip5 + 16;
+    ri->r8clip5 = r8clip5 + 32;
+    ri->gb8clip5 = gb8clip5 + 32;
     buf = (char *)ri + sizeof(*ri);
 
-    for (i = 0; i < 64; i++) {
-        int j = i - 16;
+    for (i = 0; i < 96; i++) {
+        int j = i - 32;
         if (j <= 0) {
             r8clip5[i] = 0;
             gb8clip5[i] = 0;
@@ -769,6 +728,13 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
             gb8clip5[i] = (uint8_t)j<<2;
         }
     }
+
+    // DPCM sound deltas, sign * (b & 127)^2, indexed by the signed byte b
+    for (i = 0; i < 256; i++) {
+        int v = (i - 128) & 127;
+        sqr[i] = i < 128 ? -v * v : v * v;
+    }
+    snd_sqr = sqr + 128;
 
     viddata = (void *)(((intptr_t)buf + 15) & ~15);
     buf = viddata + RoQ_VID_BUF_SIZE;

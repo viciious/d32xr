@@ -133,14 +133,12 @@ static inline void apply_motion_4x4(roq_parse_ctx* ctx, short * restrict dst, in
 {
 	int mypitch, i;
 	short * restrict src;
-	int16_t mean_x = ctx->chunk_arg1;
-	int16_t mean_y = ctx->chunk_arg0;
 	int pitch = ctx->canvas_pitch;
 
-	mypitch = (8 - (mv & 0xf) - mean_y) * pitch;
-	mypitch += 8 - (mv >> 4) - mean_x;
-	src = (short *)((intptr_t)dst + ctx->canvastocopy) + mypitch;
+	mypitch = (mv & 0xf) * pitch + (mv >> 4);
+	src = (short *)((intptr_t)dst + ctx->canvastocopy) - mypitch;
 
+#pragma GCC unroll 4
 	for (i = 0; i < 4; i++)
 	{
 		dst[0] = src[0];
@@ -156,13 +154,10 @@ static inline void apply_motion_8x8(roq_parse_ctx* ctx, short * restrict dst, in
 {
 	int mypitch, i;
 	short * restrict src;
-	int16_t mean_x = ctx->chunk_arg1;
-	int16_t mean_y = ctx->chunk_arg0;
 	int pitch = ctx->canvas_pitch;
 
-	mypitch = (8 - (mv & 0xf) - mean_y) * pitch;
-	mypitch += 8 - (mv >> 4) - mean_x;
-	src = (short *)((intptr_t)dst + ctx->canvastocopy) + mypitch;
+	mypitch = (mv & 0xf) * pitch + (mv >> 4);
+	src = (short *)((intptr_t)dst + ctx->canvastocopy) - mypitch;
 
 	for (i = 0; i < 8; i++)
 	{
@@ -201,17 +196,18 @@ static char *roq_apply_fcc2(roq_parse_ctx* ctx, short * restrict dst, char* buf)
 static char *roq_apply_sld2(roq_parse_ctx* ctx,  short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
 static char *roq_apply_cc2(roq_parse_ctx* ctx, short * restrict dst, char* buf) RoQ_ATTR_SDRAM;
 
-static void roq_read_vq(roq_parse_ctx *ctx, char *buf, char *chunk_end, int (*copyscr)(roq_info* , char , int , int )) RoQ_ATTR_SDRAM;
+static void roq_read_vq(roq_parse_ctx *ctx, char *buf, char *chunk_end, int (*copyscr)(roq_info* , char , int , int )) __attribute__((noinline)) RoQ_ATTR_SDRAM;
 
+// the 16 flag bits sit in the top half of vqflg with a marker bit below them:
+// once all 8 ids are consumed, only the marker is left (in bit 31), so
+// vqflg is 0x80000000 on refill and vqflg >> 16 is the new marker (xtrct)
 #define roq_read_vqid(ctx,buf,vqid) do { \
-	if (ctx->vqflg_pos == 0) { \
-		ctx->vqflg = ((buf[1] << 8) | (uint8_t)buf[0]) << 16; \
-		ctx->vqflg_pos = 8; \
+	if (((unsigned)ctx->vqflg << 1) == 0) { \
+		ctx->vqflg = (((buf[1] << 8) | (uint8_t)buf[0]) << 16) | ((unsigned)ctx->vqflg >> 16); \
 		buf = buf + 2; \
 	} \
-	ctx->vqflg_pos--; \
 	vqid = (((unsigned)ctx->vqflg >> 16) << 2) >> 16; \
-	ctx->vqflg <<= 2; \
+	ctx->vqflg = (unsigned)ctx->vqflg << 2; \
 } while(0)
 
 static char *roq_apply_fcc(roq_parse_ctx* ctx, short * restrict dst, char* buf)
@@ -264,7 +260,7 @@ static char *roq_apply_cc(roq_parse_ctx* ctx, short * restrict dst, char* buf)
 	for (i = 0; i < 4; i++) {
 		short * restrict idst;
 
-		idst = dst + ((i & 1) << 2) + ((i & 2) << 1) * pitch;
+		idst = dst + ((i & 1) << 2) + ((i & 2) ? pitch << 2 : 0);
 
 		roq_read_vqid(ctx, buf, vqid);
 
@@ -299,7 +295,7 @@ static char *roq_apply_sld2(roq_parse_ctx* ctx, short * restrict dst, char* buf)
 	return buf+1;
 }
 
-static inline char *roq_apply_cc2(roq_parse_ctx* ctx, short * restrict _dst, char* buf)
+static inline __attribute__((always_inline)) char *roq_apply_cc2(roq_parse_ctx* ctx, short * restrict _dst, char* buf)
 {
 	int * restrict dst = (void*)_dst;
 	int pitch = ctx->canvas_pitch;
@@ -331,8 +327,9 @@ static inline char *roq_apply_cc2(roq_parse_ctx* ctx, short * restrict _dst, cha
 	return buf+4;
 }
 
-static void roq_read_vq(roq_parse_ctx *ctx, char *buf, char *chunk_end, int (*copyscr)(roq_info* , char , int , int ))
+static void roq_read_vq(roq_parse_ctx *pctx, char *buf, char *chunk_end, int (*copyscr)(roq_info* , char , int , int ))
 {
+	roq_parse_ctx lctx = *pctx, *ctx = &lctx; // a local copy can live in registers
 	int16_t xpos, ypos;
 	roq_info *ri = ctx->ri;
 	int height = ri->display_height;
@@ -428,15 +425,11 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(roq_info*), int (*cop
 			for (i = 0; i < nv1; i++)
 			{
 				int j;
-				uint8_t y[4], u, v;
+				const uint8_t *y = fp->data;
+				uint8_t u = y[4], v = y[5];
 				roq_cell *cell = ri->cells + (int8_t)i;
 
-				y[0] = roq_fgetsc(fp);
-				y[1] = roq_fgetsc(fp);
-				y[2] = roq_fgetsc(fp);
-				y[3] = roq_fgetsc(fp);
-				u = roq_fgetsc(fp);
-				v = roq_fgetsc(fp);
+				fp->data += 6;
 
 				for (j = 0; j < 4; j++) {
 					int r, g, b;
@@ -487,10 +480,11 @@ int roq_read_frame(roq_info* ri, char loop, void (*finish)(roq_info*), int (*cop
 	ctx.ri = ri;
 	ctx.chunk_arg0 = chunk_arg0;
 	ctx.chunk_arg1 = chunk_arg1;
-	ctx.vqflg = 0;
-	ctx.vqflg_pos = 0;
+	ctx.vqflg = 0x80000000; // empty: only the marker bit
 	ctx.canvas = ri->canvas;
-	ctx.canvastocopy = (intptr_t)ri->canvascopy - (intptr_t)ri->canvas;
+	// fold in the (8 - mean_y) rows, (8 - mean_x) pixels motion bias
+	ctx.canvastocopy = (intptr_t)ri->canvascopy - (intptr_t)ri->canvas
+		+ ((8 - (int8_t)chunk_arg0) * ri->canvas_pitch + 8 - (int8_t)chunk_arg1) * 2;
 	ctx.cells = ri->cells;
 	ctx.qcells = ri->qcells;
 	ctx.canvas_pitch = ri->canvas_pitch;
