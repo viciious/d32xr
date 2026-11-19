@@ -86,6 +86,9 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       byte *columnptr = ((byte *)patch + (columnofs & ~COLUMN_INLINE));
       fixed_t sprtop, iscale, fracbase;
 
+      if (*(int8_t *)columnptr == -1)
+         continue;
+
       sprtop = FixedMul(seg->m_texturemid<<HEIGHTINTBITS, spryscale);
       sprtop = centerYFrac - sprtop;
 
@@ -94,13 +97,10 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
          "mov #-128, %0\n\t"
          "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
          "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
-         : "=r" (iscale));
+         : "=&r" (iscale) : "r"(sprtop), "r"(topclip), "r"(bottomclip));
 #else
       iscale = 0xffffffffu / scalefrac;
 #endif
-
-      if (*columnptr == 0xff)
-         continue;
 
       fracbase = FixedMul(-sprtop, iscale);
 
@@ -187,6 +187,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    patch     = W_POINTLUMPNUM(vis->patchnum);
 #ifdef MARS
    pixels    = R_CheckSpritePixels(vis->patchnum);
+   __asm volatile("" : "+r"(pixels)); /* materialize: avoid base+offset re-add per post */
 #else
    pixels    = vis->pixels;
 #endif
@@ -241,7 +242,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       // column loop
       // a post record has up to four bytes: topdelta length pixelofs*2
       // an inlined column is a single post: topdelta count pixels...
-      if (*columnptr == 0xff)
+      if (*(int8_t *)columnptr == -1)
          continue;
 
       src = columnptr + 2;
@@ -351,6 +352,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    int top;        // r19
    int bottom;     // r20
    unsigned short openmark = OPENMARK;
+   unsigned vph = (uint16_t)viewportHeight;
    viswall_t *ds;      // r17
 
    x1  = vis->x1;
@@ -372,13 +374,18 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       if (x2 >= viewportWidth)
          x2 = viewportWidth-1;
    }
+#endif
 
    if (x1 > x2)
        return;
-#endif
 
-   for(x = x1; x <= x2; x++)
-      spropening[x] = viewportHeight;
+   {
+      unsigned short *p = spropening + x2 + 1;
+      x = x2 - x1 + 1;
+      do {
+         *--p = vph;
+      } while (--x);
+   }
 
    do
    {
@@ -415,7 +422,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
          if (silhouette == 2)
          {
-            mark = (int8_t)viewportHeight;
+            mark = (int8_t)vph;
             popn++, psil++;
          }
 
@@ -428,17 +435,20 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       }
       else if (silhouette == 3)
       {
+         int ivph = vph, omark = openmark;
+         sil += x;
+         opening += x;
          do
          {
-            int16_t clip = *sil++;
-            top    = *opening;
+            int clip = *--sil;
+            top    = opening[-1];
             bottom = top & 0xff;
-            top = top & openmark;
-            if(bottom == viewportHeight)
+            top = top & omark;
+            if(bottom == ivph)
                bottom = clip & 0xff;
             if(top == 0)
-               top = clip & openmark;
-            *opening++ = top | bottom;
+               top = clip & omark;
+            *--opening = top | bottom;
          } while (--x);
       }
       else
@@ -533,17 +543,19 @@ static void R_DrawPSprites(int sprscreenhalf)
     for (spr = vd->lastsprite_p; spr < vd->vissprite_p; spr++)
     {
         vissprite_t *vis = (vissprite_t *)spr;
-        unsigned stopx = vis->x2 + 1;
-        i = vis->x1;
+        int x1 = vis->x1, x2 = vis->x2;
 
         if (vis->patchnum < 0)
             continue;
 
         // clear out the clipping array across the range of the psprite
-        while (i < stopx)
+        if (x1 <= x2)
         {
-            spropening[i] = vph;
-            ++i;
+            unsigned short *p = spropening + x2 + 1;
+            i = x2 - x1 + 1;
+            do {
+                *--p = vph;
+            } while (--i);
         }
 
         R_DrawVisSprite(vis, spropening, sprscreenhalf);
