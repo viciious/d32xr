@@ -327,6 +327,8 @@ void	R_FixupTextures(void);
 void	R_SetupLevel(int gamezonemargin);
 void 	R_EnableLowResMode(boolean enable);
 
+#define PLANECOLSHIFT 2
+
 // how much memory should be left free in the main zone after allocating the texture cache
 // can be increased for the Icon of Sin
 #define DEFAULT_GAME_ZONE_MARGIN 8*1024
@@ -706,6 +708,10 @@ __attribute__((aligned(16)))
 	/* subsectors */
 	/* */
 	volatile sector_t		**vissectors/*[MAXVISSSEC]*/, **lastvissector;
+
+	/* per-frame {cos, sin} of each column's view angle, times distscale, */
+	/* >> PLANECOLSHIFT to fit 16 bits */
+	int16_t	*planecols/*[SCREENWIDTH*2]*/;
 
 	/* */
 	/* planes */
