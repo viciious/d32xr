@@ -30,7 +30,6 @@ typedef struct
    sector_t    *curfsector, *curbsector;
    side_t      *curside;
    line_t      *curldef;
-   angle_t    lineangle1;
    int        splitspans; /* generate wall splits until this reaches 0 */
    VINT       lastv1;
    VINT       lastv2;
@@ -424,7 +423,6 @@ static void R_StoreWallRange(rbspWork_t *rbsp, int start, int stop)
       rw->seg = rbsp->curline;
       rw->start = start;
       rw->stop = newstop;
-      rw->scalestep = rbsp->lineangle1;
       rw->actionbits = 0;
       vd->lastwallcmd = rw + 1;
 
@@ -630,7 +628,6 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    rbsp->curside    = sidedef;
    rbsp->curldef    = ldef;
    rbsp->curbsector = backsector;
-   rbsp->lineangle1 = angle1;
    R_ClipWallSegment(rbsp, x1, x2, solid);
 }
 

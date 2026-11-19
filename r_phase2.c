@@ -8,10 +8,8 @@
 #include "r_local.h"
 #include "mars.h"
 
-static fixed_t R_PointToDist(fixed_t x, fixed_t y) ATTR_DATA_CACHE_ALIGN;
 static fixed_t R_ScaleFromGlobalAngle(fixed_t invdist, fixed_t sineb, int x) ATTR_DATA_CACHE_ALIGN;
 static uint16_t P_SegOffset(seg_t *seg) ATTR_DATA_CACHE_ALIGN;
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1) ATTR_DATA_CACHE_ALIGN;
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
 // the volatiles help gcc produce less silly SH2 assembler code
 static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
@@ -20,26 +18,6 @@ void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 // Get distance to point in 3D projection
 //
-static fixed_t R_PointToDist(fixed_t x, fixed_t y)
-{
-    angle_t angle;
-    fixed_t dx, dy, temp;
-
-    dx = D_abs(x - vd->viewx);
-    dy = D_abs(y - vd->viewy);
-
-    if (dy > dx)
-    {
-        temp = dx;
-        dx = dy;
-        dy = temp;
-    }
-
-    angle = (tantoangle[(unsigned)FixedDiv(dy, dx) >> DBITS] + ANG90) >> ANGLETOFINESHIFT;
-
-    // use as cosine
-    return FixedDiv(dx, finesine(angle));
-}
 
 //
 // Convert angle and distance within view frustum to texture scale factor.
@@ -59,28 +37,6 @@ static fixed_t R_ScaleFromGlobalAngle(fixed_t invdist, fixed_t sineb, int x)
 //
 // Setup texture calculations for lines with upper and lower textures
 //
-static void R_SetupCalc(viswall_t* wc, fixed_t hyp, angle_t normalangle, int angle1)
-{
-    fixed_t sineval, rw_offset;
-    angle_t offsetangle;
-
-    offsetangle = normalangle - angle1;
-
-    if (offsetangle > ANG180)
-        offsetangle = 0 - offsetangle;
-
-    if (offsetangle > ANG90)
-        offsetangle = ANG90;
-
-    sineval = finesine(offsetangle >> ANGLETOFINESHIFT);
-    rw_offset = FixedMul(hyp, sineval);
-
-    if (normalangle - angle1 < ANG180)
-        rw_offset = -rw_offset;
-
-    wc->offset += rw_offset;
-    wc->centerangle = ANG90 + vd->viewangle - normalangle;
-}
 
 static uint16_t P_SegOffset(seg_t *seg)
 {
@@ -124,13 +80,11 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 {
     angle_t      normalangle;
     seg_t       *seg = wc->seg;
-    angle_t      angle1 = wc->scalestep;
-    fixed_t      sineval, rw_distance;
+    fixed_t      rw_distance, rw_offset, dx, dy;
     fixed_t      scalefrac, scale2;
     fixed_t      invdist;
     angle_t      baseangle;
     fixed_t      sineb1, sineb2;
-    fixed_t      hyp;
     fixed_t      x1, y1, x2, y2;
     int          nv1 = SEG_UNPACK_V1(seg);
     int          nv2 = SEG_UNPACK_V2(seg);
@@ -145,34 +99,31 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     x2 = verts[nv2].x << FRACBITS;
     y2 = verts[nv2].y << FRACBITS;
 
-    hyp = R_PointToDist(x1, y1);
-
     normalangle = R_PointToAngle(x1, y1, x2, y2);
     normalangle += ANG90;
 
+    // project the view->v1 vector onto the wall normal (distance) and
+    // the wall direction (texture offset); axis-aligned walls are exact
+    dx = x1 - vd->viewx;
+    dy = y1 - vd->viewy;
     if (x1 == x2)
     {
-        rw_distance = D_abs(vd->viewx - x1);
+        rw_distance = D_abs(dx);
+        rw_offset = y2 > y1 ? -dy : dy;
     }
     else if (y1 == y2)
     {
-        rw_distance = D_abs(vd->viewy - y1);
+        rw_distance = D_abs(dy);
+        rw_offset = x2 > x1 ? -dx : dx;
     }
     else
     {
-        angle_t distangle, offsetangle;
-
-        offsetangle = normalangle - angle1;
-
-        if ((int)offsetangle < 0)
-            offsetangle = 0 - offsetangle;
-
-        if (offsetangle > ANG90)
-            offsetangle = ANG90;
-
-        distangle = ANG90 - offsetangle;
-        sineval = finesine(distangle >> ANGLETOFINESHIFT);
-        rw_distance = FixedMul(hyp, sineval);
+        fixed_t sinn = finesine(normalangle >> ANGLETOFINESHIFT);
+        fixed_t cosn = finecosine(normalangle >> ANGLETOFINESHIFT);
+        rw_distance = FixedMul(dx, cosn) + FixedMul(dy, sinn);
+        if (rw_distance < 0)
+            rw_distance = 0;
+        rw_offset = FixedMul(dy, cosn) - FixedMul(dx, sinn);
     }
     wc->distance = rw_distance;
 
@@ -219,11 +170,9 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 
     wc->scale2 = scale2;
 
-    // does line have top or bottom textures?
-    if (wc->actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE))
-    {
-        R_SetupCalc(wc, hyp, normalangle, angle1);// do calc setup
-    }
+    // only read by R_DrawSeg for textured walls, so set them unconditionally
+    wc->offset += rw_offset;
+    wc->centerangle = baseangle;
 
     wc->clipbounds = NULL;
 
