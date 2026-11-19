@@ -43,15 +43,17 @@ typedef struct drawtex_s
 typedef struct
 {
     viswall_t* segl;
-
-    drawtex_t tex[2];
     drawtex_t *first, *last;
-
-    int8_t *skycolormaps;
+    int lightmin, lightmax, lightsub, lightcoef;
+    fixed_t scalestep, offset, distance;
+    unsigned centerangle;
     int skypitch;
     drawcol_t drawskycol;
+    unsigned skyangle;
 
-    int lightmin, lightmax, lightsub, lightcoef;
+    drawtex_t tex[2];
+
+    int8_t *skycolormaps;
 #if MIPLEVELS > 1   
     unsigned minmip, maxmip;
 #endif
@@ -63,8 +65,8 @@ static atomic_flag seg_lock = ATOMIC_FLAG_INIT;
 #define R_UnlockSeg() do { atomic_flag_clear(&seg_lock); } while (0)
 
 static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
-static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
-static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
@@ -154,19 +156,12 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
 //
 // Main seg drawing loop
 //
-static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
+static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
     fixed_t scalefrac = segl->scalefrac;
-    const fixed_t scalestep = segl->scalestep;
-    const unsigned centerangle = segl->centerangle >> FRACBITS;
-    fixed_t offset = segl->offset;
-    fixed_t distance = segl->distance;
-
     int texturelight = lseg->lightmax;
-    int lightmax = lseg->lightmax, lightmin = lseg->lightmin,
-        lightcoef = lseg->lightcoef, lightsub = lseg->lightsub;
 
     const int start = segl->start;
     const int stop = segl->stop;
@@ -201,7 +196,7 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
 #endif
 
         scale2 = scalefrac;
-        scalefrac += scalestep;
+        scalefrac += lseg->scalestep;
 
         //
         // get ceilingclipx and floorclipx from clipbounds
@@ -213,23 +208,23 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
         //
         // texture only stuff
         //
-        if (lightcoef != 0)
+        if (lseg->lightcoef != 0)
         {
             // calc light level
-            texturelight = lightsub - FixedMul(scale2, lightcoef);
-            if (texturelight < lightmin)
-                texturelight = lightmin;
-            if (texturelight > lightmax)
-                texturelight = lightmax;
+            texturelight = lseg->lightsub - FixedMul(scale2, lseg->lightcoef);
+            if (texturelight < lseg->lightmin)
+                texturelight = lseg->lightmin;
+            if (texturelight > lseg->lightmax)
+                texturelight = lseg->lightmax;
             texturelight = texturelight >> FRACBITS;
             texturelight <<= 8;
         }
 
         // calculate texture offset
-        r = finetangent((uint16_t)(centerangle + xtoviewangle[x]) >> (ANGLETOFINESHIFT-FRACBITS));
-        r = FixedMul(distance, r);
+        r = finetangent((uint16_t)(lseg->centerangle + xtoviewangle[x]) >> (ANGLETOFINESHIFT-FRACBITS));
+        r = FixedMul(lseg->distance, r);
 
-        colnum = ((unsigned)(offset - r) >> FRACBITS) & 0xff;
+        colnum = ((unsigned)(lseg->offset - r) >> FRACBITS) & 0xff;
 
         if (segcolmask)
             segcolmask[x] = texturelight | colnum;
@@ -261,21 +256,17 @@ static void R_DrawSeg(seglocal_t* lseg, unsigned short *restrict clipbounds)
 //
 // Main seg drawing loop
 //
-static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
+static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds)
 {
     viswall_t* segl = lseg->segl;
 
-    drawcol_t drawsky = lseg->drawskycol;
-
     fixed_t scalefrac = segl->scalefrac;
-    fixed_t scalestep = segl->scalestep;
+    fixed_t scalestep;
 
     const fixed_t ceilingheight = segl->ceilingheight<<HEIGHTINTBITS;
     const int start = segl->start;
     const int stop = segl->stop;
-    const int pitch = lseg->skypitch;
     int x;
-    const unsigned viewangle = vd->viewangle >> FRACBITS;
 
     //
     // sky mapping
@@ -283,7 +274,7 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, lseg->skycolormaps);
 
     scalefrac = FixedMul(scalefrac, ceilingheight);
-    scalestep = FixedMul(scalestep, ceilingheight);
+    scalestep = FixedMul(segl->scalestep, ceilingheight);
 
     x = start;
     do {
@@ -308,14 +299,14 @@ static void R_DrawSegSky(seglocal_t* lseg, unsigned short *restrict clipbounds)
         {
             unsigned colnum;
 
-            colnum = ((uint16_t)(viewangle + xtoviewangle[x]) >> (ANGLETOSKYSHIFT-FRACBITS)) & 0xff;
+            colnum = ((uint16_t)(lseg->skyangle + xtoviewangle[x]) >> (ANGLETOSKYSHIFT-FRACBITS)) & 0xff;
 
 #ifdef MARS
-            inpixel_t* data = skytexturep + colnum * pitch;
+            inpixel_t* data = skytexturep + colnum * lseg->skypitch;
 #else
-            pixel_t* data = skytexturep + colnum * pitch;
+            pixel_t* data = skytexturep + colnum * lseg->skypitch;
 #endif
-            drawsky(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+            lseg->drawskycol(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
         }
     } while (++x <= stop);
 
@@ -407,6 +398,7 @@ void R_SegCommands(void)
         lseg.skypitch = 64;
         lseg.drawskycol = draw4bcol;
     }
+    lseg.skyangle = vd->viewangle >> FRACBITS;
 
     I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
     bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;
@@ -556,7 +548,13 @@ void R_SegCommands(void)
         }
 
         if ((actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE|AC_MIDTEXTURE)) != 0)
+        {
+            lseg.scalestep = segl->scalestep;
+            lseg.centerangle = segl->centerangle >> FRACBITS;
+            lseg.offset = segl->offset;
+            lseg.distance = segl->distance;
             R_DrawSeg(&lseg, clipbounds);
+        }
 
         if ((actionbits & AC_ADDSKY) != 0)
             R_DrawSegSky(&lseg, clipbounds);
