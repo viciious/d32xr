@@ -385,6 +385,9 @@ static void R_LoadDrawCode(boolean finale)
 		if (drawspan[1] == I_DrawSpan)
 			drawspan[1] = drawspan[0];
 	}
+
+	if (next > drawcode_ram + DRAWCODE_RAM_SIZE)
+		I_Error("DRAWCODE_RAM_SIZE too small: %d", (int)(next - drawcode_ram));
 #endif
 }
 
