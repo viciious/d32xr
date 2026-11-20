@@ -410,7 +410,7 @@ boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t func, void *userp )
 			continue;		/* line has already been checked */
 		lvalidcount[l] = vc;
 
-		if ( !func(&lines[*list], userp) )
+		if ( !func(&lines[l], userp) )
 			return false;
 	}
 	
