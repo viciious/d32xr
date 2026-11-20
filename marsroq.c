@@ -540,15 +540,15 @@ get_header:
         chunk_size = 0;
     }
     else {
-        while ((chunk = ringbuf_ralloc(vchunks, (chunk_size + 8 + 1) & ~1)) == NULL && !fp->eof) {
+        while ((chunk = ringbuf_ralloc(vchunks, (chunk_size + 8 + 1) & ~1)) == NULL) {
+            if (fp->eof) {
+                // the stream ended mid-chunk
+                fp->data = NULL;
+                return;
+            }
             roq_request(fp, 1);
         }
         chunk += pad;
-    }
-
-    if (fp->eof) {
-        fp->data = NULL;
-        return;
     }
 
     if (fp->clear_cache)
@@ -681,7 +681,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
     uint8_t *snddata;
     roq_info *ri;
     roq_file fp;
-    char paused = 0;
+    char paused = 0, quit = 0;
     int ctrl = 0, prev_ctrl = 0, ch_ctrl = 0;
     int framecount = 0;
     char needaudio = 1, haveaudio = 0;
@@ -819,7 +819,7 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
         {
             if (allowpause) {
                 if (ch_ctrl & (SEGA_CTRL_A|SEGA_CTRL_B|SEGA_CTRL_C)) {
-                    ri->fp->eof = 1;
+                    quit = 1;
                 } else if (ctrl & SEGA_CTRL_START)  {
                     if (ch_ctrl & SEGA_CTRL_START) {
                         paused = !paused;
@@ -828,13 +828,19 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
             }
             else {
                 if (ch_ctrl & (SEGA_CTRL_START|SEGA_CTRL_A|SEGA_CTRL_B|SEGA_CTRL_C)) {
-                    ri->fp->eof = 1;
+                    quit = 1;
                 }
             }
         }
         else
         {
             ctrl = prev_ctrl = 0;
+        }
+
+        if (quit) {
+            roq_close(ri, secsnd);
+            roq_init_video(ri);
+            return 1;
         }
 
         Mars_ClearCache();
