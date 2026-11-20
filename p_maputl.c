@@ -390,6 +390,7 @@ boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t func, void *userp )
 {
 	int			offset;
 	short		*list;
+	line_t 		*llines = lines;
 	VINT 		*lvalidcount, vc;
 
 	//if (x<0 || y<0 || x>=bmapwidth || y>=bmapheight)
@@ -402,15 +403,22 @@ boolean P_BlockLinesIterator (int x, int y, blocklinesiter_t func, void *userp )
 	vc = *lvalidcount;
 	++lvalidcount;
 
-	for ( list = blockmaplump+offset ; *list != -1 ; list++)
+	list = blockmaplump+offset;
+	while (1)
 	{
 		int l = *list;
+		list++;
+#ifdef MARS
+		__asm__ ("" : "+r" (list)); // keeps GCC from turning *list++ into list[-1]
+#endif
+		if (__builtin_expect(l == -1, 0))
+			break;
 
 		if (lvalidcount[l] == vc)
 			continue;		/* line has already been checked */
 		lvalidcount[l] = vc;
 
-		if ( !func(&lines[l], userp) )
+		if ( !func(&llines[l], userp) )
 			return false;
 	}
 	
