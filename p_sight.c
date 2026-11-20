@@ -479,21 +479,11 @@ static mobj_t *P_GetSightMobj(int c)
 
    while (1)
    {
-      if (c == 1)
-      {
-         Mars_ClearCacheLine(&mobj->next);
-      }
-
       mobj = SPTR_TO_NNLPTR(mobj->next);
       if (mobj == (void*)&mobjhead)
       {
          mobj = NULL;
          break;
-      }
-
-      if (c == 1)
-      {
-         Mars_ClearCacheLines(mobj, (sizeof(mobj_t)+31)/16);
       }
 
       if (P_MobjCanSightCheck((mobj_t *)mobj))
@@ -555,8 +545,6 @@ static void P_CheckSights2(void)
    mobj_t *mobj;
 #ifndef MARS
    int c = 0;
-#else
-   mobj_t *ctrgt = NULL;
 #endif
 
    while (1)
@@ -566,14 +554,6 @@ static void P_CheckSights2(void)
 
       if (!PS_RejectCheckSight(mobj, mobj->target))
          continue;
-
-#ifdef MARS
-      if (c == 1 && ctrgt != mobj->target)
-      {
-         Mars_ClearCacheLines(mobj->target, (sizeof(mobj_t)+31)/16);
-         ctrgt = mobj->target;
-      }
-#endif
 
       if (PS_CheckSight2(mobj, mobj->target))
          mobj->flags |= MF_SEETARGET;
@@ -605,12 +585,18 @@ void Mars_Sec_P_CheckSights(void)
       return;
    }
 
+   Mars_ClearCache();
+
    P_CheckSights2(1);
 }
 #endif
 
 void P_CheckSights (void)
 {
+#ifdef MARS
+	mobj_t *mo;
+#endif
+
 #ifdef JAGUAR
 	extern	int p_sight_start;
 	DSPFunction (&p_sight_start);
@@ -622,6 +608,16 @@ void P_CheckSights (void)
 	P_CheckSights2(0);
 
 	Mars_P_EndCheckSights();
+
+	// clear cache for mobj flags right after the sight check as the
+	// other CPU might have modified the MF_SEETARGET state; this must
+	// happen before anything does a read-modify-write of mobj->flags
+	// (MF_JUSTHIT, P_KillMobj, etc) from a stale cache line
+	for (mo = SPTR_TO_NNLPTR(mobjhead.next); mo != (void*)&mobjhead; mo = SPTR_TO_NNLPTR(mo->next))
+	{
+		if (mo->tics == 1)
+			Mars_ClearCacheLine(&mo->flags);
+	}
 #else
    next_sight = (void*)&mobjhead;
 
