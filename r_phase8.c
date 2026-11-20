@@ -93,7 +93,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       if (*(int8_t *)columnptr == -1)
          continue;
 
-      sprtop = FixedMul(seg->m_texturemid<<HEIGHTINTBITS, spryscale);
+      sprtop = FixedMul(FROMHEIGHT16(seg->m_texturemid), spryscale);
       sprtop = centerYFrac - sprtop;
 
 #ifdef MARS
@@ -200,7 +200,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    spryscale = vis->yscale;
    dcol      = vis->colormap < 0 ? drawfuzzcol : drawcol;
 
-   sprtop = FixedMul(vis->texturemid<<HEIGHTINTBITS, spryscale);
+   sprtop = FixedMul(FROMHEIGHT16(vis->texturemid), spryscale);
    sprtop = centerYFrac - sprtop;
    fracbase = FixedMul(-sprtop, iscale);
 

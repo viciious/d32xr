@@ -263,7 +263,7 @@ static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds)
     fixed_t scalefrac = segl->scalefrac;
     fixed_t scalestep;
 
-    const fixed_t ceilingheight = segl->ceilingheight<<HEIGHTINTBITS;
+    const fixed_t ceilingheight = FROMHEIGHT16(segl->ceilingheight);
     const int start = segl->start;
     const int stop = segl->stop;
     int x;
@@ -322,9 +322,9 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
     int mipwidth, mipheight;
 
     drawtex->widthmask = width-1;
-    drawtex->topheight = topheight;
-    drawtex->bottomheight = bottomheight;
-    drawtex->texturemid = texturemid;
+    drawtex->topheight = FROMHEIGHT16(topheight);
+    drawtex->bottomheight = FROMHEIGHT16(bottomheight);
+    drawtex->texturemid = FROMHEIGHT16(texturemid);
 #if MIPLEVELS > 1
     drawtex->maxmip = !texmips ? 0 : tex->mipcount-1;
 #else
@@ -536,14 +536,14 @@ void R_SegCommands(void)
         if (actionbits & AC_TOPTEXTURE)
         {
             R_SetupDrawTexture(toptex, &textures[segl->t_texturenum],
-                segl->t_texturemid<<HEIGHTINTBITS, segl->t_topheight<<HEIGHTINTBITS, segl->t_bottomheight<<HEIGHTINTBITS);
+                segl->t_texturemid, segl->t_topheight, segl->t_bottomheight);
             lseg.first--;
         }
 
         if (actionbits & AC_BOTTOMTEXTURE)
         {
             R_SetupDrawTexture(bottomtex, &textures[segl->b_texturenum],
-                segl->b_texturemid<<HEIGHTINTBITS, segl->b_topheight<<HEIGHTINTBITS, segl->b_bottomheight<<HEIGHTINTBITS);
+                segl->b_texturemid, segl->b_topheight, segl->b_bottomheight);
             lseg.last++;
         }
 

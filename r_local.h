@@ -34,6 +34,9 @@ extern boolean lowres;
 #define HEIGHTFRACBITS 		4
 #define HEIGHTINTBITS 		(16-HEIGHTFRACBITS)
 
+#define HEIGHT16(x) 		((int16_t)((uint32_t)(x) >> HEIGHTINTBITS))
+#define FROMHEIGHT16(x) 	((x)<<HEIGHTINTBITS)
+
 /* */
 /* lighting constants */
 /* */

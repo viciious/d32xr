@@ -212,7 +212,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
     int x, start = segl->start;
     const int stop = segl->stop;
 
-    const volatile fixed_t ceilingheight = segl->ceilingheight << HEIGHTINTBITS;
+    const volatile fixed_t ceilingheight = FROMHEIGHT16(segl->ceilingheight);
 
     const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
     const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
@@ -220,9 +220,9 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
     unsigned short * restrict flooropen = (actionbits & AC_ADDFLOOR) ? vd->visplanes[0].open : NULL;
     unsigned short * restrict ceilopen = (actionbits & AC_ADDCEILING) ? vd->visplanes[0].open : NULL;
 
-    volatile fixed_t floorheight = segl->floorheight << HEIGHTINTBITS;
-    volatile fixed_t floornewheight = segl->floornewheight << HEIGHTINTBITS;
-    volatile fixed_t ceilingnewheight = segl->ceilingnewheight << HEIGHTINTBITS;
+    volatile fixed_t floorheight = FROMHEIGHT16(segl->floorheight);
+    volatile fixed_t floornewheight = FROMHEIGHT16(segl->floornewheight);
+    volatile fixed_t ceilingnewheight = FROMHEIGHT16(segl->ceilingnewheight);
 
     unsigned short * restrict newclipbounds = segl->clipbounds;
 

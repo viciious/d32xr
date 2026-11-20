@@ -179,7 +179,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis->gy       = thing->y >> FRACBITS;
    vis->xscale   = xscale;
    vis->yscale   = FixedMul(xscale, stretch);
-   vis->texturemid = (unsigned)texmid>>HEIGHTINTBITS;
+   vis->texturemid = HEIGHT16(texmid);
 
    if (thing->flags & MF_ATTACHED)
    {
@@ -297,7 +297,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis->xscale = xscale;
    vis->yscale = FRACUNIT;
    vis->xiscale = FixedDiv(FRACUNIT, xscale);
-   vis->texturemid = (unsigned)texmid>>HEIGHTINTBITS;
+   vis->texturemid = HEIGHT16(texmid);
    vis->startfrac = 0;
    if (x1 < 0)
        vis->startfrac = vis->xiscale * -x1;

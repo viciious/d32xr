@@ -142,9 +142,8 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	vis.xscale = xscale;
 	vis.xiscale = flip ? -FRACUNIT : FRACUNIT;
 	vis.yscale = 2 * FRACUNIT;
-	vis.texturemid = (centerYFrac -
-			((top - BIGSHORT(patch->topoffset)) * 2 * FRACUNIT))
-			/ (2 << HEIGHTINTBITS);
+	vis.texturemid = HEIGHT16((centerYFrac -
+			((top - BIGSHORT(patch->topoffset)) * 2 * FRACUNIT)) / 2);
 	vis.startfrac = flip ? (spriteWidth << FRACBITS) - 1 : 0;
 	if (x1 < 0)
 		vis.startfrac += vis.xiscale * -x1;
