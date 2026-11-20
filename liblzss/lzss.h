@@ -1,4 +1,5 @@
 #ifndef _LZSS_H_
+#define _LZSS_H_
 
 #include <stdint.h>
 

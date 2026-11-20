@@ -145,7 +145,7 @@ static void lzss_copy(int8_t *dst, const int8_t *src, USHORT size)
 	case 3:      *dst++ = *src++;
 	case 2:      *dst++ = *src++;
 	case 1:      *dst++ = *src++;
-	} while (--r);
+	} while (--t);
 	}
 #endif
 }
@@ -271,6 +271,7 @@ int lzss_read_all(lzss_state_t* lzss)
 {
 	USHORT len;
 	uint8_t getidbyte = 0;
+	uint8_t idbyte = 0;
 	uint32_t source = 0;
 	uint8_t* input = lzss->input;
 	uint8_t* output = lzss->buf;
@@ -284,8 +285,6 @@ int lzss_read_all(lzss_state_t* lzss)
 	getidbyte = 0;
 	while (1)
 	{
-		uint8_t idbyte;
-
 		/* get a new idbyte if necessary */
 		if (!getidbyte) idbyte = *input++;
 
@@ -311,7 +310,7 @@ int lzss_read_all(lzss_state_t* lzss)
 
 			if (len == 1) {
 				/* end of stream */
-				return output - lzss->buf;
+				return outpos;
 			}
 
 			for (j = 0; j < len; j++)
@@ -324,13 +323,14 @@ int lzss_read_all(lzss_state_t* lzss)
 		getidbyte = (getidbyte + 1) & 7;
 	}
 
-	return output - lzss->buf;
+	return outpos;
 }
 
 uint32_t lzss_decompressed_size(lzss_state_t* lzss)
 {
 	USHORT len;
 	uint8_t getidbyte = 0;
+	uint8_t idbyte = 0;
 	uint8_t* input = lzss->input;
 	uint32_t outpos = 0;
 	uint32_t buf_size = lzss->buf_size;
@@ -342,8 +342,6 @@ uint32_t lzss_decompressed_size(lzss_state_t* lzss)
 	getidbyte = 0;
 	while (1)
 	{
-		uint8_t idbyte;
-
 		/* get a new idbyte if necessary */
 		if (!getidbyte) idbyte = *input++;
 
@@ -381,6 +379,7 @@ uint32_t lzss_compressed_size(lzss_state_t* lzss)
 {
 	USHORT len;
 	uint8_t getidbyte;
+	uint8_t idbyte = 0;
 	uint8_t* input = lzss->input;
 	uint32_t buf_size = lzss->buf_size;
 
@@ -390,8 +389,6 @@ uint32_t lzss_compressed_size(lzss_state_t* lzss)
 	getidbyte = 0;
 	while (1)
 	{
-		uint8_t idbyte;
-
 		/* get a new idbyte if necessary */
 		if (!getidbyte) idbyte = *input++;
 
