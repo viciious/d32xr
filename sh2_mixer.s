@@ -83,23 +83,26 @@ mix_loop:
         add     #-128,r3
         shll8   r3
 
+        /* muls.w and sts cost 1 cycle more at addr%4==2, so all four */
+        /* are kept at addr%4==0 (mix_loop is 4-byte aligned) */
+
         /* scale sample for left output */
         muls.w  r3,r13
         add     r10,r9          /* position += increment */
         sts     macl,r0
+        shlr16  r0
 
         /* scale sample for right output */
         muls.w  r3,r14
 
         /* scale sample for left output -- cont */
-        shlr16  r0
         shll16  r0
+        sts     macl,r2
         add     r0,r1
 
         /* scale sample for right output -- cont */
-        sts     macl,r0
-        shlr16  r0
-        add     r0,r1
+        shlr16  r2
+        add     r2,r1
 
         /* advance position and check for loop */
         mov.l   r1,@r5
@@ -227,8 +230,8 @@ mix4_loop:
         add     #1,r3
         muls.w  r1,r3
         exts.w  r12,r12         /* 32-bit predictor */
+        sts     macl,r3         /* diff, at addr%4==0 */
         mov     #-128,r1
-        sts     macl,r3         /* diff */
         /* if (nibble & 8) step = -step */
         bt/s    1f
         shar    r3              /* diff / 2 */
@@ -255,23 +258,23 @@ mix4_loop:
         .p2alignw 2, 0x0009
 mix4_gets:
         /* get sample */
+        /* muls.w and sts are kept at addr%4==0, where they're 1 cycle cheaper */
 
         /* scale sample for left output */
         muls.w  r12,r13
         mov.l   @r5,r1
+        sts     macl,r3
         add     r10,r9          /* position += increment */
-        sts     macl,r0
 
         /* scale sample for right output */
         muls.w  r12,r14
 
         /* scale sample for left output -- cont */
-        shlr16  r0
-        shll16  r0
-        mov     r0,r3
+        shlr16  r3
+        sts     macl,r0
+        shll16  r3
 
         /* scale sample for right output -- cont */
-        sts     macl,r0
         shlr16  r0
         add     r0,r3
 
@@ -408,8 +411,8 @@ mix4_loop2x:
         add     #1,r3
         muls.w  r1,r3
         exts.w  r12,r12         /* 32-bit predictor */
+        sts     macl,r3         /* diff, at addr%4==0 */
         mov     #-128,r1
-        sts     macl,r3         /* diff */
         /* if (nibble & 8) step = -step */
         bt/s    1f
         shar    r3              /* diff / 2 */
@@ -436,24 +439,24 @@ mix4_loop2x:
         .p2alignw 2, 0x0009
 mix4_gets2x:
         /* get sample */
+        /* muls.w and sts are kept at addr%4==0, where they're 1 cycle cheaper */
 
         /* scale sample for left output */
         muls.w  r12,r13
         mov.l   @r5,r1
+        sts     macl,r3
         dt      r6
-        add     r10,r9          /* position += increment */
-        sts     macl,r0
 
         /* scale sample for right output */
         muls.w  r12,r14
 
         /* scale sample for left output -- cont */
-        shlr16  r0
-        shll16  r0
-        mov     r0,r3
+        shlr16  r3
+        sts     macl,r0
+        shll16  r3
+        add     r10,r9          /* position += increment */
 
         /* scale sample for right output -- cont */
-        sts     macl,r0
         shlr16  r0
         add     r0,r3
 
