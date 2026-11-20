@@ -42,10 +42,13 @@ typedef struct
 
     i16divline_t strace;  // from t1 to t2
     fixed_t t2x, t2y;
+    fixed_t sidek;        // -(strace.dy*strace.x - strace.dx*strace.y + 1)
+    int16_t sidec[4];     // strace.dy, -strace.dx, twice: one pair per vertex
 } sightWork_t;
 
-static boolean PS_CrossSubsector(sightWork_t* sw, int num) ATTR_DATA_CACHE_ALIGN;
-static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_CrossLine(sightWork_t* sw, line_t *line, mapvertex_t *v1, mapvertex_t *v2, fixed_t iden) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static boolean PS_CrossBlock(sightWork_t* sw, int bnum) ATTR_DATA_CACHE_ALIGN;
+static boolean PS_CrossBlockmap(sightWork_t* sw) ATTR_DATA_CACHE_ALIGN;
 static boolean PS_RejectCheckSight(mobj_t* t1, mobj_t* t2) ATTR_DATA_CACHE_ALIGN;
 static boolean P_MobjCanSightCheck(mobj_t *mobj) ATTR_DATA_CACHE_ALIGN;
 static mobj_t *P_GetSightMobj(int c) ATTR_DATA_CACHE_ALIGN;
@@ -57,195 +60,287 @@ static void P_CheckSights2(void) ATTR_DATA_CACHE_ALIGN;
 #endif
 boolean P_CheckSight(mobj_t *t1, mobj_t *t2) ATTR_DATA_CACHE_ALIGN;
 
-// Returns side 0 (front), 1 (back)
-#define PS_DivlineSide(xx,yy,n) (((n)->dy * ((xx) - (n)->x)) <= (((yy) - (n)->y) * (n)->dx))
+// Dot product of (xx,yy) - (x,y) with the divline normal (-dy,dx),
+// >= 0 on the back side
+#define PS_DivlineDot(xx,yy,n) ((((yy) - (n)->y) * (n)->dx) - ((n)->dy * ((xx) - (n)->x)))
 
-// Returns (h << FRACBITS) / frac, where frac = (num << FRACBITS) / den is the
-// fractional intercept point along strace. The two shifts cancel, so this is
-// h * den / num: a single 64/32 divide instead of computing frac first.
-static inline fixed_t PS_SlopeDiv(fixed_t h, int32_t den, int32_t num)
+/*
+=================
+=
+= PS_CrossLine
+=
+= The line's vertices are on different sides of strace, check whether
+= strace crosses the line and if so, whether it blocks the view.
+=
+= Returns true if the view isn't blocked.
+=================
+*/
+
+static boolean PS_CrossLine(sightWork_t *sw, line_t *line, mapvertex_t *v1, mapvertex_t *v2, fixed_t iden)
 {
-#ifdef MARS
-   int32_t lo, divunit;
-   fixed_t slope;
-   __asm volatile (
-      "dmuls.l %3, %4\n\t"
-      "mov #-128, %2\n\t"
-      "add %2, %2 /* %2 is now 0xFFFFFF00 */ \n\t"
-      "sts mach, %0\n\t"
-      "sts macl, %1\n\t"
-      "mov.l %5, @(0,%2) /* set 32-bit divisor */ \n\t"
-      "mov.l %0, @(16,%2) /* set high bits of the 64-bit dividend */ \n\t"
-      "mov.l %1, @(20,%2) /* set low bits of the 64-bit dividend, start divide */ \n\t"
-      "mov.l @(20,%2), %0 /* get 32-bit quotient */ \n\t"
-      : "=&r" (slope), "=&r" (lo), "=&r" (divunit)
-      : "r" (h), "r" (den), "r" (num)
-      : "mach", "macl"
-   );
-   return slope;
-#else
-   return FixedDiv(h, FixedDiv(num, den));
-#endif
+   sector_t     *front;
+   sector_t     *back;
+   fixed_t      opentop;
+   fixed_t      openbottom;
+   i16divline_t divl;
+   fixed_t      slope;
+   fixed_t      inum, d2;
+   i16divline_t *strace = &sw->strace;
+   fixed_t      sightzstart = sw->sightzstart;
+
+   divl.x = v1->x;
+   divl.y = v1->y;
+   divl.dx = v2->x - v1->x;
+   divl.dy = v2->y - v1->y;
+
+   // dot products for the trace start and end, >= 0 on the back side;
+   // d2 - inum = strace.dy*divl.dx - strace.dx*divl.dy, which is exactly
+   // a2 - a1 from PS_CrossBlock, passed in as iden = a1 - a2
+   inum = PS_DivlineDot(strace->x, strace->y, &divl);
+   d2 = inum - iden;
+
+   // line isn't crossed?
+   if ((inum >= 0) == (d2 >= 0))
+      return true;
+
+   // stop because it is not two sided anyway
+   if (line->sidenum[1] < 0)
+      return false;
+
+   front = LD_FRONTSECTOR(line);
+   back = LD_SIDESECTOR(line, 1);
+
+   // no wall to block sight with?
+   if (front->floorheight == back->floorheight && front->ceilingheight == back->ceilingheight)
+      return true;
+
+   // possible occluder
+   // because of ceiling height differences
+   if (front->ceilingheight < back->ceilingheight)
+      opentop = front->ceilingheight;
+   else
+      opentop = back->ceilingheight;
+
+   // because of ceiling height differences
+   if (front->floorheight > back->floorheight)
+      openbottom = front->floorheight;
+   else
+      openbottom = back->floorheight;
+
+   // quick test for totally closed doors
+   if (openbottom >= opentop)
+      return false; // stop
+
+   // intercept fraction along strace is inum / iden
+
+   if (front->floorheight != back->floorheight)
+   {
+      slope = P_SlopeDiv(openbottom - sightzstart, iden, inum);
+      if (slope > sw->bottomslope)
+         sw->bottomslope = slope;
+   }
+
+   if (front->ceilingheight != back->ceilingheight)
+   {
+      slope = P_SlopeDiv(opentop - sightzstart, iden, inum);
+      if (slope < sw->topslope)
+         sw->topslope = slope;
+   }
+
+   if (sw->topslope <= sw->bottomslope)
+      return false; // stop
+
+   return true;
 }
 
 /*
 =================
 =
-= PS_CrossSubsector
+= PS_CrossBlock
 =
-= Returns true if strace crosses the given subsector successfuly
+= Checks all lines in a blockmap cell against strace. Lines are processed
+= as they are found rather than sorted by distance: the slope window only
+= ever narrows (max of bottom slopes, min of top slopes), so the result
+= doesn't depend on the order. Lines listed in several cells may be checked
+= more than once, which is harmless for the same reason.
+=
+= A vertex lying exactly on strace (dot product 0) counts as being on the
+= back side, so a line touching the trace with a vertex is checked as crossed
+= when its other vertex is on the front side.
+=
+= Returns true if strace crosses the cell successfully.
 =================
 */
 
-static boolean PS_CrossSubsector(sightWork_t *sw, int num)
+static boolean PS_CrossBlock(sightWork_t *sw, int bnum)
 {
-   seg_t       *seg;
-   line_t      *line;
-   VINT         s1;
-   VINT         s2;
-   int          count;
-   subsector_t *sub;
-   sector_t    *front;
-   sector_t    *back;
-   fixed_t      opentop;
-   fixed_t      openbottom;
-   i16divline_t divl;
+   int16_t      *list;
+   line_t       *line;
    mapvertex_t  *v1, *v2;
-   fixed_t      slope;
-   fixed_t      inum, iden;
-   i16divline_t *strace = &sw->strace;
-   int16_t      t2x = sw->t2x, t2y = sw->t2y;
-   fixed_t      sightzstart = sw->sightzstart;
-   VINT         side;
-   VINT         prevld = -1;
+   fixed_t      a1, a2;
+   int16_t      ld;
+   const int16_t *sc = sw->sidec;
+   const fixed_t k = sw->sidek;
+   line_t       *llines = lines;
+   mapvertex_t  *lvertexes = vertexes;
 
-   sub = &subsectors[num];
+   list = blockmaplump + blockmaplump[4 + bnum];
 
-   // check lines
-   count = SSEC_NUMLINES(sub);
-   seg   = &segs[sub->firstline];
+   ld = *list;
+   list++;
 
-   for( ; count; seg++, count--)
+   while (1)
    {
-      int ld = SEG_UNPACK_LINEDEF(seg);
-      boolean twoSided;
+      if (__builtin_expect(ld < 0, 0))
+         break;
 
-      line = &lines[ld];
+      line = &llines[ld];
+      v1 = &lvertexes[line->v1];
+      v2 = &lvertexes[line->v2];
 
-      // allready checked other side?
-      if (ld == prevld)
-         continue;
-      prevld = ld;
+      // side values of the line's vertices against strace:
+      // a1, a2 = -PS_DivlineDot(v1/v2->x, v1/v2->y, strace) - 1, the sign bit
+      // is set when the vertex is on the back side
+      P_VertexSides(sc, k, &v1, &v2, &a1, &a2);
 
-      v1 = &vertexes[line->v1];
-      v2 = &vertexes[line->v2];
-
-      s1 = PS_DivlineSide(v1->x, v1->y, strace);
-      s2 = PS_DivlineSide(v2->x, v2->y, strace);
-
-      // line isn't crossed?
-      if (s1 == s2)
-         continue;
-
-      divl.x = v1->x;
-      divl.y = v1->y;
-      divl.dx = v2->x - v1->x;
-      divl.dy = v2->y - v1->y;
-      s1 = PS_DivlineSide (strace->x, strace->y, &divl);
-      s2 = PS_DivlineSide (t2x, t2y, &divl);
+      // the next entry is loaded before the test, so it can go into the
+      // branch delay slot
+      ld = *list;
+      list++;
+#ifdef MARS
+      __asm__ ("" : "+r" (list)); // keeps GCC from turning *list++ into list[-1]
+#endif
 
       // line isn't crossed?
-      if (s1 == s2)
+      if ((a1 ^ a2) >= 0)
          continue;
 
-      // stop because it is not two sided anyway
-      twoSided = line->sidenum[1] >= 0;
-      if(!twoSided)
+      if (!PS_CrossLine(sw, line, v1, v2, a1 - a2))
          return false;
-
-      // crosses a two sided line
-      side = SEG_UNPACK_SIDE(seg);
-      front = LD_SIDESECTOR(line, side);
-      back =  LD_SIDESECTOR(line, side^1);
-
-      // no wall to block sight with?
-      if(front->floorheight == back->floorheight && front->ceilingheight == back->ceilingheight)
-         continue;
-
-      // possible occluder
-      // because of ceiling height differences
-      if (front->ceilingheight < back->ceilingheight)
-         opentop = front->ceilingheight;
-      else
-         opentop = back->ceilingheight;
-
-      // because of ceiling height differences
-      if (front->floorheight > back->floorheight)
-         openbottom = front->floorheight;
-      else
-         openbottom = back->floorheight;
-
-      // quick test for totally closed doors
-      if(openbottom >= opentop)
-         return false; // stop
-
-      // intercept point along strace is num / den
-      iden = (fixed_t)divl.dy * strace->dx - (fixed_t)divl.dx * strace->dy;
-      inum = (fixed_t)(divl.x - strace->x) * divl.dy - (fixed_t)(divl.y - strace->y) * divl.dx;
-
-      if(front->floorheight != back->floorheight)
-      {
-         slope = PS_SlopeDiv(openbottom - sightzstart, iden, inum);
-         if(slope > sw->bottomslope)
-             sw->bottomslope = slope;
-      }
-
-      if(front->ceilingheight != back->ceilingheight)
-      {
-         slope = PS_SlopeDiv(opentop - sightzstart, iden, inum);
-         if(slope < sw->topslope)
-             sw->topslope = slope;
-      }
-
-      if(sw->topslope <= sw->bottomslope)
-         return false;    // stop
    }
 
-   // passed the subsector ok
+   // passed the cell ok
    return true;
 }
 
-//
-// Returns true if strace crosses the given node successfuly
-//
-static boolean PS_CrossBSPNode(sightWork_t* sw, int bspnum)
+/*
+=================
+=
+= PS_CrossBlockmap
+=
+= Walks the blockmap cells along strace with an exact integer DDA: no
+= divides, no rounding, so no cell is ever skipped. When the trace goes
+= exactly through a cell corner, the two cells touching it are checked too.
+=
+= Returns true if strace crosses the blockmap successfully.
+=================
+*/
+
+static boolean PS_CrossBlockmap(sightWork_t *sw)
 {
-   node_t *bsp;
-   int side, side2;
    i16divline_t *strace = &sw->strace;
+   fixed_t tx1, ty1, tx2, ty2;
+   unsigned x1, y1, x2, y2;
+   int nx, ny, adx, ady, err, bnum, bstepx, bstepy;
 
-#ifdef MARS
-   while ((int16_t)bspnum >= 0)
-#else
-   while (!(bspnum & NF_SUBSECTOR))
-#endif
+   tx1 = (fixed_t)strace->x << FRACBITS;
+   ty1 = (fixed_t)strace->y << FRACBITS;
+   tx2 = sw->t2x << FRACBITS;
+   ty2 = sw->t2y << FRACBITS;
+
+   // an end outside of the map: nothing to see. With both ends inside,
+   // every cell the trace walks through is inside as well.
+   if (tx1 < bmaporgx || ty1 < bmaporgy || tx2 < bmaporgx || ty2 < bmaporgy)
+      return false;
+
+   x1 = tx1 - bmaporgx;
+   y1 = ty1 - bmaporgy;
+   x2 = tx2 - bmaporgx;
+   y2 = ty2 - bmaporgy;
+
+   if ((int)(x1 >> MAPBLOCKSHIFT) >= bmapwidth
+      || (int)(x2 >> MAPBLOCKSHIFT) >= bmapwidth
+      || (int)(y1 >> MAPBLOCKSHIFT) >= bmapheight
+      || (int)(y2 >> MAPBLOCKSHIFT) >= bmapheight)
+      return false;
+
+   nx = (x2 >> MAPBLOCKSHIFT) - (x1 >> MAPBLOCKSHIFT);
+   ny = (y2 >> MAPBLOCKSHIFT) - (y1 >> MAPBLOCKSHIFT);
+   bnum = (y1 >> MAPBLOCKSHIFT) * bmapwidth + (x1 >> MAPBLOCKSHIFT);
+
+   // positions within the cells, in map units: the trace ends and the
+   // blockmap origin are whole units, so nothing is lost
+   x1 = (x1 & MAPBMASK) >> FRACBITS;
+   y1 = (y1 & MAPBMASK) >> FRACBITS;
+
+   // distances to the first vertical and horizontal cell boundaries ahead
+   adx = strace->dx;
+   if (adx >= 0)
    {
-      bsp = &nodes[bspnum];
-
-      // decide which side the start point is on
-      side = PS_DivlineSide(strace->x, strace->y, (i16divline_t *)bsp);
-      side2 = PS_DivlineSide(sw->t2x, sw->t2y, (i16divline_t *)bsp);
-
-      // the partition plane is crossed here
-      if (side == side2)
-         bspnum = bsp->children[side]; // the line doesn't touch the other side
-      else if (!PS_CrossBSPNode(sw, bsp->children[side]))
-         return false; // cross the starting side
-      else
-         bspnum = bsp->children[side ^ 1]; // cross the ending side
+      bstepx = 1;
+      x1 = MAPBLOCKUNITS - x1;
+   }
+   else
+   {
+      bstepx = -1;
+      adx = -adx;
+      nx = -nx;
    }
 
-   return PS_CrossSubsector(sw, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+   ady = strace->dy;
+   if (ady >= 0)
+   {
+      bstepy = bmapwidth;
+      y1 = MAPBLOCKUNITS - y1;
+   }
+   else
+   {
+      bstepy = -bmapwidth;
+      ady = -ady;
+      ny = -ny;
+   }
+
+   // the boundaries are reached at x1/adx and y1/ady of the trace, err is
+   // that difference scaled by adx*ady: < 0 means the vertical one comes first
+   err = (int)x1 * ady - (int)y1 * adx;
+
+   // from here on err moves by whole cells
+   adx *= MAPBLOCKUNITS;
+   ady *= MAPBLOCKUNITS;
+
+   while (1)
+   {
+      if (!PS_CrossBlock(sw, bnum))
+         return false;
+
+      if (!(nx | ny))
+         return true;
+
+      if (ny == 0 || (nx != 0 && err < 0))
+      {
+         bnum += bstepx;
+         err += ady;
+         nx--;
+      }
+      else if (nx == 0 || err > 0)
+      {
+         bnum += bstepy;
+         err -= adx;
+         ny--;
+      }
+      else
+      {
+         // exactly through a corner, also check the two cells touching it
+         if (!PS_CrossBlock(sw, bnum + bstepx))
+            return false;
+         if (!PS_CrossBlock(sw, bnum + bstepy))
+            return false;
+         bnum += bstepx + bstepy;
+         err += ady - adx;
+         nx--;
+         ny--;
+      }
+   }
 }
 
 //
@@ -337,8 +432,11 @@ static boolean PS_CheckSight2(mobj_t *t1, mobj_t *t2)
    sw.t2y = ((t2->y & ~0x1ffff) | 0x10000) >> FRACBITS;
    sw.strace.dx = sw.t2x - sw.strace.x;
    sw.strace.dy = sw.t2y - sw.strace.y;
+   sw.sidek = -((fixed_t)sw.strace.dy * sw.strace.x - (fixed_t)sw.strace.dx * sw.strace.y + 1);
+   sw.sidec[0] = sw.sidec[2] = sw.strace.dy;
+   sw.sidec[1] = sw.sidec[3] = -sw.strace.dx;
 
-   return PS_CrossBSPNode(&sw, numnodes-1);
+   return PS_CrossBlockmap(&sw);
 }
 
 static boolean P_MobjCanSightCheck(mobj_t *mobj)

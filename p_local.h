@@ -37,6 +37,34 @@
 #define	MELEERANGE		(70*FRACUNIT)
 #define	MISSILERANGE	(32*64*FRACUNIT)
 
+// Returns (h << FRACBITS) / frac, where frac = (num << FRACBITS) / den is the
+// fractional intercept point along the trace. The two shifts cancel, so this is
+// h * den / num: a single 64/32 divide instead of computing frac first.
+static inline __attribute__((always_inline)) fixed_t P_SlopeDiv(fixed_t h, int32_t den, int32_t num)
+{
+#ifdef MARS
+   int32_t lo, divunit;
+   fixed_t slope;
+   __asm volatile (
+      "dmuls.l %3, %4\n\t"
+      "mov #-128, %2\n\t"
+      "add %2, %2 /* %2 is now 0xFFFFFF00 */ \n\t"
+      "sts mach, %0\n\t"
+      "sts macl, %1\n\t"
+      "mov.l %5, @(0,%2) /* set 32-bit divisor */ \n\t"
+      "mov.l %0, @(16,%2) /* set high bits of the 64-bit dividend */ \n\t"
+      "mov.l %1, @(20,%2) /* set low bits of the 64-bit dividend, start divide */ \n\t"
+      "mov.l @(20,%2), %0 /* get 32-bit quotient */ \n\t"
+      : "=&r" (slope), "=&r" (lo), "=&r" (divunit)
+      : "r" (h), "r" (den), "r" (num)
+      : "mach", "macl"
+   );
+   return slope;
+#else
+   return FixedDiv(h, FixedDiv(num, den));
+#endif
+}
+
 
 typedef enum
 {
