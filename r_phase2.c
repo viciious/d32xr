@@ -11,7 +11,7 @@
 static fixed_t R_ScaleFromGlobalAngle(fixed_t invdist, fixed_t sineb, int x) ATTR_DATA_CACHE_ALIGN;
 static uint16_t P_SegOffset(seg_t *seg) ATTR_DATA_CACHE_ALIGN;
 void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts) ATTR_DATA_CACHE_ALIGN;
-// the volatiles help gcc produce less silly SH2 assembler code
+// the empty asm fence in R_SegLoop helps gcc produce less silly SH2 assembler code
 static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
@@ -204,7 +204,7 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 //
 static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
 {
-    const volatile int actionbits = segl->actionbits;
+    int actionbits = segl->actionbits;
 
     fixed_t scalefrac = segl->scalefrac;
     const fixed_t scalestep = segl->scalestep;
@@ -212,7 +212,7 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
     int x, start = segl->start;
     const int stop = segl->stop;
 
-    const volatile fixed_t ceilingheight = FROMHEIGHT16(segl->ceilingheight);
+    fixed_t ceilingheight = FROMHEIGHT16(segl->ceilingheight);
 
     const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
     const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
@@ -220,11 +220,17 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
     unsigned short * restrict flooropen = (actionbits & AC_ADDFLOOR) ? vd->visplanes[0].open : NULL;
     unsigned short * restrict ceilopen = (actionbits & AC_ADDCEILING) ? vd->visplanes[0].open : NULL;
 
-    volatile fixed_t floorheight = FROMHEIGHT16(segl->floorheight);
-    volatile fixed_t floornewheight = FROMHEIGHT16(segl->floornewheight);
-    volatile fixed_t ceilingnewheight = FROMHEIGHT16(segl->ceilingnewheight);
+    fixed_t floorheight = FROMHEIGHT16(segl->floorheight);
+    fixed_t floornewheight = FROMHEIGHT16(segl->floornewheight);
+    fixed_t ceilingnewheight = FROMHEIGHT16(segl->ceilingnewheight);
 
     unsigned short * restrict newclipbounds = segl->clipbounds;
+
+#ifdef MARS
+    // keep these out of GCC's value tracking; yields a tighter loop than volatile
+    __asm volatile ("" : "+r" (actionbits), "+r" (ceilingheight), "+r" (floorheight),
+                         "+r" (floornewheight), "+r" (ceilingnewheight));
+#endif
 
     const int cy = centerY;
     const int vh = viewportHeight;

@@ -107,6 +107,7 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
         colnum = colnum_ & tex->widthmask;
         mipcolnum = colnum;
         frac = tex->texturemid - (centerY - top) * iscale;
+        mip = tex->mip;
 
 #if MIPLEVELS > 1
         if (miplevel > tex->maxmip)
@@ -117,13 +118,21 @@ static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, i
                 frac >>= 1;
                 mipcolnum >>= 1;
                 iscale >>= 1;
+                mip++;
+#ifdef MARS
+                // keep GCC from folding the increments into mip + m*28 (mul.l)
+                __asm volatile ("" : "+r" (mip));
+#endif
             } while (--m);
         }
 #endif
 
         // CALICO: Jaguar-specific GPU blitter input calculation starts here.
         // We invoke a software column drawer instead.
-        mip = &tex->mip[miplevel];
+#ifdef MARS
+        // keep GCC from turning mip back into &tex->mip[miplevel] (mul.l)
+        __asm volatile ("" : "+r" (mip));
+#endif
         src = mip->data + mipcolnum * mip->pitch;
 
         if (mip->numdecals > 0)
