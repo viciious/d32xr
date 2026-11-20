@@ -58,7 +58,9 @@ typedef struct
    fixed_t   shootx2, shooty2;
    fixed_t   firstlinefrac;
    int       shootdivpositive;
-   int16_t   ssx1, ssy1, ssx2, ssy2;
+   int16_t   ssx1, ssy1;
+   fixed_t   sidek;        // -(ndy*ssx1 - ndx*ssy1), nd = trace end - start
+   int16_t   sidec[4];     // ndy, -ndx, twice: one pair per vertex
    intercept_t old_intercept;
 
    line_t  *shootline;
@@ -124,51 +126,34 @@ static inline int PA_NodeSide(int x, int y, node_t *node)
 //
 static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *v2)
 {
-   fixed_t s1, s2;
-   fixed_t p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, dx, dy, ndx, ndy;
+   fixed_t a1, a2, s1, den;
+   fixed_t dx, dy, ndx, ndy;
 
-   // p1, p2 are endpoints
-   p1x = v1->x;
-   p1y = v1->y;
-   p2x = v2->x;
-   p2y = v2->y;
+   // a = ndy*(v->x - ssx1) - ndx*(v->y - ssy1): sign bit set when the
+   // vertex is on the back side of the sight trace
+   P_VertexSides(sw->sidec, sw->sidek, &v1, &v2, &a1, &a2);
 
-   // p3, p4 are sight endpoints
-   p3x = sw->ssx1;
-   p3y = sw->ssy1;
-   p4x = sw->ssx2;
-   p4y = sw->ssy2;
-
-   dx  = p2x - p3x;
-   dy  = p2y - p3y;
-   ndx = p4x - p3x;
-   ndy = p4y - p3y;
-
-   s1 = (ndy * dx) < (dy * ndx);
-
-   dx = p1x - p3x;
-   dy = p1y - p3y;
-
-   s2 = (ndy * dx) < (dy * ndx);
-
-   if(s1 == s2)
+   if ((a1 ^ a2) >= 0)
       return -1; // line isn't crossed
 
-   ndx = p1y - p2y; // vector normal to world line
-   ndy = p2x - p1x;
+   dx = v1->x - sw->ssx1;
+   dy = v1->y - sw->ssy1;
+
+   ndx = v1->y - v2->y; // vector normal to world line
+   ndy = v2->x - v1->x;
 
    s1 = ndx * dx + ndy * dy; // distance projected onto normal
 
-   dx = p4x - p1x;
-   dy = p4y - p1y;
-
-   s2 = ndx * dx + ndy * dy; // distance projected onto normal
+   // the trace end's distance s2 isn't needed on its own: s1 + s2 is the
+   // line normal dotted with the trace direction (end - start), which is
+   // exactly a2 - a1
+   den = a2 - a1;
 
    /* try to quickly decide by looking at sign bits */
-   if ( (s1 ^ (s1 + s2))&0x80000000 )
+   if ( (s1 ^ den)&0x80000000 )
       return -1;
 
-   return FixedDiv(s1, (s1 + s2));
+   return FixedDiv(s1, den);
 }
 
 //
@@ -442,6 +427,7 @@ void P_Shoot2(lineattack_t *la)
    mobj_t  *t1;
    angle_t  angle;
    fixed_t  tmp;
+   fixed_t  ndx, ndy;
    shootWork_t sw;
    VINT     *lvalidcount;
 
@@ -464,8 +450,11 @@ void P_Shoot2(lineattack_t *la)
 
    sw.ssx1 = sw.shootdiv.x >> FRACBITS;
    sw.ssy1 = sw.shootdiv.y >> FRACBITS;
-   sw.ssx2 = sw.shootx2    >> FRACBITS;
-   sw.ssy2 = sw.shooty2    >> FRACBITS;
+   ndx = (int16_t)(sw.shootx2 >> FRACBITS) - sw.ssx1;
+   ndy = (int16_t)(sw.shooty2 >> FRACBITS) - sw.ssy1;
+   sw.sidek = -(ndy * sw.ssx1 - ndx * sw.ssy1);
+   sw.sidec[0] = sw.sidec[2] = ndy;
+   sw.sidec[1] = sw.sidec[3] = -ndx;
 
    sw.aimtopslope    = la->aimtopslope;
    sw.aimbottomslope = la->aimbottomslope;

@@ -222,6 +222,37 @@ int 	P_PointOnLineSide (fixed_t x, fixed_t y, line_t *line);
 int 	P_PointOnDivlineSide (fixed_t x, fixed_t y, divline_t *line);
 boolean P_BoxCrossLine (line_t *ld, fixed_t testbbox[4]);
 
+// Side values of two vertices against a trace with a precomputed setup:
+// a = sc[0]*v->x + sc[1]*v->y + k, with sc = {tdy, -tdx, tdy, -tdx} and k
+// chosen by the caller, so that the sign bit marks the back side. On MARS
+// mac.w reads the vertex coordinates straight from memory; *v1 and *v2 are
+// stepped back while the multiplier finishes, so they're unchanged on return.
+static inline __attribute__((always_inline)) void P_VertexSides(const int16_t *sc, fixed_t k,
+   mapvertex_t **v1, mapvertex_t **v2, fixed_t *a1, fixed_t *a2)
+{
+#ifdef MARS
+   const int16_t *c = sc;
+   __asm (
+      "lds %5, macl\n\t"
+      "mac.w @%2+, @%3+\n\t"
+      "mac.w @%2+, @%3+\n\t"
+      "add #-4, %3\n\t"
+      "sts macl, %0\n\t"
+      "lds %5, macl\n\t"
+      "mac.w @%2+, @%4+\n\t"
+      "mac.w @%2+, @%4+\n\t"
+      "add #-4, %4\n\t"
+      "sts macl, %1\n\t"
+      : "=&r" (*a1), "=r" (*a2), "+r" (c), "+r" (*v1), "+r" (*v2)
+      : "r" (k), "m" (*(const int16_t (*)[4])sc), "m" (**v1), "m" (**v2)
+      : "mach", "macl"
+   );
+#else
+   *a1 = sc[0] * (*v1)->x + sc[1] * (*v1)->y + k;
+   *a2 = sc[0] * (*v2)->x + sc[1] * (*v2)->y + k;
+#endif
+}
+
 fixed_t	P_LineOpening (line_t *linedef);
 
 static inline __attribute__((always_inline)) void P_LineBBox(line_t* ld, fixed_t *bbox)
