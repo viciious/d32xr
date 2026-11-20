@@ -80,12 +80,12 @@ int Mars_PlayRoQ(const char *fn, void *mem, size_t size, int allowpause, void (*
 
 void Mars_Sec_AM_Drawer(void);
 
-#define Mars_R_SecWait() do { while (MARS_SYS_COMM4 != MARS_SECCMD_NONE) { SH2_Delay64(); } } while(0)
+#define Mars_R_SecWait() do { while (mars_sys_comm->comm4 != MARS_SECCMD_NONE) { SH2_Delay64(); } } while(0)
 
 static inline void Mars_CommSlaveClearCache(void)
 {
 	Mars_R_SecWait();
-	MARS_SYS_COMM4 = MARS_SECCMD_CLEAR_CACHE;
+	mars_sys_comm->comm4 = MARS_SECCMD_CLEAR_CACHE;
 }
 
 // r_phase2
@@ -94,26 +94,26 @@ static inline void Mars_R_BeginWallPrep(boolean draw)
 	Mars_R_SecWait();
 	if (!draw)
 		return;
-	MARS_SYS_COMM6 = 0; // (next seg)<<8|last unready seg
-	MARS_SYS_COMM4 = draw ? MARS_SECCMD_R_WALL_PREP : MARS_SECCMD_R_WALL_PREP_NODRAW;
+	mars_sys_comm->comm6 = 0; // (next seg)<<8|last unready seg
+	mars_sys_comm->comm4 = draw ? MARS_SECCMD_R_WALL_PREP : MARS_SECCMD_R_WALL_PREP_NODRAW;
 }
 
 static inline void Mars_R_WallNext(void)
 {
-	*(volatile uint8_t *)&MARS_SYS_COMM6 = *(volatile uint8_t *)&MARS_SYS_COMM6 + 1;
+	*(volatile uint8_t *)&mars_sys_comm->comm6 = *(volatile uint8_t *)&mars_sys_comm->comm6 + 1;
 }
 
 static inline void Mars_R_EndWallPrep(void)
 {
-	*(volatile int8_t *)&MARS_SYS_COMM6 = -2;
+	*(volatile int8_t *)&mars_sys_comm->comm6 = -2;
 }
 
 // r_phase7
 static inline void Mars_R_BeginDrawPlanes(void)
 {
 	Mars_R_SecWait();
-	MARS_SYS_COMM6 = 0; // next visplane
-	MARS_SYS_COMM4 = MARS_SECCMD_R_DRAW_PLANES;
+	mars_sys_comm->comm6 = 0; // next visplane
+	mars_sys_comm->comm4 = MARS_SECCMD_R_DRAW_PLANES;
 }
 
 static inline void Mars_R_EndDrawPlanes(void)
@@ -124,8 +124,8 @@ static inline void Mars_R_EndDrawPlanes(void)
 static inline void Mars_R_BeginDrawSprites(int sprscreenhalf)
 {
 	Mars_R_SecWait();
-	MARS_SYS_COMM6 = sprscreenhalf;
-	MARS_SYS_COMM4 = MARS_SECCMD_R_DRAW_SPRITES;
+	mars_sys_comm->comm6 = sprscreenhalf;
+	mars_sys_comm->comm4 = MARS_SECCMD_R_DRAW_SPRITES;
 }
 
 static inline void Mars_R_EndDrawSprites(void)
@@ -135,34 +135,34 @@ static inline void Mars_R_EndDrawSprites(void)
 static inline void Mars_M_BeginDrawFire(void)
 {
 	Mars_R_SecWait();
-	MARS_SYS_COMM4 = MARS_SECCMD_M_ANIMATE_FIRE;
+	mars_sys_comm->comm4 = MARS_SECCMD_M_ANIMATE_FIRE;
 }
 
 static inline void Mars_M_EndDrawFire(void)
 {
-	MARS_SYS_COMM4 = MARS_SECCMD_BREAK;
+	mars_sys_comm->comm4 = MARS_SECCMD_BREAK;
 	Mars_R_SecWait();
 }
 
 static inline void Mars_InitSoundDMA(int initfull)
 {
 	Mars_R_SecWait();
-	MARS_SYS_COMM6 = initfull;
-	MARS_SYS_COMM4 = MARS_SECCMD_S_INIT_DMA;
+	mars_sys_comm->comm6 = initfull;
+	mars_sys_comm->comm4 = MARS_SECCMD_S_INIT_DMA;
 	Mars_R_SecWait();
 }
 
 static inline void Mars_InitRoQSoundDMA(int init)
 {
 	Mars_R_SecWait();
-	MARS_SYS_COMM6 = init;
-	MARS_SYS_COMM4 = MARS_SECCMD_S_INIT_ROQ_DMA;
+	mars_sys_comm->comm6 = init;
+	mars_sys_comm->comm4 = MARS_SECCMD_S_INIT_ROQ_DMA;
 }
 
 static inline void Mars_AM_BeginDrawer(void)
 {
 	Mars_R_SecWait();
-	MARS_SYS_COMM4 = MARS_SECCMD_AM_DRAW;
+	mars_sys_comm->comm4 = MARS_SECCMD_AM_DRAW;
 }
 
 static inline void Mars_AM_EndDrawer(void)
@@ -172,26 +172,26 @@ static inline void Mars_AM_EndDrawer(void)
 
 static inline void Mars_P_BeginCheckSights(void)
 {
-	while (MARS_SYS_COMM4 != 0) {};
-	MARS_SYS_COMM6 = 0;
-	MARS_SYS_COMM4 = MARS_SECCMD_P_SIGHT_CHECKS;
+	while (mars_sys_comm->comm4 != 0) {};
+	mars_sys_comm->comm6 = 0;
+	mars_sys_comm->comm4 = MARS_SECCMD_P_SIGHT_CHECKS;
 }
 
 static inline void Mars_P_EndCheckSights(void)
 {
-	while (MARS_SYS_COMM4 != 0);
+	while (mars_sys_comm->comm4 != 0);
 }
 
 static inline void Mars_melt_BeginWipe(void)
 {
-	while (MARS_SYS_COMM4 != 0) {};
-	MARS_SYS_COMM6 = 0;
-	MARS_SYS_COMM4 = MARS_SECCMD_MELT_DO_WIPE;
+	while (mars_sys_comm->comm4 != 0) {};
+	mars_sys_comm->comm6 = 0;
+	mars_sys_comm->comm4 = MARS_SECCMD_MELT_DO_WIPE;
 }
 
 static inline void Mars_melt_EndWipe(void)
 {
-	while (MARS_SYS_COMM4 != 0);
+	while (mars_sys_comm->comm4 != 0);
 }
 
 #endif 

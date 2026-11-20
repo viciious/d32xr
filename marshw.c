@@ -56,7 +56,7 @@ void *pri_dma_arg = NULL;
 const int NTSC_CLOCK_SPEED = 23011360; // HZ
 const int PAL_CLOCK_SPEED = 22801467; // HZ
 
-static char *mars_stringbuffer = (char *)(&MARS_FRAMEBUFFER + 0x100);
+static char *mars_stringbuffer = (char *)(mars_framebuffer + 0x100);
 
 void pri_vbi_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
 void pri_cmd_handler(void) MARS_ATTR_DATA_CACHE_ALIGN;
@@ -94,7 +94,7 @@ int Mars_FRTCounter2Msec(int c)
 
 void Mars_WaitFrameBuffersFlip(void)
 {
-	while ((MARS_VDP_FBCTL & MARS_VDP_FS) != MARS_ACTIVE_SCREEN) {
+	while ((mars_vdp->fbctl & MARS_VDP_FS) != MARS_ACTIVE_SCREEN) {
 		SH2_Delay512();
 	}
 }
@@ -102,13 +102,13 @@ void Mars_WaitFrameBuffersFlip(void)
 void Mars_FlipFrameBuffers(char wait)
 {
 	MARS_ACTIVE_SCREEN = !MARS_ACTIVE_SCREEN;
-	MARS_VDP_FBCTL = MARS_ACTIVE_SCREEN;
+	mars_vdp->fbctl = MARS_ACTIVE_SCREEN;
 	if (wait) Mars_WaitFrameBuffersFlip();
 }
 
 char Mars_FramebuffersFlipped(void)
 {
-	return (MARS_VDP_FBCTL & MARS_VDP_FS) == MARS_ACTIVE_SCREEN;
+	return (mars_vdp->fbctl & MARS_VDP_FS) == MARS_ACTIVE_SCREEN;
 }
 
 void Mars_InitLineTable(void)
@@ -116,7 +116,7 @@ void Mars_InitLineTable(void)
 	int j;
 	int blank;
 	int offset = 0; // 224p or 240p
-	unsigned short* lines = (unsigned short *)&MARS_FRAMEBUFFER;
+	unsigned short* lines = (unsigned short *)mars_framebuffer;
 
 	// initialize the lines section of the framebuffer
 
@@ -174,9 +174,9 @@ static char Mars_UploadPalette(void)
 {
 	int i;
 	volatile int* newpal = (volatile int *)mars_newpalette;
-	volatile int* cram = (volatile int *)&MARS_CRAM;
+	volatile int* cram = (volatile int *)mars_cram;
 
-	if ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0)
+	if ((mars_sys->intmsk & MARS_SH2_ACCESS_VDP) == 0)
 		return 0;
 	for (i = 0; i < 128; i += 4)
 	{
@@ -196,13 +196,13 @@ int Mars_PollMouse(void)
 	if (port < 0)
 		return -1;
 
-	while (MARS_SYS_COMM0); // wait until 68000 has responded to any earlier requests
-	MARS_SYS_COMM0 = 0x0500 | port; // tells 68000 to read mouse
-	while (MARS_SYS_COMM0 == (0x0500 | port)); // wait for mouse value
+	while (mars_sys_comm->comm0); // wait until 68000 has responded to any earlier requests
+	mars_sys_comm->comm0 = 0x0500 | port; // tells 68000 to read mouse
+	while (mars_sys_comm->comm0 == (0x0500 | port)); // wait for mouse value
 
-	mouse1 = *(volatile unsigned short *)&MARS_SYS_COMM0;
-	mouse2 = *(volatile unsigned short *)&MARS_SYS_COMM2;
-	MARS_SYS_COMM0 = 0; // tells 68000 we got the mouse value
+	mouse1 = (uint16_t)mars_sys_comm->comm0;
+	mouse2 = (uint16_t)mars_sys_comm->comm2;
+	mars_sys_comm->comm0 = 0; // tells 68000 we got the mouse value
 
 	return (int)((mouse1 << 16) | mouse2);
 }
@@ -235,7 +235,7 @@ int Mars_ParseMousePacket(int mouse, int* pmx, int* pmy)
 
 int Mars_GetWDTCount(void)
 {
-	unsigned int cnt = SH2_WDT_RTCNT;
+	unsigned int cnt = sh2_wdt->rtcnt;
 	return (int)((mars_pwdt_ovf_count << 8) | cnt);
 }
 
@@ -245,10 +245,10 @@ void Mars_InitVideo(int lines)
 	char NTSC;
 	int mars_lines = lines == 240 || lines == -240 ? MARS_240_LINES : MARS_224_LINES;
 
-	while ((MARS_SYS_INTMSK & MARS_SH2_ACCESS_VDP) == 0);
+	while ((mars_sys->intmsk & MARS_SH2_ACCESS_VDP) == 0);
 
-	MARS_VDP_DISPMODE = mars_lines | MARS_VDP_MODE_256;
-	NTSC = (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT) != 0;
+	mars_vdp->dispmode = mars_lines | MARS_VDP_MODE_256;
+	NTSC = (mars_vdp->dispmode & MARS_NTSC_FORMAT) != 0;
 
 	// change 4096.0f to something else if WDT TCSR is changed!
 	mars_frtc2msec_frac = 4096.0f * 1000.0f / (NTSC ? NTSC_CLOCK_SPEED : PAL_CLOCK_SPEED) * 65536.0f;
@@ -256,7 +256,7 @@ void Mars_InitVideo(int lines)
 	mars_refresh_hz = NTSC ? 60 : 50;
 	mars_requested_lines = lines;
 	mars_framebuffer_height = lines == 240 ? 240 : 224;
-	MARS_ACTIVE_SCREEN = MARS_VDP_FBCTL;
+	MARS_ACTIVE_SCREEN = mars_vdp->fbctl;
 
 	Mars_FlipFrameBuffers(1);
 
@@ -266,7 +266,7 @@ void Mars_InitVideo(int lines)
 
 		Mars_InitLineTable();
 
-		p = (int*)(&MARS_FRAMEBUFFER + 0x100);
+		p = (int*)(mars_framebuffer + 0x100);
 		p_end = (int*)p + 320 / 4 * mars_framebuffer_height;
 		do {
 			*p = 0;
@@ -286,23 +286,23 @@ void Mars_Init(void)
 	mars_mouseport = -1;
 
 	// init DMA channel 0 & 1
-	SH2_DMA_SAR0 = (int)&MARS_SYS_DMAFIFO;
-	SH2_DMA_DAR0 = 0;
-	SH2_DMA_TCR0 = 0;
-	SH2_DMA_CHCR0 = 0;
-	SH2_DMA_DRCR0 = 0;
-	SH2_DMA_SAR1 = 0;
-	SH2_DMA_DAR1 = 0;
-	SH2_DMA_TCR1 = 0;
-	SH2_DMA_CHCR1 = 0;
-	SH2_DMA_DRCR1 = 0;
-	SH2_DMA_DMAOR = 1; // enable DMA transfers on all channels
+	sh2_dma->sar0 = (int)&mars_sys->dmafifo;
+	sh2_dma->dar0 = 0;
+	sh2_dma->tcr0 = 0;
+	sh2_dma->chcr0 = 0;
+	sh2_dma_drcr->drcr0 = 0;
+	sh2_dma->sar1 = 0;
+	sh2_dma->dar1 = 0;
+	sh2_dma->tcr1 = 0;
+	sh2_dma->chcr1 = 0;
+	sh2_dma_drcr->drcr1 = 0;
+	sh2_dma->dmaor = 1; // enable DMA transfers on all channels
 
-	SH2_WDT_WTCSR_TCNT = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
+	sh2_wdt->wtcsr_tcnt = 0xA518; /* WDT TCSR = clr OVF, IT mode, timer off, clksel = Fs/2 */
 
 	/* init hires timer system */
-	SH2_WDT_VCR = (65<<8) | (SH2_WDT_VCR & 0x00FF); // set exception vector for WDT
-	SH2_INT_IPRA = (SH2_INT_IPRA & 0xFF0F) | 0x0020; // set WDT INT to priority 2
+	*sh2_int_vcrwdt = (65<<8) | (*sh2_int_vcrwdt & 0x00FF); // set exception vector for WDT
+	*sh2_int_ipra = (*sh2_int_ipra & 0xFF0F) | 0x0020; // set WDT INT to priority 2
 
 	Mars_UpdateCD();
 
@@ -321,14 +321,14 @@ void Mars_InitPWM(int sample_rate, int min_sample, int max_sample)
 	int centre_sample = (max_sample-min_sample)/2;
 
 	// init the sound hardware
-	MARS_PWM_MONO = 1;
-	MARS_PWM_MONO = 1;
-	MARS_PWM_MONO = 1;
-	if (MARS_VDP_DISPMODE & MARS_NTSC_FORMAT)
-		MARS_PWM_CYCLE = (((23011361 << 1) / (sample_rate)+1) >> 1) + 1; // for NTSC clock
+	mars_pwm->mono = 1;
+	mars_pwm->mono = 1;
+	mars_pwm->mono = 1;
+	if (mars_vdp->dispmode & MARS_NTSC_FORMAT)
+		mars_pwm->cycle = (((23011361 << 1) / (sample_rate)+1) >> 1) + 1; // for NTSC clock
 	else
-		MARS_PWM_CYCLE = (((22801467 << 1) / (sample_rate)+1) >> 1) + 1; // for PAL clock
-	MARS_PWM_CTRL = 0x0185; // TM = 1, RTP, RMD = right, LMD = left
+		mars_pwm->cycle = (((22801467 << 1) / (sample_rate)+1) >> 1) + 1; // for PAL clock
+	mars_pwm->ctrl = 0x0185; // TM = 1, RTP, RMD = right, LMD = left
 
 	sample = min_sample;
 
@@ -337,8 +337,8 @@ void Mars_InitPWM(int sample_rate, int min_sample, int max_sample)
 	{
 		for (ix = 0; ix < (sample_rate * 2) / (centre_sample - min_sample); ix++)
 		{
-			while (MARS_PWM_MONO & 0x8000); // wait while full
-			MARS_PWM_MONO = sample;
+			while (mars_pwm->mono & 0x8000); // wait while full
+			mars_pwm->mono = sample;
 		}
 		sample++;
 	}
@@ -346,7 +346,7 @@ void Mars_InitPWM(int sample_rate, int min_sample, int max_sample)
 
 uint16_t* Mars_FrameBufferLines(void)
 {
-	uint16_t* lines = (uint16_t*)&MARS_FRAMEBUFFER;
+	uint16_t* lines = (uint16_t*)mars_framebuffer;
 	if (mars_requested_lines == -240)
 		lines += (240 - 224) / 2;
 	return lines;
@@ -356,12 +356,12 @@ void Mars_ReadSRAM(uint8_t * buffer, int offset, int len)
 {
 	uint8_t *ptr = buffer;
 
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 	while (len-- > 0) {
-		MARS_SYS_COMM2 = offset++;
-		MARS_SYS_COMM0 = 0x0100;    /* Read SRAM */
-		while (MARS_SYS_COMM0);
-		*ptr++ = MARS_SYS_COMM2 & 0x00FF;
+		mars_sys_comm->comm2 = offset++;
+		mars_sys_comm->comm0 = 0x0100;    /* Read SRAM */
+		while (mars_sys_comm->comm0);
+		*ptr++ = mars_sys_comm->comm2 & 0x00FF;
 	}
 }
 
@@ -369,24 +369,24 @@ void Mars_WriteSRAM(const uint8_t* buffer, int offset, int len)
 {
 	const uint8_t *ptr = buffer;
 
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 	while (len-- > 0) {
-		MARS_SYS_COMM2 = offset++;
-		MARS_SYS_COMM0 = 0x0200 | *ptr++;    /* Write SRAM */
-		while (MARS_SYS_COMM0);
+		mars_sys_comm->comm2 = offset++;
+		mars_sys_comm->comm0 = 0x0200 | *ptr++;    /* Write SRAM */
+		while (mars_sys_comm->comm0);
 	}
 }
 
 void Mars_SetStringBufferOffset(int offset)
 {
-	mars_stringbuffer = (char *)(&MARS_FRAMEBUFFER + 0x100) + ((offset + 3)&~3);
+	mars_stringbuffer = (char *)(mars_framebuffer + 0x100) + ((offset + 3)&~3);
 }
 
 char *Mars_StringToFramebuffer(const char *str)
 {
-	short *fb = (short *)(&MARS_FRAMEBUFFER + 0x100);
+	short *fb = (short *)(mars_framebuffer + 0x100);
 	char *buf = mars_stringbuffer;
-	int *lnbuf = (int *)(&MARS_FRAMEBUFFER + 0x0F0); // 16 unused words of the line table
+	int *lnbuf = (int *)(mars_framebuffer + 0x0F0); // 16 unused words of the line table
 
 	if (!*str)
 		return (char *)buf;
@@ -404,24 +404,24 @@ char *Mars_StringToFramebuffer(const char *str)
 
 void Mars_UpdateCD(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x0600;
-	while (MARS_SYS_COMM0);
-	mars_cd_ok = MARS_SYS_COMM2;
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x0600;
+	while (mars_sys_comm->comm0);
+	mars_cd_ok = mars_sys_comm->comm2;
 	mars_num_cd_tracks = (mars_cd_ok >> 2) & 63;
 	mars_cd_ok = mars_cd_ok & 0x3;
 }
 
 void Mars_UseCD(int usecd)
 {
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 
 	if (!mars_cd_ok)
 		return;
 
-	MARS_SYS_COMM2 = usecd & 1;
-	MARS_SYS_COMM0 = 0x0700;
-	while (MARS_SYS_COMM0);
+	mars_sys_comm->comm2 = usecd & 1;
+	mars_sys_comm->comm0 = 0x0700;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, int length, char looping)
@@ -440,27 +440,27 @@ void Mars_PlayTrack(char use_cda, int playtrack, const char *name, int offset, i
 
 	if (!use_cda)
 	{
-		*(int *)&MARS_SYS_COMM8 = offset;
-		*(int *)&MARS_SYS_COMM12 = length;
+		*(int *)&mars_sys_comm->comm8 = offset;
+		*(int *)&mars_sys_comm->comm12 = length;
 	}
 
-	MARS_SYS_COMM2 = playtrack | (looping ? 0x8000 : 0x0000);
-	MARS_SYS_COMM0 = 0x0300 | use_cdf | send_fn; /* start music */
-	while (MARS_SYS_COMM0);
+	mars_sys_comm->comm2 = playtrack | (looping ? 0x8000 : 0x0000);
+	mars_sys_comm->comm0 = 0x0300 | use_cdf | send_fn; /* start music */
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_MCDResumeSPCMTrack(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x2C00;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x2C00;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_MCDOpenTray(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x2D00;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x2D00;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len)
@@ -468,20 +468,20 @@ void Mars_MCDLoadSfx(uint16_t id, void *data, uint32_t data_len)
 	int i;
 	uint16_t s[4];
 
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 
 	s[0] = (uintptr_t)data_len>>16, s[1] = (uintptr_t)data_len&0xffff;
 	s[2] = (uintptr_t)data>>16, s[3] = (uintptr_t)data&0xffff;
 
 	for (i = 0; i < 4; i++) {
-		MARS_SYS_COMM2 = s[i];
-		MARS_SYS_COMM0 = 0x1D01+i;
-		while (MARS_SYS_COMM0);
+		mars_sys_comm->comm2 = s[i];
+		mars_sys_comm->comm0 = 0x1D01+i;
+		while (mars_sys_comm->comm0);
 	}
 
-	MARS_SYS_COMM2 = id;
-	MARS_SYS_COMM0 = 0x1D00; /* load sfx */
-	while (MARS_SYS_COMM0);
+	mars_sys_comm->comm2 = id;
+	mars_sys_comm->comm0 = 0x1D00; /* load sfx */
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_MCDPlaySfx(uint8_t src_id, uint16_t buf_id, uint8_t pan, uint8_t vol, uint16_t freq)
@@ -489,29 +489,29 @@ void Mars_MCDPlaySfx(uint8_t src_id, uint16_t buf_id, uint8_t pan, uint8_t vol, 
 	if (src_id == 0)
 		return;
 
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 
-	MARS_SYS_COMM2 = (pan<<8)|vol;
-	MARS_SYS_COMM8 = freq;
-	MARS_SYS_COMM10 = buf_id;
-	MARS_SYS_COMM0 = 0x1E00|src_id;
+	mars_sys_comm->comm2 = (pan<<8)|vol;
+	mars_sys_comm->comm8 = freq;
+	mars_sys_comm->comm10 = buf_id;
+	mars_sys_comm->comm0 = 0x1E00|src_id;
 
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 }
 
 int Mars_MCDGetSfxPlaybackStatus(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1F00;
-	while (MARS_SYS_COMM0);
-	return MARS_SYS_COMM2;
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1F00;
+	while (mars_sys_comm->comm0);
+	return mars_sys_comm->comm2;
 }
 
 void Mars_MCDClearSfx(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x2000;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x2000;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol, uint16_t freq)
@@ -519,41 +519,41 @@ void Mars_MCDUpdateSfx(uint8_t src_id, uint8_t pan, uint8_t vol, uint16_t freq)
 	if (src_id == 0)
 		return;
 
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = (pan<<8)|vol;
-	MARS_SYS_COMM8 = freq;
-	MARS_SYS_COMM0 = 0x2100|src_id;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm2 = (pan<<8)|vol;
+	mars_sys_comm->comm8 = freq;
+	mars_sys_comm->comm0 = 0x2100|src_id;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_MCDStopSfx(uint8_t src_id)
 {
 	if (src_id == 0)
 		return;
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x2200|src_id;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x2200|src_id;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_MCDFlushSfx(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x2300;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x2300;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_StopTrack(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x0400; /* stop music */
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x0400; /* stop music */
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_SetMusicVolume(uint8_t volume)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1800|volume;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1800|volume;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_WaitTicks(int ticks)
@@ -564,10 +564,10 @@ void Mars_WaitTicks(int ticks)
 
 int Mars_GetMusicStatus(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1100;
-	while (MARS_SYS_COMM0);
-	return MARS_SYS_COMM2;
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1100;
+	while (mars_sys_comm->comm0);
+	return mars_sys_comm->comm2;
 }
 
 /*
@@ -576,10 +576,10 @@ int Mars_GetMusicStatus(void)
 
 static inline unsigned short GetNetByte(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1200;	/* get a byte from the network */
-	while (MARS_SYS_COMM0);
-	return *(volatile unsigned short *)&MARS_SYS_COMM2;		/* status:byte */
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1200;	/* get a byte from the network */
+	while (mars_sys_comm->comm0);
+	return *(volatile unsigned short *)&mars_sys_comm->comm2;		/* status:byte */
 }
 
 /*
@@ -623,40 +623,40 @@ int Mars_GetNetByte(int wait)
  */
 int Mars_PutNetByte(int val)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1300 | (val & 0x00FF);	/* send a byte to the network */
-	while (MARS_SYS_COMM0);
-	return (*(volatile unsigned short *)&MARS_SYS_COMM2 == 0xFFFF) ? -1 : 0;
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1300 | (val & 0x00FF);	/* send a byte to the network */
+	while (mars_sys_comm->comm0);
+	return (*(volatile unsigned short *)&mars_sys_comm->comm2 == 0xFFFF) ? -1 : 0;
 }
 
 void Mars_SetupNet(int type)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1400 | (type & 255);		/* init joyport 2 for networking */
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1400 | (type & 255);		/* init joyport 2 for networking */
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_CleanupNet(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1500;		/* cleanup networking */
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1500;		/* cleanup networking */
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_SetNetLinkTimeout(int timeout)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = timeout;
-	MARS_SYS_COMM0 = 0x1700;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm2 = timeout;
+	mars_sys_comm->comm0 = 0x1700;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_MDSetFontPalette(const uint8_t* palette)
 {
 	int	i;
-	short *buf = (short *)(&MARS_FRAMEBUFFER + 0x0F0); // 16 unused words of the line table 
+	short *buf = (short *)(mars_framebuffer + 0x0F0); // 16 unused words of the line table
 
-	while (MARS_SYS_COMM0) ;
+	while (mars_sys_comm->comm0) ;
 
 	for (i = 0; i < 16; i++) {
 		int r = *palette++;
@@ -671,24 +671,24 @@ void Mars_MDSetFontPalette(const uint8_t* palette)
 
 	}
 
-    MARS_SYS_COMM0 = 0x0B00;
-    while (MARS_SYS_COMM0) ;
+    mars_sys_comm->comm0 = 0x0B00;
+    while (mars_sys_comm->comm0) ;
 }
 
 void Mars_MDLoadFont(int xtiles, int ytiles, short *data)
 {
-	int *buf = (int *)(&MARS_FRAMEBUFFER + 0x0F0); // 16 unused words of the line table 
-	short *fb = (short *)(&MARS_FRAMEBUFFER + 0x100);
+	int *buf = (int *)(mars_framebuffer + 0x0F0); // 16 unused words of the line table
+	short *fb = (short *)(mars_framebuffer + 0x100);
 
-	if (data < fb || data >= &MARS_OVERWRITE_IMG) {
+	if (data < fb || data >= mars_overwrite_img) {
 		return;
 	}
 
-	while (MARS_SYS_COMM0) ;
-	MARS_SYS_COMM2 = ((ytiles & 0xff) << 8) | (xtiles & 0xff);
+	while (mars_sys_comm->comm0) ;
+	mars_sys_comm->comm2 = ((ytiles & 0xff) << 8) | (xtiles & 0xff);
 	*buf = (uintptr_t)data - (uintptr_t)fb;
-    MARS_SYS_COMM0 = 0x0C00;
-    while (MARS_SYS_COMM0) ;
+    mars_sys_comm->comm0 = 0x0C00;
+    while (mars_sys_comm->comm0) ;
 }
 
 void Mars_MDPutString(int x, int y, const char *str)
@@ -696,28 +696,28 @@ void Mars_MDPutString(int x, int y, const char *str)
 	if (!str || !*str) {
 		return;
 	}
-	while (MARS_SYS_COMM0) ;
-	MARS_SYS_COMM2 = (y << 6) | x;
+	while (mars_sys_comm->comm0) ;
+	mars_sys_comm->comm2 = (y << 6) | x;
 	Mars_StringToFramebuffer(str);
-	MARS_SYS_COMM0 = 0x0D00|1; // force the line to be cleared
-	while (MARS_SYS_COMM0) ;
+	mars_sys_comm->comm0 = 0x0D00|1; // force the line to be cleared
+	while (mars_sys_comm->comm0) ;
 }
 
 void Mars_SetBankPage(int bank, int page)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1600 | (page<<3) | bank;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1600 | (page<<3) | bank;
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_SetBankPageSec(int bank, int page)
 {
-	volatile unsigned short bcomm4 = MARS_SYS_COMM4;
+	volatile unsigned short bcomm4 = mars_sys_comm->comm4;
 
-	MARS_SYS_COMM4 = 0x1600 | (page<<3) | bank;
-	while (MARS_SYS_COMM4 != 0x1000);
+	mars_sys_comm->comm4 = 0x1600 | (page<<3) | bank;
+	while (mars_sys_comm->comm4 != 0x1000);
 
-	MARS_SYS_COMM4 = bcomm4;
+	mars_sys_comm->comm4 = bcomm4;
 }
 
 int Mars_ROMSize(void)
@@ -737,9 +737,9 @@ void Mars_DetectInputDevices(void)
 	for (i = 0; i < MARS_MAX_CONTROLLERS; i++)
 	{
 		/* wait on COMM0 */
-		while (*(volatile unsigned short *)&MARS_SYS_COMM0 != ctrl_wait);
+		while (*(volatile unsigned short *)&mars_sys_comm->comm0 != ctrl_wait);
 
-		int val = *(volatile unsigned short *)&MARS_SYS_COMM2;
+		int val = *(volatile unsigned short *)&mars_sys_comm->comm2;
 		if (val == 0xF000)
 		{
 			mars_controlval[i] = 0;
@@ -755,7 +755,7 @@ void Mars_DetectInputDevices(void)
 			mars_controlval[i] |= val;
 		}
 
-		MARS_SYS_COMM0 = ++ctrl_wait;
+		mars_sys_comm->comm0 = ++ctrl_wait;
 		++ctrl_wait;
 	}
 
@@ -787,24 +787,24 @@ int Mars_ReadController(int ctrl)
 void Mars_SetVDPPri(int sel)
 {
 	if (sel) {
-		MARS_VDP_DISPMODE |= MARS_VDP_PRIO_32X;
+		mars_vdp->dispmode |= MARS_VDP_PRIO_32X;
 	} else {
-		MARS_VDP_DISPMODE &= ~MARS_VDP_PRIO_32X;
+		mars_vdp->dispmode &= ~MARS_VDP_PRIO_32X;
 	}
 }
 
 void Mars_InitMDVDP(void)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM0 = 0x1900 | (1);
-	while (MARS_SYS_COMM0);	
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm0 = 0x1900 | (1);
+	while (mars_sys_comm->comm0);
 }
 
 void Mars_StoreWordColumnInMDVRAM(int c, int count)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = count;
-	MARS_SYS_COMM0 = 0x1A00|c;		/* sel = to VRAM, column in LB of comm0, start move */
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm2 = count;
+	mars_sys_comm->comm0 = 0x1A00|c;		/* sel = to VRAM, column in LB of comm0, start move */
 }
 
 void Mars_LoadWordColumnFromMDVRAM(int c, const uint16_t *length_offsets, int count)
@@ -812,7 +812,7 @@ void Mars_LoadWordColumnFromMDVRAM(int c, const uint16_t *length_offsets, int co
 	int i;
 	int offset;
 	volatile short *line_table =
-		(volatile short *)(&MARS_FRAMEBUFFER + 0x0F0);
+		(volatile short *)(mars_framebuffer + 0x0F0);
 
 	for (offset = 0; offset < count; offset += 16) {
 		int bcount = count - offset;
@@ -830,22 +830,22 @@ void Mars_LoadWordColumnFromMDVRAM(int c, const uint16_t *length_offsets, int co
 		if (!hascols)
 			continue;
 
-		while (MARS_SYS_COMM0 != 0);
+		while (mars_sys_comm->comm0 != 0);
 		for (i = 0; i < bcount; i++) {
 			line_table[i] = length_offsets[offset + i];
 		}
-		MARS_SYS_COMM2 = bcount;
-		MARS_SYS_COMM0 = 0x1B00 | (c + offset);
+		mars_sys_comm->comm2 = bcount;
+		mars_sys_comm->comm0 = 0x1B00 | (c + offset);
 	}
 
-	while (MARS_SYS_COMM0 != 0);
+	while (mars_sys_comm->comm0 != 0);
 }
 
 void Mars_SwapWordColumnWithMDVRAM(int c, int count)
 {
-    while (MARS_SYS_COMM0);
-    MARS_SYS_COMM2 = count;
-    MARS_SYS_COMM0 = 0x1C00|c;        /* sel = swap with VRAM, column in LB of comm0, start move */
+    while (mars_sys_comm->comm0);
+    mars_sys_comm->comm2 = count;
+    mars_sys_comm->comm0 = 0x1C00|c;        /* sel = swap with VRAM, column in LB of comm0, start move */
 }
 
 int Mars_OpenCDFileByName(const char *name, int *poffset)
@@ -858,14 +858,14 @@ int Mars_OpenCDFileByName(const char *name, int *poffset)
 		return -1;
 	}
 
-	while (MARS_SYS_COMM0) {}
+	while (mars_sys_comm->comm0) {}
 	Mars_StringToFramebuffer(name);
-    MARS_SYS_COMM0 = 0x2600;
-    while (MARS_SYS_COMM0) {}
+    mars_sys_comm->comm0 = 0x2600;
+    while (mars_sys_comm->comm0) {}
 
 	if (poffset)
-		*poffset = *(int *)&MARS_SYS_COMM12;
-	return *(int *)&MARS_SYS_COMM8;
+		*poffset = *(int *)&mars_sys_comm->comm12;
+	return *(int *)&mars_sys_comm->comm8;
 }
 
 void Mars_OpenCDFileByOffset(int length, int offset)
@@ -877,30 +877,30 @@ void Mars_OpenCDFileByOffset(int length, int offset)
 		return;
 	}
 
-    while (MARS_SYS_COMM0) {}
-	*(int *)&MARS_SYS_COMM8 = length;
-	*(int *)&MARS_SYS_COMM12 = offset;
+    while (mars_sys_comm->comm0) {}
+	*(int *)&mars_sys_comm->comm8 = length;
+	*(int *)&mars_sys_comm->comm12 = offset;
 
-    MARS_SYS_COMM0 = 0x2700;
-    while (MARS_SYS_COMM0) {}
+    mars_sys_comm->comm0 = 0x2700;
+    while (mars_sys_comm->comm0) {}
 }
 
 int Mars_ReadCDFile(int length)
 {
 	int words = length / 2 + 1;
-	short *fb = (short *)(&MARS_FRAMEBUFFER + 0x100);
+	short *fb = (short *)(mars_framebuffer + 0x100);
 
-	while (MARS_SYS_COMM0) {}
+	while (mars_sys_comm->comm0) {}
 
 	do {
 		*fb++ = 0;
 	} while (--words);
 
-	*(int *)&MARS_SYS_COMM8 = length;
-	MARS_SYS_COMM0 = 0x2800;
+	*(int *)&mars_sys_comm->comm8 = length;
+	mars_sys_comm->comm0 = 0x2800;
 
-	while (MARS_SYS_COMM0) {}
-	return *(int *)&MARS_SYS_COMM8;
+	while (mars_sys_comm->comm0) {}
+	return *(int *)&mars_sys_comm->comm8;
 }
 
 static void Mars_HandleBeginDMARequest(void)
@@ -910,26 +910,26 @@ static void Mars_HandleBeginDMARequest(void)
 	void *dest;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
-	cmd = ++MARS_SYS_COMM0;
-	while (MARS_SYS_COMM0 == cmd);
+	cmd = ++mars_sys_comm->comm0;
+	while (mars_sys_comm->comm0 == cmd);
 
-	l = MARS_SYS_COMM2; // length in words
-	arg = (((((MARS_SYS_DMADAR>>1)&0xffff)<<16)))|(((MARS_SYS_DMASAR>>1)&0xffff));
+	l = mars_sys_comm->comm2; // length in words
+	arg = (((((mars_sys->dmadar>>1)&0xffff)<<16)))|(((mars_sys->dmasar>>1)&0xffff));
 
 	dest = pri_dreqdma_cb(pri_dma_arg, NULL, l*2, arg);
 
 	if (!dest) {
 		// deny
-		++MARS_SYS_COMM2;
-		cmd = ++MARS_SYS_COMM0;
-		while (MARS_SYS_COMM0 == cmd);
+		++mars_sys_comm->comm2;
+		cmd = ++mars_sys_comm->comm0;
+		while (mars_sys_comm->comm0 == cmd);
 		return;
 	}
 
-	cmd = ++MARS_SYS_COMM0;
-	while (MARS_SYS_COMM0 == cmd);
+	cmd = ++mars_sys_comm->comm0;
+	while (mars_sys_comm->comm0 == cmd);
 
-	while (!(MARS_SYS_DMACTR & MARS_SYS_DMA_68S)) ; // wait for SH DREQ to start
+	while (!(mars_sys->dmactr & MARS_SYS_DMA_68S)) ; // wait for SH DREQ to start
 
 	j = (l + 3) & 0xFFFC; // # words to DMA
 	if (j == 0)
@@ -938,12 +938,12 @@ static void Mars_HandleBeginDMARequest(void)
 	pri_dma_dest = dest;
 	pri_dma_length = l*2;
 
-	SH2_DMA_CHCR0; // read TE
-	SH2_DMA_CHCR0 = chcr; // clear TE
-	SH2_DMA_DAR0 = 0x20000000 | ((uintptr_t)dest);
-	SH2_DMA_TCR0 = j;
+	sh2_dma->chcr0; // read TE
+	sh2_dma->chcr0 = chcr; // clear TE
+	sh2_dma->dar0 = 0x20000000 | ((uintptr_t)dest);
+	sh2_dma->tcr0 = j;
 
-	SH2_DMA_CHCR0 = chcr|SH2_DMA_CHCR_DE;
+	sh2_dma->chcr0 = chcr|SH2_DMA_CHCR_DE;
 }
 
 static void Mars_HandleEndDMARequest(void)
@@ -951,32 +951,32 @@ static void Mars_HandleEndDMARequest(void)
 	int flag;
 	int chcr = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AL_AH|SH2_DMA_CHCR_DS_EDGE|SH2_DMA_CHCR_DL_AH;
 
-	while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) {
+	while (!(sh2_dma->chcr0 & SH2_DMA_CHCR_TE)) {
 	} // wait on TE
-	SH2_DMA_CHCR0 = chcr; // clear DMA TE
+	sh2_dma->chcr0 = chcr; // clear DMA TE
 
 	// wait for an ack
-	flag = MARS_SYS_COMM0 + 2;
-	MARS_SYS_COMM0 = flag;
-	while (MARS_SYS_COMM0 == flag);
+	flag = mars_sys_comm->comm0 + 2;
+	mars_sys_comm->comm0 = flag;
+	while (mars_sys_comm->comm0 == flag);
 
 	pri_dreqdmadone_cb(pri_dma_arg);
 }
 
 int Mars_SeekCDFile(int offset, int whence)
 {
-	while (MARS_SYS_COMM0) {}
-	*(int *)&MARS_SYS_COMM8 = offset;
-	MARS_SYS_COMM2 = whence;
-	MARS_SYS_COMM0 = 0x2900;
+	while (mars_sys_comm->comm0) {}
+	*(int *)&mars_sys_comm->comm8 = offset;
+	mars_sys_comm->comm2 = whence;
+	mars_sys_comm->comm0 = 0x2900;
 
-	while (MARS_SYS_COMM0) {}
-	return *(int *)&MARS_SYS_COMM8;
+	while (mars_sys_comm->comm0) {}
+	return *(int *)&mars_sys_comm->comm8;
 }
 
 void *Mars_GetCDFileBuffer(void)
 {
-	return (void *)(&MARS_FRAMEBUFFER + 0x100);
+	return (void *)(mars_framebuffer + 0x100);
 }
 
 void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int *offsetlen)
@@ -987,16 +987,16 @@ void Mars_MCDLoadSfxFileOfs(uint16_t start_id, int numsfx, const char *name, int
 		return;
 	}
 
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 
 	ptr = Mars_StringToFramebuffer(name);
 	ptr = (void*)(((uintptr_t)ptr + 1 + 3) & ~3);
 	fast_memcpy(ptr, offsetlen, (unsigned)numsfx*2*sizeof(*offsetlen)/4);
 
-	MARS_SYS_COMM2 = start_id;
-	MARS_SYS_COMM0 = 0x2A00|numsfx; /* load sfx */
+	mars_sys_comm->comm2 = start_id;
+	mars_sys_comm->comm0 = 0x2A00|numsfx; /* load sfx */
 
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 }
 
 int Mars_MCDReadDirectory(const char *path, char **pbuf)
@@ -1008,13 +1008,13 @@ int Mars_MCDReadDirectory(const char *path, char **pbuf)
 		return -1;
 	}
 
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
 
 	Mars_StringToFramebuffer(path);
-	MARS_SYS_COMM0 = 0x2B00; /* read directory */
-	while (MARS_SYS_COMM0);
+	mars_sys_comm->comm0 = 0x2B00; /* read directory */
+	while (mars_sys_comm->comm0);
 	*pbuf = mars_stringbuffer;
-	return *(int *)&MARS_SYS_COMM12;
+	return *(int *)&mars_sys_comm->comm12;
 }
 
 int Mars_MCDBeginRoQStream(const char *file)
@@ -1026,43 +1026,43 @@ int Mars_MCDBeginRoQStream(const char *file)
         return -1;
     }
 
-	MARS_SYS_COMM8 = 0x1000;
-    MARS_SYS_COMM0 = 0x2E00;
+	mars_sys_comm->comm8 = 0x1000;
+    mars_sys_comm->comm0 = 0x2E00;
 	return length;
 }
 
 void Mars_MCDSopRoQStream(void)
 {
-    while (MARS_SYS_COMM8 & MARS_ROQFL_REQ) {
+    while (mars_sys_comm->comm8 & MARS_ROQFL_REQ) {
 		;
 	}
-	MARS_SYS_COMM8 |= MARS_ROQFL_STP; // tell the 68k to stop streaming
+	mars_sys_comm->comm8 |= MARS_ROQFL_STP; // tell the 68k to stop streaming
 
-	while (MARS_SYS_COMM0) {
+	while (mars_sys_comm->comm0) {
 		;
 	}
 }
 
 void Mars_StoreAuxBytes(int length)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = length;
-	MARS_SYS_COMM0 = 0x2400;
-	while (MARS_SYS_COMM0);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm2 = length;
+	mars_sys_comm->comm0 = 0x2400;
+	while (mars_sys_comm->comm0);
 }
 
 void *Mars_LoadAuxBytes(int length)
 {
-	while (MARS_SYS_COMM0);
-	MARS_SYS_COMM2 = length;
-	MARS_SYS_COMM0 = 0x2500;
-	while (MARS_SYS_COMM0);
-	return (void *)(&MARS_FRAMEBUFFER + 0x100);
+	while (mars_sys_comm->comm0);
+	mars_sys_comm->comm2 = length;
+	mars_sys_comm->comm0 = 0x2500;
+	while (mars_sys_comm->comm0);
+	return (void *)(mars_framebuffer + 0x100);
 }
 
 void Mars_Finish(void)
 {
-	while (MARS_SYS_COMM0 != 0);
+	while (mars_sys_comm->comm0 != 0);
 }
 
 void Mars_SetPriCmdCallback(void (*cb)(void))
@@ -1102,7 +1102,7 @@ void pri_vbi_handler(void)
 
 void pri_cmd_handler(void)
 {
-	switch (*(volatile unsigned short *)&MARS_SYS_COMM0)
+	switch (*(volatile unsigned short *)&mars_sys_comm->comm0)
 	{
 		case 0xFF00:
 			Mars_DetectInputDevices();
@@ -1126,8 +1126,8 @@ void sec_cmd_handler(void)
 
 void sec_dma1_handler(void)
 {
-	SH2_DMA_CHCR1; // read TE
-	SH2_DMA_CHCR1 = 0; // clear TE
+	sh2_dma->chcr1; // read TE
+	sh2_dma->chcr1 = 0; // clear TE
 
 	sci_dma1_cb();
 }

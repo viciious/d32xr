@@ -105,8 +105,8 @@ static int SlopeAngle (unsigned num, unsigned den)
 
 	den >>= 8;
 #ifdef MARS
-	SH2_DIVU_DVSR = den;
-	SH2_DIVU_DVDNT = num << 3;
+	sh2_divu->dvsr = den;
+	sh2_divu->dvdnt = num << 3;
 
     __asm volatile (
       "mov.l %1, %0"
@@ -117,7 +117,7 @@ static int SlopeAngle (unsigned num, unsigned den)
    if (den < 2)
 	  ans = SLOPERANGE;
    else
-      ans = SH2_DIVU_DVDNT;
+      ans = sh2_divu->dvdnt;
 #else
 	if (den < 2)
 		ans = SLOPERANGE;

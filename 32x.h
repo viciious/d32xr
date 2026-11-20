@@ -25,49 +25,10 @@
 #ifndef __32X_H__
 #define __32X_H__
 
-#define MARS_CRAM           (*(volatile short *)0x20004200)
-#define MARS_FRAMEBUFFER    (*(volatile short *)0x24000000)
-#define MARS_OVERWRITE_IMG  (*(volatile short *)0x24020000)
-#define MARS_SDRAM          (*(volatile short *)0x26000000)
-
-#define MARS_SYS_INTMSK     (*(volatile unsigned short *)0x20004000)
-#define MARS_SYS_DMACTR     (*(volatile unsigned short *)0x20004006)
-#define MARS_SYS_DMASAR     (*(volatile unsigned long *)0x20004008)
-#define MARS_SYS_DMADAR     (*(volatile unsigned long *)0x2000400C)
-#define MARS_SYS_DMALEN     (*(volatile unsigned short *)0x20004010)
-#define MARS_SYS_DMAFIFO    (*(volatile unsigned short *)0x20004012)
-#define MARS_SYS_VRESI_CLR  (*(volatile unsigned short *)0x20004014)
-#define MARS_SYS_VINT_CLR   (*(volatile unsigned short *)0x20004016)
-#define MARS_SYS_HINT_CLR   (*(volatile unsigned short *)0x20004018)
-#define MARS_SYS_CMDI_CLR   (*(volatile unsigned short *)0x2000401A)
-#define MARS_SYS_PWMI_CLR   (*(volatile unsigned short *)0x2000401C)
-
-#define MARS_SYS_COMM0      (*(volatile short *)0x20004020) /* Master SH2 communication */
-#define MARS_SYS_COMM2      (*(volatile short *)0x20004022)
-#define MARS_SYS_COMM4      (*(volatile short *)0x20004024) /* Slave SH2 communication */
-#define MARS_SYS_COMM6      (*(volatile short *)0x20004026)
-#define MARS_SYS_COMM8      (*(volatile short *)0x20004028) /* unused */
-#define MARS_SYS_COMM10     (*(volatile short *)0x2000402A) /* unused */
-#define MARS_SYS_COMM12     (*(volatile short *)0x2000402C) /* unused */
-#define MARS_SYS_COMM14     (*(volatile short *)0x2000402E) /* unused */
-
 #define MARS_SYS_DMA_RV     0x0001
 #define MARS_SYS_DMA_68S    0x0004
 #define MARS_SYS_DMA_EMPTY  0x4000
 #define MARS_SYS_DMA_FULL   0x8000
-
-#define MARS_PWM_CTRL       (*(volatile unsigned short *)0x20004030)
-#define MARS_PWM_CYCLE      (*(volatile unsigned short *)0x20004032)
-#define MARS_PWM_LEFT       (*(volatile unsigned short *)0x20004034)
-#define MARS_PWM_RIGHT      (*(volatile unsigned short *)0x20004036)
-#define MARS_PWM_MONO       (*(volatile unsigned short *)0x20004038)
-#define MARS_PWM_STEREO     MARS_PWM_LEFT
-
-#define MARS_VDP_DISPMODE   (*(volatile unsigned short *)0x20004100)
-#define MARS_VDP_FILLEN     (*(volatile unsigned short *)0x20004104)
-#define MARS_VDP_FILADR     (*(volatile unsigned short *)0x20004106)
-#define MARS_VDP_FILDAT     (*(volatile unsigned short *)0x20004108)
-#define MARS_VDP_FBCTL      (*(volatile unsigned short *)0x2000410A)
 
 #define MARS_SH2_ACCESS_VDP 0x8000
 #define MARS_68K_ACCESS_VDP 0x0000
@@ -95,58 +56,6 @@
 #define SH2_CCTL_CP         0x10
 #define SH2_CCTL_TW         0x08
 #define SH2_CCTL_CE         0x01
-
-#define SH2_FRT_TIER        (*(volatile unsigned char *)0xFFFFFE10)
-#define SH2_FRT_FTCSR       (*(volatile unsigned char *)0xFFFFFE11)
-#define SH2_FRT_FRCH        (*(volatile unsigned char *)0xFFFFFE12)
-#define SH2_FRT_FRCL        (*(volatile unsigned char *)0xFFFFFE13)
-#define SH2_FRT_OCRH        (*(volatile unsigned char *)0xFFFFFE14)
-#define SH2_FRT_OCRL        (*(volatile unsigned char *)0xFFFFFE15)
-#define SH2_FRT_TCR         (*(volatile unsigned char *)0xFFFFFE16)
-#define SH2_FRT_TOCR        (*(volatile unsigned char *)0xFFFFFE17)
-#define SH2_FRT_ICRH        (*(volatile unsigned char *)0xFFFFFE18)
-#define SH2_FRT_ICRL        (*(volatile unsigned char *)0xFFFFFE19)
-
-#define SH2_WDT_RTCSR       (*(volatile unsigned char *)0xFFFFFE80)
-#define SH2_WDT_RTCNT       (*(volatile unsigned char *)0xFFFFFE81)
-#define SH2_WDT_RRSTCSR     (*(volatile unsigned char *)0xFFFFFE83)
-#define SH2_WDT_WTCSR_TCNT  (*(volatile unsigned short *)0xFFFFFE80)
-#define SH2_WDT_WRWOVF_RST  (*(volatile unsigned short *)0xFFFFFE82)
-#define SH2_WDT_VCR         (*(volatile unsigned short *)0xFFFFFEE4)
-
-#define SH2_DMA_SAR0        (*(volatile unsigned long *)0xFFFFFF80)
-#define SH2_DMA_DAR0        (*(volatile unsigned long *)0xFFFFFF84)
-#define SH2_DMA_TCR0        (*(volatile unsigned long *)0xFFFFFF88)
-#define SH2_DMA_CHCR0       (*(volatile unsigned long *)0xFFFFFF8C)
-#define SH2_DMA_VCR0        (*(volatile unsigned long *)0xFFFFFFA0)
-#define SH2_DMA_DRCR0       (*(volatile unsigned char *)0xFFFFFE71)
-
-#define SH2_DMA_SAR1        (*(volatile unsigned long *)0xFFFFFF90)
-#define SH2_DMA_DAR1        (*(volatile unsigned long *)0xFFFFFF94)
-#define SH2_DMA_TCR1        (*(volatile unsigned long *)0xFFFFFF98)
-#define SH2_DMA_CHCR1       (*(volatile unsigned long *)0xFFFFFF9C)
-#define SH2_DMA_VCR1        (*(volatile unsigned long *)0xFFFFFFA8)
-#define SH2_DMA_DRCR1       (*(volatile unsigned char *)0xFFFFFE72)
-
-#define SH2_DMA_DMAOR       (*(volatile unsigned long *)0xFFFFFFB0)
-
-#define SH2_INT_ICR         (*(volatile unsigned short *)0xFFFFFEE0)
-#define SH2_INT_IPRA        (*(volatile unsigned short *)0xFFFFFEE2)
-#define SH2_INT_IPRB        (*(volatile unsigned short *)0xFFFFFE60)
-#define SH2_INT_VCRA        (*(volatile unsigned short *)0xFFFFFE62)
-#define SH2_INT_VCRB        (*(volatile unsigned short *)0xFFFFFE64)
-#define SH2_INT_VCRC        (*(volatile unsigned short *)0xFFFFFE66)
-#define SH2_INT_VCRD        (*(volatile unsigned short *)0xFFFFFE68)
-#define SH2_INT_VCRWDT      (*(volatile unsigned short *)0xFFFFFEE4)
-#define SH2_INT_VCRDIV      (*(volatile unsigned long *)0xFFFFFF0C)
-
-#define SH2_DIVU_DVSR       (*(volatile long *)0xFFFFFF00)
-#define SH2_DIVU_DVDNT      (*(volatile long *)0xFFFFFF04)
-#define SH2_DIVU_DVDNTH     (*(volatile long *)0xFFFFFF10)
-#define SH2_DIVU_DVDNTL     (*(volatile long *)0xFFFFFF14)
-
-#define SH2_ASSOC_PURGE     (*(volatile unsigned long *)0x40000000) // associative purge area address
-#define SH2_DIRECT_RW       (*(volatile unsigned char *)0xC0000000) // cache data array
 
 #define SH2_DMA_CHCR_DM_F     (0<<14)  // Fixed destination address
 #define SH2_DMA_CHCR_DM_INC   (1<<14)  // Destination address is incremented 
@@ -211,12 +120,7 @@
 #define SEGA_CTRL_MMB       0x00040000
 #define SEGA_CTRL_STARTMB   0x00080000
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-#define SH2_ClearCacheLine(addr) *(volatile unsigned long *)((uintptr_t)&SH2_ASSOC_PURGE + (uintptr_t)(addr)) = 0
+#define SH2_ClearCacheLine(addr) *(volatile unsigned long *)((uintptr_t)sh2_assoc_purge + (uintptr_t)(addr)) = 0
 #define SH2_ClearCache() \
 	do { \
 		CacheControl(0); /* disable cache */ \
@@ -225,7 +129,7 @@ extern "C" {
 
 #define SH2_ClearCacheLines(paddr,nl) \
 	do { \
-		volatile unsigned long *addr = (void *)((uintptr_t)&SH2_ASSOC_PURGE + (uintptr_t)(paddr)); \
+		volatile unsigned long *addr = (void *)((uintptr_t)sh2_assoc_purge + (uintptr_t)(paddr)); \
 		int l; \
 		for (l = 0; l < (int)nl; l++) { \
 			*addr = 0; \
@@ -258,6 +162,171 @@ extern "C" {
             : : : "r0" \
         ); \
     } while(0)
+
+typedef struct {
+	unsigned short intmsk;
+	unsigned short standby_changer; // Use with system (Boot ROM); application access is prohibited.
+	unsigned short hcount;
+	unsigned short dmactr;
+	unsigned long dmasar;
+	unsigned long dmadar;
+	unsigned short dmalen;
+	unsigned short dmafifo;
+	unsigned short vresi_clr;
+	unsigned short vint_clr;
+	unsigned short hint_clr;
+	unsigned short cmdi_clr;
+	unsigned short pwmi_clr;
+} mars_sys_t;
+
+typedef struct {
+	short comm0;
+	short comm2;
+	short comm4;
+	short comm6;
+	short comm8;
+	short comm10;
+	short comm12;
+	short comm14;
+} mars_sys_comm_t;
+
+typedef struct {
+	unsigned short ctrl;
+	unsigned short cycle;
+	union {
+		unsigned short left;
+		unsigned short stereo;
+	};
+	unsigned short right;
+	unsigned short mono;
+} mars_pwm_t;
+
+typedef struct {
+	unsigned short dispmode;
+	unsigned short screenshift;
+	unsigned short fillen;
+	unsigned short filadr;
+	unsigned short fildat;
+	unsigned short fbctl;
+} mars_vdp_t;
+
+typedef struct {
+	unsigned char tier;
+	unsigned char ftcsr;
+	unsigned char frch;
+	unsigned char frcl;
+	unsigned char ocrh;
+	unsigned char ocrl;
+	unsigned char tcr;
+	unsigned char tocr;
+	unsigned char icrh;
+	unsigned char icrl;
+} sh2_frt_t;
+
+typedef struct {
+    // Write by word access. It cannot be written by byte or longword access.
+    // Read by byte access. The correct value cannot be read by word or longword access
+	union {
+		struct {
+			unsigned char rtcsr;
+			unsigned char rtcnt;
+		};
+		unsigned short wtcsr_tcnt;
+	};
+
+    // Write by word access. It cannot be written by byte or longword access.
+    // Read by byte access. The correct value cannot be read by word or longword access
+    union {
+		struct {
+			unsigned char unused;
+			unsigned char rrstcsr;
+		};
+		unsigned short wrwovf_rst;
+	};
+} sh2_wdt_t;
+
+typedef struct {
+	unsigned long sar0;
+	unsigned long dar0;
+	unsigned long tcr0;
+	unsigned long chcr0;
+	unsigned long sar1;
+	unsigned long dar1;
+	unsigned long tcr1;
+	unsigned long chcr1;
+	unsigned long vcr0;
+	unsigned long unused0;
+	unsigned long vcr1;
+	unsigned long unused1;
+	unsigned long dmaor;
+} sh2_dma_t;
+
+typedef struct {
+	unsigned char drcr0;
+	unsigned char drcr1;
+} sh2_dma_drcr_t;
+
+typedef struct {
+	unsigned short a, b, c, d;
+} sh2_vcr_t;
+
+typedef struct {
+	long dvsr;
+	long dvdnt;
+	long dvcr;
+    long vcrdiv;
+	long dvdnth;
+	long dvdntl;
+} sh2_divu_t;
+
+static short volatile * const mars_cram =
+	(short volatile *)0x20004200;
+static short volatile * const mars_framebuffer =
+	(short volatile *)0x24000000;
+static short volatile * const mars_overwrite_img =
+	(short volatile *)0x24020000;
+static short volatile * const mars_sdram =
+	(short volatile *)0x26000000;
+
+static mars_sys_t volatile * const mars_sys =
+	(mars_sys_t *)0x20004000;
+static mars_sys_comm_t volatile * const mars_sys_comm =
+	(mars_sys_comm_t *)0x20004020;
+static mars_pwm_t volatile * const mars_pwm =
+	(mars_pwm_t *)0x20004030;
+static mars_vdp_t volatile * const mars_vdp =
+	(mars_vdp_t *)0x20004100;
+
+static sh2_frt_t volatile * const sh2_frt =
+	(sh2_frt_t *)0xFFFFFE10;
+static sh2_wdt_t volatile * const sh2_wdt =
+	(sh2_wdt_t *)0xFFFFFE80;
+static sh2_dma_t volatile * const sh2_dma =
+	(sh2_dma_t *)0xFFFFFF80;
+static sh2_dma_drcr_t volatile * const sh2_dma_drcr =
+	(sh2_dma_drcr_t *)0xFFFFFE71;
+static volatile unsigned short * const sh2_int_icr =
+	(volatile unsigned short *)0xFFFFFEE0;
+static volatile unsigned short * const sh2_int_ipra =
+	(volatile unsigned short *)0xFFFFFEE2;
+static volatile unsigned short * const sh2_int_vcrwdt =
+	(volatile unsigned short *)0xFFFFFEE4;
+static volatile unsigned short * const sh2_int_iprb =
+	(volatile unsigned short *)0xFFFFFE60;
+static sh2_vcr_t volatile * const sh2_vcr =
+	(sh2_vcr_t *)0xFFFFFE62;
+static sh2_divu_t volatile * const sh2_divu =
+	(sh2_divu_t *)0xFFFFFF00;
+
+static volatile unsigned long * const sh2_assoc_purge =
+	(volatile unsigned long *)0x40000000; // associative purge area address
+static volatile unsigned char * const sh2_direct_rw =
+	(volatile unsigned char *)0xC0000000; // cache data array
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* global functions in crt0.s */
 extern int SetSH2SR(int level);
