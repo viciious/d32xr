@@ -226,10 +226,22 @@ extern "C" {
 #define SH2_ClearCacheLines(paddr,nl) \
 	do { \
 		volatile unsigned long *addr = (void *)((uintptr_t)&SH2_ASSOC_PURGE + (uintptr_t)(paddr)); \
-		int l; \
-		for (l = 0; l < (int)nl; l++) { \
-			*addr = 0; \
-			addr += 4; \
+		if (__builtin_constant_p(nl)) { \
+			/* let GCC unroll the loop for constant counts */ \
+			int l; \
+			for (l = 0; l < (int)nl; l++) { \
+				*addr = 0; \
+				addr += 4; \
+			} \
+		} else if ((int)(nl) > 0) { \
+			int l = nl; \
+			__asm volatile ( \
+				"1:\n\t" \
+				"mov.l %2,@%0\n\t" \
+				"dt %1\n\t" \
+				"bf/s 1b\n\t" \
+				"add #16,%0\n\t" \
+				: "+r" (addr), "+r" (l) : "r" (0) : "t", "memory"); \
 		} \
 	} while (0)
 
