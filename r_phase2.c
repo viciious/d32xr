@@ -202,6 +202,8 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
 //
 // Main seg clipping loop
 //
+#define COL(p) (*(unsigned short *)((char *)(p) + x))
+
 static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
 {
     int actionbits = segl->actionbits;
@@ -209,13 +211,13 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
     fixed_t scalefrac = segl->scalefrac;
     const fixed_t scalestep = segl->scalestep;
 
-    int x, start = segl->start;
+    int start = segl->start;
     const int stop = segl->stop;
+    // byte offset of column x, so GCC keeps a single induction variable
+    unsigned x = (unsigned)start << 1;
+    const unsigned stopx = (unsigned)stop << 1;
 
     fixed_t ceilingheight = FROMHEIGHT16(segl->ceilingheight);
-
-    const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
-    const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
 
     unsigned short * restrict flooropen = (actionbits & AC_ADDFLOOR) ? vd->visplanes[0].open : NULL;
     unsigned short * restrict ceilopen = (actionbits & AC_ADDCEILING) ? vd->visplanes[0].open : NULL;
@@ -226,19 +228,23 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
 
     unsigned short * restrict newclipbounds = segl->clipbounds;
 
+    // which halves of clipbounds take the new values
+    int newclip = ((actionbits & AC_NEWFLOOR) ? 0x00ff : 0) | ((actionbits & AC_NEWCEILING) ? 0xff00 : 0);
+
 #ifdef MARS
     // keep these out of GCC's value tracking; yields a tighter loop than volatile
-    __asm volatile ("" : "+r" (actionbits), "+r" (ceilingheight), "+r" (floorheight),
+    __asm volatile ("" : "+r" (newclip), "+r" (ceilingheight), "+r" (floorheight),
                          "+r" (floornewheight), "+r" (ceilingnewheight));
 #endif
 
     const int cy = centerY;
     const int vh = viewportHeight;
 
-    if (!(actionbits & (AC_ADDFLOOR|AC_ADDCEILING)) && !newclipbounds)
+    // AC_ADDFLOOR/AC_ADDCEILING always come with AC_NEWFLOOR/AC_NEWCEILING,
+    // which allocate segl->clipbounds in R_WallLatePrep
+    if (!newclipbounds)
         return;
 
-    x = start;
     do {
         fixed_t floorclipx, ceilingclipx;
         fixed_t low, high, top, bottom;
@@ -255,14 +261,11 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
         //
         // get ceilingclipx and floorclipx from clipbounds
         //
-        ceilingclipx = clipbounds[x];
+        ceilingclipx = COL(clipbounds);
         floorclipx = ceilingclipx & 0x00ff;
         ceilingclipx = ((unsigned)ceilingclipx & 0xff00) >> 8;
 
-        if (newclipbounds)
         {
-            const int newclip = actionbits & (AC_NEWFLOOR|AC_NEWCEILING);
-
             //
             // calc high and low
             //
@@ -280,14 +283,9 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
             else if (high < ceilingclipx)
                 high = ceilingclipx;
 
-            newclipbounds[x] = (high << 8) | low;
-
-            if (!(newclip & AC_NEWFLOOR))
-                low = floorclipx;
-            if (!(newclip & AC_NEWCEILING))
-                high = ceilingclipx;
-            // rewrite clipbounds
-            clipbounds[x] = (high << 8) | low;
+            // rewrite clipbounds; the seg keeps the merged values, so
+            // that R_SegCommands can copy them back as whole words
+            COL(newclipbounds) = COL(clipbounds) ^= (COL(clipbounds) ^ ((high << 8) + low)) & newclip;
         }
 
         //
@@ -303,12 +301,13 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
 
             if (top < bottom)
             {
-                if (!MARKEDOPEN(flooropen[x]))
+                if (!MARKEDOPEN(COL(flooropen)))
                 {
-                    visplane_t *floor = R_FindPlane(floorheight, floorandlight, x, stop);
+                    const int floorandlight = ((segl->seglightlevel & 0xff) << 16) | segl->floorpicnum;
+                    visplane_t *floor = R_FindPlane(floorheight, floorandlight, x >> 1, stop);
                     flooropen = floor->open;
                 }
-                flooropen[x] = (top << 8) + (bottom-1);
+                COL(flooropen) = (top << 8) + (bottom-1);
             }
         }
 
@@ -325,15 +324,16 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
 
             if (top < bottom)
             {
-                if (!MARKEDOPEN(ceilopen[x]))
+                if (!MARKEDOPEN(COL(ceilopen)))
                 {
-                    visplane_t *ceiling = R_FindPlane(ceilingheight, ceilandlight, x, stop);
+                    const int ceilandlight = ((segl->seglightlevel & 0xff) << 16) | segl->ceilingpicnum;
+                    visplane_t *ceiling = R_FindPlane(ceilingheight, ceilandlight, x >> 1, stop);
                     ceilopen = ceiling->open;
                 }
-                ceilopen[x] = (top << 8) + (bottom-1);
+                COL(ceilopen) = (top << 8) + (bottom-1);
             }
         }
-    } while (++x <= stop);
+    } while ((x += 2) <= stopx);
 }
 
 #ifdef MARS

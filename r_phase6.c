@@ -596,21 +596,9 @@ post_draw:
             short *restrict src = (short *)segl->clipbounds + segl->start;
             short *restrict dst = (short *)clipbounds + segl->start;
 
-            if ((actionbits & (AC_NEWFLOOR|AC_NEWCEILING)) == (AC_NEWFLOOR|AC_NEWCEILING)) {
-                do {
-                    *dst = *src, src++, dst++;
-                } while (--w);
-            }
-            else {
-                int8_t *restrict psrc = (int8_t *)src;
-                int8_t *restrict pdst = (int8_t *)dst;
-                if (actionbits & AC_NEWFLOOR) {
-                    psrc++, pdst++;
-                }                 
-                do {
-                    *pdst = *psrc, psrc += 2, pdst += 2;
-                } while (--w);
-            }
+            do {
+                *dst = *src, src++, dst++;
+            } while (--w);
         }
     }
 
