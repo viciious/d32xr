@@ -50,13 +50,14 @@ typedef struct
     int skypitch;
     drawcol_t drawskycol;
     unsigned skyangle;
+#if MIPLEVELS > 1
+    // keep within the mov.l @(disp,Rn) range (60 bytes)
+    unsigned minmip, maxmip;
+#endif
 
     drawtex_t tex[2];
 
     int8_t *skycolormaps;
-#if MIPLEVELS > 1   
-    unsigned minmip, maxmip;
-#endif
 } seglocal_t;
 
 static atomic_flag seg_lock = ATOMIC_FLAG_INIT;
@@ -64,103 +65,10 @@ static atomic_flag seg_lock = ATOMIC_FLAG_INIT;
 #define R_LockSeg() do { while (atomic_flag_test_and_set(&seg_lock)); } while (0)
 #define R_UnlockSeg() do { atomic_flag_clear(&seg_lock); } while (0)
 
-static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
-
-//
-// Render a wall texture as columns
-//
-static void R_DrawTexture(int x, unsigned iscale, int colnum_, fixed_t scale2, int floorclipx, int ceilingclipx, unsigned light, drawtex_t *tex, int miplevel)
-{
-    fixed_t top, bottom;
-
-    top = FixedMul(scale2, tex->topheight)>>FRACBITS;
-    bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
-
-    top = centerY - top;
-    if (top < ceilingclipx)
-        top = ceilingclipx;
-
-    bottom = centerY - bottom;
-    if (bottom > floorclipx)
-        bottom = floorclipx;
-
-#if MIPLEVELS <= 1
-    miplevel = 0;
-#endif
-
-    // column has no length?
-    if (top < bottom)
-    {
-        VINT colnum, mipcolnum;
-        drawmip_t *mip;
-        fixed_t frac;
-#ifdef MARS
-        inpixel_t* src;
-#else
-        pixel_t* src;
-#endif
-
-        colnum = colnum_ & tex->widthmask;
-        mipcolnum = colnum;
-        frac = tex->texturemid - (centerY - top) * iscale;
-        mip = tex->mip;
-
-#if MIPLEVELS > 1
-        if (miplevel > tex->maxmip)
-            miplevel = tex->maxmip;
-        if (miplevel > 0) {
-            unsigned m = miplevel;
-            do {
-                frac >>= 1;
-                mipcolnum >>= 1;
-                iscale >>= 1;
-                mip++;
-#ifdef MARS
-                // keep GCC from folding the increments into mip + m*28 (mul.l)
-                __asm volatile ("" : "+r" (mip));
-#endif
-            } while (--m);
-        }
-#endif
-
-        // CALICO: Jaguar-specific GPU blitter input calculation starts here.
-        // We invoke a software column drawer instead.
-#ifdef MARS
-        // keep GCC from turning mip back into &tex->mip[miplevel] (mul.l)
-        __asm volatile ("" : "+r" (mip));
-#endif
-        src = mip->data + mipcolnum * mip->pitch;
-
-        if (mip->numdecals > 0)
-        {
-            // decals/composite textures
-            if (mip->lastcol == colnum)
-            {
-                src = mip->columncache;
-            }
-            else if (mip->numdecals > 0)
-            {
-                boolean decaled;
-
-                decaled = R_CompositeColumn(colnum, mip->tex,
-                    src, mip->columncache, mip->height, miplevel);
-                if (decaled)
-                {
-                    src = mip->columncache;
-                    mip->lastcol = colnum;
-                }
-            }
-        }
-
-        I_SetThreadLocalVar(DOOMTLS_COLORMAP, mip->colormaps);
-
-        mip->drawcol(x, top, bottom-1, light, frac, iscale, src, mip->height);
-    }
-}
 
 //
 // Main seg drawing loop
@@ -181,10 +89,17 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 
     uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? (segl->clipbounds + 1) + stop - start : NULL;
 
+#if MIPLEVELS > 1
+    // scale is linear in x, so miplevel is monotonic and its extremes are
+    // at the first and the last column: maxmip holds the first one until
+    // the loop is done
+    lseg->maxmip = -1;
+#endif
+
     x = start;
     do {
        fixed_t r;
-       int floorclipx, ceilingclipx;
+       unsigned clip;
        fixed_t scale2;
        unsigned colnum;
        unsigned iscale;
@@ -207,12 +122,13 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         scale2 = scalefrac;
         scalefrac += lseg->scalestep;
 
-        //
-        // get ceilingclipx and floorclipx from clipbounds
-        //
-        ceilingclipx = clipbounds[x];
-        floorclipx = ceilingclipx & 0x00ff;
-        ceilingclipx = (unsigned)ceilingclipx >> 8;
+        // calculate texture offset
+        r = finetangent((uint16_t)(lseg->centerangle + xtoviewangle[x]) >> (ANGLETOFINESHIFT-FRACBITS));
+        r = FixedMul(lseg->distance, r);
+        colnum = ((unsigned)(lseg->offset - r) >> FRACBITS) & 0xff;
+
+        // ceilingclipx and floorclipx, unpacked per texture
+        clip = clipbounds[x];
 
         //
         // texture only stuff
@@ -228,12 +144,6 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
             texturelight = texturelight >> FRACBITS;
             texturelight <<= 8;
         }
-
-        // calculate texture offset
-        r = finetangent((uint16_t)(lseg->centerangle + xtoviewangle[x]) >> (ANGLETOFINESHIFT-FRACBITS));
-        r = FixedMul(lseg->distance, r);
-
-        colnum = ((unsigned)(lseg->offset - r) >> FRACBITS) & 0xff;
 
         if (segcolmask)
             segcolmask[x] = texturelight | colnum;
@@ -251,15 +161,118 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 #if MIPLEVELS > 1
         // other texture drawing info
         miplevel = iscale / MIPSCALE;
-        if (miplevel > lseg->maxmip)
+        if ((int)lseg->maxmip < 0)
             lseg->maxmip = miplevel;
-        if (miplevel < lseg->minmip)
-            lseg->minmip = miplevel;
 #endif
 
-        for (tex = lseg->first; tex < lseg->last; tex++)
-            R_DrawTexture(x, iscale, colnum, scale2, floorclipx, ceilingclipx, texturelight, tex, miplevel);
+        //
+        // draw the textures
+        //
+        tex = lseg->first;
+        if (tex < lseg->last)
+        do {
+            fixed_t top, bottom;
+            int floorclipx = clip & 0x00ff, ceilingclipx = clip >> 8;
+
+            top = FixedMul(scale2, tex->topheight)>>FRACBITS;
+            bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
+
+            top = centerY - top;
+            if (top < ceilingclipx)
+                top = ceilingclipx;
+
+            bottom = centerY - bottom;
+            if (bottom > floorclipx)
+                bottom = floorclipx;
+
+            // column has no length?
+            if (top < bottom)
+            {
+                VINT texcolnum, mipcolnum;
+                unsigned m = miplevel;
+                unsigned texiscale = iscale;
+                drawmip_t *mip;
+                fixed_t frac;
+#ifdef MARS
+                inpixel_t* src;
+#else
+                pixel_t* src;
+#endif
+
+                texcolnum = colnum & tex->widthmask;
+                mipcolnum = texcolnum;
+                frac = tex->texturemid - (centerY - top) * iscale;
+                mip = tex->mip;
+
+#if MIPLEVELS > 1
+                if (m > (unsigned)tex->maxmip)
+                    m = tex->maxmip;
+                if (m > 0) {
+                    unsigned i = m;
+                    do {
+                        frac >>= 1;
+                        mipcolnum >>= 1;
+                        texiscale >>= 1;
+                        mip++;
+#ifdef MARS
+                        // keep GCC from folding the increments into mip + m*28 (mul.l)
+                        // and from spilling frac to the stack on every iteration
+                        __asm volatile ("" : "+r" (mip), "+r" (frac), "+r" (texiscale), "+r" (mipcolnum));
+#endif
+                    } while (--i);
+                }
+#else
+                m = 0;
+#endif
+
+                // CALICO: Jaguar-specific GPU blitter input calculation starts here.
+                // We invoke a software column drawer instead.
+#ifdef MARS
+                // keep GCC from turning mip back into &tex->mip[m] (mul.l)
+                __asm volatile ("" : "+r" (mip));
+#endif
+                src = mip->data + mipcolnum * mip->pitch;
+
+                if (mip->numdecals > 0)
+                {
+                    // decals/composite textures
+                    if (mip->lastcol == texcolnum)
+                    {
+                        src = mip->columncache;
+                    }
+                    else
+                    {
+                        boolean decaled;
+
+                        decaled = R_CompositeColumn(texcolnum, mip->tex,
+                            src, mip->columncache, mip->height, m);
+                        if (decaled)
+                        {
+                            src = mip->columncache;
+                            mip->lastcol = texcolnum;
+                        }
+                    }
+                }
+
+                I_SetThreadLocalVar(DOOMTLS_COLORMAP, mip->colormaps);
+
+                mip->drawcol(x, top, bottom-1, texturelight, frac, texiscale, src, mip->height);
+            }
+        } while (++tex < lseg->last);
     } while (++x <= stop);
+
+#if MIPLEVELS > 1
+    {
+        // miplevel is now the last column's
+        unsigned lo = lseg->maxmip, hi = miplevel;
+        if (lo > hi)
+            lo = miplevel, hi = lseg->maxmip;
+        if (lo > MIPLEVELS)
+            lo = MIPLEVELS;
+        lseg->minmip = lo;
+        lseg->maxmip = hi;
+    }
+#endif
 }
 
 //
