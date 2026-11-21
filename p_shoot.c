@@ -136,6 +136,11 @@ static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *
    if ((a1 ^ a2) >= 0)
       return -1; // line isn't crossed
 
+   // the trace end's distance s2 isn't needed on its own: s1 + s2 is the
+   // line normal dotted with the trace direction (end - start), which is
+   // exactly a2 - a1
+   den = a2 - a1;
+
    dx = v1->x - sw->ssx1;
    dy = v1->y - sw->ssy1;
 
@@ -143,11 +148,6 @@ static fixed_t PA_SightCrossLine(shootWork_t *sw, mapvertex_t *v1, mapvertex_t *
    ndy = v2->x - v1->x;
 
    s1 = ndx * dx + ndy * dy; // distance projected onto normal
-
-   // the trace end's distance s2 isn't needed on its own: s1 + s2 is the
-   // line normal dotted with the trace direction (end - start), which is
-   // exactly a2 - a1
-   den = a2 - a1;
 
    /* try to quickly decide by looking at sign bits */
    if ( (s1 ^ den)&0x80000000 )
