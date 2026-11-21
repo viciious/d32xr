@@ -390,6 +390,50 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
     } while (++j <= drawtex->maxmip);
 }
 
+static inline __attribute__((always_inline)) void R_StopCopyClipbounds(void)
+{
+#ifdef MARS
+    (void)SH2_DMA_CHCR0;
+    SH2_DMA_CHCR0 = 0; // clear TE
+#endif
+}
+
+static inline __attribute__((always_inline)) void R_WaitCopyClipbounds(void **dma_dst, unsigned *dma_nl)
+{
+#ifdef MARS
+    if (*dma_dst) {
+        while (!(SH2_DMA_CHCR0 & SH2_DMA_CHCR_TE)) {}
+        SH2_DMA_CHCR0 = 0; // clear TE
+        Mars_ClearCacheLines(*dma_dst, *dma_nl);
+        *dma_dst = NULL;
+    }
+#else
+    (void)dma_dst, (void)dma_nl;
+#endif
+}
+
+static inline void R_CopySegClipbounds(viswall_t *segl, uint16_t *clipbounds, void **dma_dst, unsigned *dma_nl)
+{
+    unsigned w = segl->stop - segl->start + 1;
+    short *restrict src = (short *)segl->clipbounds + segl->start;
+    short *restrict dst = (short *)clipbounds + segl->start;
+
+#ifdef MARS
+    SH2_DMA_SAR0 = (uintptr_t)src;
+    SH2_DMA_DAR0 = (uintptr_t)dst;
+    SH2_DMA_TCR0 = w; // number of words
+    SH2_DMA_CHCR0 = SH2_DMA_CHCR_DM_INC|SH2_DMA_CHCR_SM_INC|SH2_DMA_CHCR_TS_WU|SH2_DMA_CHCR_AR_ARM|SH2_DMA_CHCR_TB_CS|SH2_DMA_CHCR_TA_DA|SH2_DMA_CHCR_DE;
+
+    *dma_dst = dst;
+    *dma_nl = (((uintptr_t)dst & 15) + w * sizeof(*dst) + 15) >> 4;
+#else
+    (void)dma_dst, (void)dma_nl;
+    do {
+        *dst = *src, src++, dst++;
+    } while (--w);
+#endif
+}
+
 void R_SegCommands(void)
 {
     int i;
@@ -399,6 +443,8 @@ void R_SegCommands(void)
     int extralight;
     uint32_t clipbounds_[SCREENWIDTH / 2 + 1];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
+    void *dma_dst = NULL; // start of the pending clipbounds DMA destination
+    unsigned dma_nl = 0; // number of cache lines it covers
 #ifdef MARS
     volatile int8_t *addedsegs = (volatile int8_t *)&MARS_SYS_COMM6;
     volatile uint8_t *readysegs = (volatile uint8_t *)addedsegs + 1;
@@ -435,8 +481,10 @@ void R_SegCommands(void)
         int actionbits;
 
 #ifdef MARS
-        if (*addedsegs == -1)
-            return; // the other cpu is done drawing segments, so should we
+        if (*addedsegs == -1) {
+            // the other cpu is done drawing segments, so should we
+            break;
+        }
         while (*readysegs <= i) {
             SH2_Delay64();
             continue;
@@ -449,7 +497,11 @@ void R_SegCommands(void)
         actionbits = *(volatile short *)&segl->actionbits;
         if (actionbits & AC_DRAWN || !(actionbits & (AC_TOPTEXTURE | AC_BOTTOMTEXTURE | AC_MIDTEXTURE | AC_ADDSKY))) {
             R_UnlockSeg();
-            goto post_draw;
+            if ((actionbits & (AC_NEWFLOOR|AC_NEWCEILING))) {
+                R_WaitCopyClipbounds(&dma_dst, &dma_nl);
+                goto copy_bounds;
+            }
+            continue;
         } else {
             segl->actionbits = actionbits|AC_DRAWN;
             R_UnlockSeg();
@@ -569,12 +621,15 @@ void R_SegCommands(void)
             lseg.last++;
         }
 
+        R_WaitCopyClipbounds(&dma_dst, &dma_nl);
+
         if ((actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE|AC_MIDTEXTURE)) != 0)
         {
             lseg.scalestep = segl->scalestep;
             lseg.centerangle = segl->centerangle >> FRACBITS;
             lseg.offset = segl->offset;
             lseg.distance = segl->distance;
+
             R_DrawSeg(&lseg, clipbounds);
         }
 
@@ -589,18 +644,15 @@ void R_SegCommands(void)
         segl->miplevels[1] = lseg.maxmip;
 #endif
 
-post_draw:
-        if(actionbits & (AC_NEWFLOOR|AC_NEWCEILING) && segl + 1 < last)
-        {
-            unsigned w = segl->stop - segl->start + 1;
-            short *restrict src = (short *)segl->clipbounds + segl->start;
-            short *restrict dst = (short *)clipbounds + segl->start;
-
-            do {
-                *dst = *src, src++, dst++;
-            } while (--w);
+        // the clipbounds aren't needed after the last seg
+        if (actionbits & (AC_NEWFLOOR|AC_NEWCEILING)) {
+copy_bounds:
+            if (segl + 1 < last)
+                R_CopySegClipbounds(segl, clipbounds, &dma_dst, &dma_nl);
         }
     }
+
+    R_StopCopyClipbounds();
 
 #ifdef MARS
     // mark all segments as rendered
