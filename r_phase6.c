@@ -70,6 +70,8 @@ static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds) 
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
+#define COL(p) (*(unsigned short *)((char *)(p) + x))
+
 //
 // Main seg drawing loop
 //
@@ -80,14 +82,14 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
     fixed_t scalefrac = segl->scalefrac;
     int texturelight = lseg->lightmax;
 
-    const int start = segl->start;
-    const int stop = segl->stop;
-    int x;
+    const int startx = segl->start << 1;
+    const int stopx = segl->stop << 1;
+    int x = stopx - startx + 2; // for segcolmask setup
     unsigned miplevel = 0;
 
     drawtex_t *tex;
 
-    uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? (segl->clipbounds + 1) + stop - start : NULL;
+    uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? &COL(segl->clipbounds) : NULL;
 
 #if MIPLEVELS > 1
     // scale is linear in x, so miplevel is monotonic and its extremes are
@@ -96,7 +98,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
     lseg->maxmip = -1;
 #endif
 
-    x = start;
+    x = startx;
     do {
        fixed_t r;
        unsigned clip;
@@ -123,12 +125,12 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         scalefrac += lseg->scalestep;
 
         // calculate texture offset
-        r = finetangent((uint16_t)(lseg->centerangle + xtoviewangle[x]) >> (ANGLETOFINESHIFT-FRACBITS));
+        r = finetangent((uint16_t)(lseg->centerangle + COL(xtoviewangle)) >> (ANGLETOFINESHIFT-FRACBITS));
         r = FixedMul(lseg->distance, r);
         colnum = ((unsigned)(lseg->offset - r) >> FRACBITS) & 0xff;
 
         // ceilingclipx and floorclipx, unpacked per texture
-        clip = clipbounds[x];
+        clip = COL(clipbounds);
 
         //
         // texture only stuff
@@ -146,7 +148,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         }
 
         if (segcolmask)
-            segcolmask[x] = texturelight | colnum;
+            COL(segcolmask) = texturelight | colnum;
 
 #ifdef MARS
         __asm volatile (
@@ -169,7 +171,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         // draw the textures
         //
         tex = lseg->first;
-        if (tex < lseg->last)
+        if (__builtin_expect(tex < lseg->last, 1))
         do {
             fixed_t top, bottom;
             int floorclipx = clip & 0x00ff, ceilingclipx = clip >> 8;
@@ -186,7 +188,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
                 bottom = floorclipx;
 
             // column has no length?
-            if (top < bottom)
+            if (__builtin_expect(top < bottom, 1))
             {
                 VINT texcolnum, mipcolnum;
                 unsigned m = miplevel;
@@ -233,7 +235,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 #endif
                 src = mip->data + mipcolnum * mip->pitch;
 
-                if (mip->numdecals > 0)
+                if (__builtin_expect(mip->numdecals > 0, 0))
                 {
                     // decals/composite textures
                     if (mip->lastcol == texcolnum)
@@ -256,10 +258,10 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 
                 I_SetThreadLocalVar(DOOMTLS_COLORMAP, mip->colormaps);
 
-                mip->drawcol(x, top, bottom-1, texturelight, frac, texiscale, src, mip->height);
+                mip->drawcol(x>>1, top, bottom-1, texturelight, frac, texiscale, src, mip->height);
             }
         } while (++tex < lseg->last);
-    } while (++x <= stop);
+    } while ( __builtin_expect((x += 2) <= stopx, 1) );
 
 #if MIPLEVELS > 1
     {
@@ -286,9 +288,9 @@ static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds)
     fixed_t scalestep;
 
     const fixed_t ceilingheight = FROMHEIGHT16(segl->ceilingheight);
-    const int start = segl->start;
-    const int stop = segl->stop;
-    int x;
+    const int startx = segl->start << 1;
+    const int stopx = segl->stop << 1;
+    int x = 0;
 
     //
     // sky mapping
@@ -298,7 +300,7 @@ static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds)
     scalefrac = FixedMul(scalefrac, ceilingheight);
     scalestep = FixedMul(segl->scalestep, ceilingheight);
 
-    x = start;
+    x = startx;
     do {
         fixed_t scale2;
         int floorclipx, ceilingclipx;
@@ -307,7 +309,7 @@ static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds)
         scale2 = scalefrac;
         scalefrac += scalestep;
 
-        ceilingclipx = clipbounds[x];
+        ceilingclipx = COL(clipbounds);
         floorclipx = ceilingclipx & 0x00ff;
         ceilingclipx = (unsigned)ceilingclipx >> 8;
 
@@ -317,20 +319,20 @@ static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds)
         if (bottom > floorclipx)
             bottom = floorclipx;
 
-        if (top < bottom)
+        if (__builtin_expect(top < bottom, 1))
         {
             unsigned colnum;
 
-            colnum = ((uint16_t)(lseg->skyangle + xtoviewangle[x]) >> (ANGLETOSKYSHIFT-FRACBITS)) & 0xff;
+            colnum = ((uint16_t)(lseg->skyangle + COL(xtoviewangle)) >> (ANGLETOSKYSHIFT-FRACBITS)) & 0xff;
 
 #ifdef MARS
             inpixel_t* data = skytexturep + colnum * lseg->skypitch;
 #else
             pixel_t* data = skytexturep + colnum * lseg->skypitch;
 #endif
-            lseg->drawskycol(x, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
+            lseg->drawskycol(x>>1, top, --bottom, 0, (top * 18204) << 2, FRACUNIT + 7281, data, 128);
         }
-    } while (++x <= stop);
+    } while ( __builtin_expect((x += 2) <= stopx, 1) );
 
     I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 }
