@@ -445,20 +445,20 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       }
       else if (silhouette == 3)
       {
+         int clip = 0;
          int ivph = vph, omark = openmark;
-         sil += x;
-         opening += x;
          do
          {
-            int clip = *--sil;
-            top    = opening[-1];
+            clip = *sil++;
+            top    = *opening;
+            __asm volatile ("" : "+r" (clip), "+r" (opening), "+r" (sil));
             bottom = top & 0xff;
             top = top & omark;
             if(bottom == ivph)
                bottom = clip & 0xff;
             if(top == 0)
                top = clip & omark;
-            *--opening = top | bottom;
+            *opening++ = top | bottom;
          } while (--x);
       }
       else
