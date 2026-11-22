@@ -25,7 +25,7 @@ static void R_PrepMobj(mobj_t *thing)
 {
    fixed_t tr_x, tr_y;
    fixed_t gxt, gyt, gzt;
-   fixed_t tx, tz, x1, x2;
+   fixed_t tx, tz, x1, x2, cx1, cx2;
    fixed_t xscale;
    fixed_t texmid;
    spritedef_t   *sprdef;
@@ -157,6 +157,11 @@ static void R_PrepMobj(mobj_t *thing)
    if (tz < viewportHeight - centerYFrac)
        return;
 
+   cx1 = x1 < 0 ? 0 : x1;
+   cx2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
+   if (cx1 > cx2)
+      return;
+
    R_LockSpr();
    Mars_ClearCacheLine(&vd->vissprite_p);
    vis = (vissprite_t *)vd->vissprite_p;
@@ -173,8 +178,8 @@ static void R_PrepMobj(mobj_t *thing)
 #ifndef MARS
    vis->pixels   = R_CheckPixels(lump + 1);
 #endif
-   vis->x1       = x1 < 0 ? 0 : x1;
-   vis->x2       = x2 >= viewportWidth ? viewportWidth - 1 : x2;
+   vis->x1       = cx1;
+   vis->x2       = cx2;
    vis->gx       = thing->x >> FRACBITS;
    vis->gy       = thing->y >> FRACBITS;
    vis->xscale   = xscale;
@@ -235,7 +240,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    vissprite_t  *vis;
    fixed_t      center, xscale;
    fixed_t      topoffset, texmid;
-   fixed_t      tx, x1, x2;
+   fixed_t      tx, x1, x2, cx1, cx2;
    const state_t* state;
 
    state = &states[psp->state];
@@ -273,6 +278,11 @@ static void R_PrepPSprite(pspdef_t *psp)
    x2 >>= FRACBITS;
    x2 -= 1;
 
+   cx1 = x1 < 0 ? 0 : x1;
+   cx2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
+   if (cx1 > cx2)
+      return;
+
    // off the right side?
    if (x1 > viewportWidth)
        return;
@@ -292,8 +302,8 @@ static void R_PrepPSprite(pspdef_t *psp)
 #ifndef MARS
    vis->pixels = R_CheckPixels(lump + 1);
 #endif
-   vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
+   vis->x1 = cx1;
+   vis->x2 = cx2;
    vis->xscale = xscale;
    vis->yscale = FRACUNIT;
    vis->xiscale = FixedDiv(FRACUNIT, xscale);
