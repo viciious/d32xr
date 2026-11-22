@@ -372,8 +372,6 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #ifdef MARS
    if (sprscreenhalf > 0)
    {
-      if (x1 < 0)
-         x1 = 0;
       if (x2 >= sprscreenhalf)
          x2 = sprscreenhalf - 1;
    }
@@ -381,8 +379,6 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    {
       if (x1 < -sprscreenhalf)
          x1 = -sprscreenhalf;
-      if (x2 >= viewportWidth)
-         x2 = viewportWidth-1;
    }
 #endif
 
@@ -555,9 +551,6 @@ static void R_DrawPSprites(int sprscreenhalf)
         vissprite_t *vis = (vissprite_t *)spr;
         int x1 = vis->x1, x2 = vis->x2;
 
-        if (vis->patchnum < 0)
-            continue;
-
         // clear out the clipping array across the range of the psprite
         if (x1 <= x2)
         {
@@ -612,14 +605,10 @@ void R_Sprites(void)
    for (wc = vd->vissprites, i = 0; wc != vd->lastsprite_p; wc++, i++)
    {
        vissprite_t* ds = (vissprite_t *)wc;
-       if (ds->patchnum < 0)
-           continue;
 
        // average mid point
        unsigned xscale = ds->xscale;
        int pixcount = ds->x2 + 1 - ds->x1;
-       if (pixcount <= 0)
-         continue;
 
        midcount += pixcount;
        half += (ds->x1 + (pixcount >> 1)) * pixcount;
@@ -634,10 +623,6 @@ void R_Sprites(void)
    for (spr = vd->lastsprite_p; spr < vd->vissprite_p; spr++) {
         vissprite_t *pspr = (vissprite_t *)spr;
         int pixcount = pspr->x2 + 1 - pspr->x1;
-
-        if (pspr->patchnum < 0 || pixcount <= 0)
-            continue;
-
         midcount += pixcount;
         half += (pspr->x1 + (pixcount >> 1)) * pixcount;
    }
