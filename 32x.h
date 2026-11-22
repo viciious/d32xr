@@ -228,20 +228,20 @@ extern "C" {
 		volatile unsigned long *addr = (void *)((uintptr_t)&SH2_ASSOC_PURGE + (uintptr_t)(paddr)); \
 		if (__builtin_constant_p(nl)) { \
 			/* let GCC unroll the loop for constant counts */ \
-			int l; \
-			for (l = 0; l < (int)nl; l++) { \
+			int llll; \
+			for (llll = 0; llll < (int)nl; llll++) { \
 				*addr = 0; \
 				addr += 4; \
 			} \
 		} else if ((int)(nl) > 0) { \
-			int l = nl; \
+			int llll = nl; \
 			__asm volatile ( \
 				"1:\n\t" \
 				"mov.l %2,@%0\n\t" \
 				"dt %1\n\t" \
 				"bf/s 1b\n\t" \
 				"add #16,%0\n\t" \
-				: "+r" (addr), "+r" (l) : "r" (0) : "t", "memory"); \
+				: "+r" (addr), "+r" (llll) : "r" (0) : "t", "memory"); \
 		} \
 	} while (0)
 
