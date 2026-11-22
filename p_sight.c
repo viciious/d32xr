@@ -4,8 +4,12 @@
   Line-of-sight checking
 
   The MIT License (MIT)
+
+  Copyright (c) 2026 Victor Luchits
   
   Copyright (c) 2015 James Haley, Olde Skuul, id Software and ZeniMax Media
+
+  Copyright (c) 2003 Christoph Oelckers, Randy Heit
   
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
