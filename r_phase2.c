@@ -132,8 +132,8 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
     // and collected after the sine lookups, which don't depend on it and
     // hide most of its 39-cycle latency. Nothing in between may use the divider.
     SH2_DIVU_DVSR = rw_distance;           // set 32-bit divisor
-    SH2_DIVU_DVDNTH = stretchX >> 16;      // high long of 64-bit dividend
-    SH2_DIVU_DVDNTL = stretchX << 16;      // low long, starts the divide
+    SH2_DIVU_DVDNTH = stretchX>>FRACBITS;  // high long of 64-bit dividend
+    SH2_DIVU_DVDNTL = stretchX<<FRACBITS;  // low long, starts the divide
 #else
     invdist = FixedDiv(stretchX, rw_distance);
 #endif

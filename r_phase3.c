@@ -113,8 +113,12 @@ static void R_PrepMobj(mobj_t *thing)
    if (lump < firstsprite || lump >= firstsprite + numsprites)
       return;
 
+#ifdef MARS
+   SH2_DIVU_DVSR = tz;        // set 32-bit divisor
+   SH2_DIVU_DVDNTH = centerXFrac>>FRACBITS; // high long of 64-bit dividend
+   SH2_DIVU_DVDNTL = 0;       // low long, starts the divide
+#endif
    patch = W_POINTLUMPNUM(lump);
-   xscale = FixedDiv(PROJECTION, tz);
    gzt = thing->z - vd->viewz;
 
    leftoffset = BIGSHORT(patch->leftoffset);
@@ -132,17 +136,20 @@ static void R_PrepMobj(mobj_t *thing)
    else
       tx -= leftoffset << FRACBITS;
 
-   x1 = FixedMul(tx, xscale);
-   x1 = (centerXFrac + x1) >> FRACBITS;
+#ifdef MARS
+   xscale = SH2_DIVU_DVDNTL; // get 32-bit quotient
+#else
+   xscale = FixedDiv(PROJECTION, tz);
+#endif
+   x1 = centerXFrac + FixedMul(tx, xscale);
+   x2 = x1 + BIGSHORT(patch->width) * xscale;
 
    // off the right side?
+   x1 = (x1 >> FRACBITS);
    if (x1 > viewportWidth)
        return;
 
-   tx += ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
-   x2 = FixedMul(tx, xscale);
-   x2 = ((centerXFrac + x2) >> FRACBITS) - 1;
-
+   x2 = (x2 >> FRACBITS) - 1;
    // off the left side
    if (x2 < 0)
        return;
@@ -174,6 +181,11 @@ static void R_PrepMobj(mobj_t *thing)
    vd->vissprite_p++;
    R_UnlockSpr();
 
+#ifdef MARS
+   SH2_DIVU_DVSR = xscale; // set 32-bit divisor
+   SH2_DIVU_DVDNTH = 0;    // high long of 64-bit dividend
+   SH2_DIVU_DVDNTL = -1;   // low long, starts the divide
+#endif
    vis->patchnum = lump;
 #ifndef MARS
    vis->pixels   = R_CheckPixels(lump + 1);
@@ -182,9 +194,15 @@ static void R_PrepMobj(mobj_t *thing)
    vis->x2       = cx2;
    vis->gx       = thing->x >> FRACBITS;
    vis->gy       = thing->y >> FRACBITS;
-   vis->xscale   = xscale;
-   vis->yscale   = FixedMul(xscale, stretch);
+   vis->startfrac = 0;
    vis->texturemid = HEIGHT16(texmid);
+   vis->yscale   = FixedMul(xscale, stretch);
+   vis->xscale   = xscale;
+#ifdef MARS
+   vis->xiscale  = SH2_DIVU_DVDNTL; // get 32-bit quotient
+#else
+   vis->xiscale  = FixedDiv(FRACUNIT, xscale);
+#endif
 
    if (thing->flags & MF_ATTACHED)
    {
@@ -193,26 +211,17 @@ static void R_PrepMobj(mobj_t *thing)
 
    if(flip)
    {
-      vis->xiscale = -FixedDiv(FRACUNIT, xscale);
+      vis->xiscale = -vis->xiscale;
       vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
-   }
-   else
-   {
-      vis->xiscale = FixedDiv(FRACUNIT, xscale);
-      vis->startfrac = 0;
    }
 
    if (x1 < 0)
        vis->startfrac += vis->xiscale * -x1;
 
    if (thing->flags & MF_SHADOW)
-   {
       vis->colormap = -vd->fuzzcolormap;
-   }
    else if (vd->fixedcolormap)
-   {
        vis->colormap = vd->fixedcolormap;
-   }
    else
    {
       if (fullbright)
@@ -241,7 +250,9 @@ static void R_PrepPSprite(pspdef_t *psp)
    fixed_t      center, xscale;
    fixed_t      topoffset, texmid;
    fixed_t      tx, x1, x2, cx1, cx2;
+   fixed_t      leftoffset;
    const state_t* state;
+   boolean      flip = false;
 
    state = &states[psp->state];
    sprdef = &sprites[state->sprite];
@@ -265,23 +276,21 @@ static void R_PrepPSprite(pspdef_t *psp)
    topoffset = (((fixed_t)BIGSHORT(patch->topoffset) - weaponYpos) << FRACBITS) - psp->sy;
 
    texmid = BASEYCENTER * FRACUNIT + topoffset;
+   leftoffset = BIGSHORT(patch->leftoffset);
+   if (flip)
+      tx += viewportWidth << FRACBITS;
 
    // calculate edges of the shape
-   tx = tx - (((fixed_t)BIGSHORT(patch->leftoffset)) << FRACBITS);
+   if (flip)
+      tx -= ((fixed_t)BIGSHORT(patch->width)-leftoffset) << FRACBITS;
+   else
+      tx -= (leftoffset << FRACBITS);
+
    x1 = FixedMul(tx, xscale);
+   x2 = x1 + BIGSHORT(patch->width) * xscale;
 
-   tx = ((fixed_t)BIGSHORT(patch->width) << FRACBITS);
-   x2 = FixedMul(tx, xscale);
-   x2 += x1;
-
-   x1 >>= FRACBITS;
-   x2 >>= FRACBITS;
-   x2 -= 1;
-
-   cx1 = x1 < 0 ? 0 : x1;
-   cx2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
-   if (cx1 > cx2)
-      return;
+   x1 = (x1 >> FRACBITS);
+   x2 = (x2 >> FRACBITS) - 1;
 
    // off the right side?
    if (x1 > viewportWidth)
@@ -291,6 +300,11 @@ static void R_PrepPSprite(pspdef_t *psp)
    if (x2 < 0)
        return;
 
+   cx1 = x1 < 0 ? 0 : x1;
+   cx2 = x2 >= viewportWidth ? viewportWidth - 1 : x2;
+   if (cx1 > cx2)
+      return;
+
    // store information in vissprite
    if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES)
       return; // out of vissprites
@@ -298,28 +312,25 @@ static void R_PrepPSprite(pspdef_t *psp)
    vis = (vissprite_t *)vd->vissprite_p;
    vd->vissprite_p++;
 
+#ifdef MARS
+   SH2_DIVU_DVSR = xscale; // set 32-bit divisor
+   SH2_DIVU_DVDNTH = 0;    // high long of 64-bit dividend
+   SH2_DIVU_DVDNTL = -1;   // low long, starts the divide
+#endif
    vis->patchnum = lump;
 #ifndef MARS
    vis->pixels = R_CheckPixels(lump + 1);
 #endif
    vis->x1 = cx1;
    vis->x2 = cx2;
-   vis->xscale = xscale;
    vis->yscale = FRACUNIT;
-   vis->xiscale = FixedDiv(FRACUNIT, xscale);
    vis->texturemid = HEIGHT16(texmid);
    vis->startfrac = 0;
-   if (x1 < 0)
-       vis->startfrac = vis->xiscale * -x1;
-
+   vis->xscale = xscale;
    if (vd->shadow)
-   {
       vis->colormap = -vd->fuzzcolormap;
-   }
    else if (vd->fixedcolormap)
-   {
        vis->colormap = vd->fixedcolormap;
-   }
    else
    {
        if (state->frame & FF_FULLBRIGHT)
@@ -329,6 +340,20 @@ static void R_PrepPSprite(pspdef_t *psp)
        vis->colormap = HWLIGHT(vis->colormap);
    }
    vis->colormap2 = 0;
+#ifdef MARS
+   vis->xiscale  = SH2_DIVU_DVDNTL; // get 32-bit quotient
+#else
+   vis->xiscale  = FixedDiv(FRACUNIT, xscale);
+#endif
+
+   if (flip)
+   {
+      vis->xiscale = -vis->xiscale;
+      vis->startfrac = ((fixed_t)BIGSHORT(patch->width) << FRACBITS) - 1;
+   }
+
+   if (x1 < 0)
+       vis->startfrac += vis->xiscale * -x1;
 }
 
 //
