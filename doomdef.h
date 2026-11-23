@@ -1220,6 +1220,7 @@ extern	VINT	controltype;				/* 0 to 5 */
 extern	VINT	strafebtns;
 extern	VINT	alwaysrun;
 extern 	VINT 	yabcdpad;
+extern	VINT 	handedness;
 extern	boolean	splitscreen;
 
 extern	VINT	sfxvolume, musicvolume;		/* range from 0 to 255 */

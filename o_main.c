@@ -12,7 +12,7 @@
 #define CURSORX		(80)
 #define CURSORWIDTH	24
 #define ITEMX		(CURSORX+CURSORWIDTH)
-#define ITEMSPACE	20
+#define ITEMSPACE	19
 #define CURSORY(y)	(STARTY+ITEMSPACE*(y))
 #define SLIDEWIDTH 90
 
@@ -46,6 +46,7 @@ typedef enum
 	mi_yabcdpad,
 	mi_alwaysrun,
 	mi_strafebtns,
+	mi_hand,
 
 	mi_quityes,
 	mi_quitno,
@@ -135,9 +136,9 @@ static VINT screenpos;
 void O_DrawControl(void)
 {
 	//EraseBlock(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 20, 90, 80);
-	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 20, buttona[controltype]);
-	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 40, buttonb[controltype]);
-	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + 60, buttonc[controltype]);
+	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + ITEMSPACE, buttona[controltype]);
+	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + ITEMSPACE*2, buttonb[controltype]);
+	print(menuitem[mi_controltype].x + 40, menuitem[mi_controltype].y + ITEMSPACE*3, buttonc[controltype]);
 /*	IN_DrawValue(30, 20, controltype); */
 }
 
@@ -280,6 +281,10 @@ void O_Init (void)
 	menuitem[mi_strafebtns].x = ITEMX;
 	menuitem[mi_strafebtns].y = STARTY+ITEMSPACE*6;
 
+	menuitem[mi_hand].name = "Hand";
+	menuitem[mi_hand].x = ITEMX;
+	menuitem[mi_hand].y = STARTY+ITEMSPACE*7;
+
 	menuitem[mi_quityes].name = "Yes";
 	menuitem[mi_quityes].x = ITEMX;
 	menuitem[mi_quityes].y = STARTY;
@@ -314,7 +319,7 @@ void O_Init (void)
 
 	menuscreen[ms_controls].name = "Controls";
 	menuscreen[ms_controls].firstitem = mi_controltype;
-	menuscreen[ms_controls].numitems = mi_strafebtns - mi_controltype + 1;
+	menuscreen[ms_controls].numitems = mi_hand - mi_controltype + 1;
 
 	menuscreen[ms_help].name = "Help";
 	menuscreen[ms_help].firstitem = 0;
@@ -609,6 +614,7 @@ goback:
 				int oldalwaysrun = alwaysrun;
 				int oldstrafebtns = strafebtns;
 				int oldyabcdpad = yabcdpad;
+				int oldhandedness = handedness;
 
 				if (buttons & BT_RIGHT)
 				{
@@ -628,6 +634,10 @@ goback:
 					case mi_yabcdpad:
 						if (++yabcdpad > 1)
 							yabcdpad = 1;
+						break;
+					case mi_hand:
+						if (++handedness > 1)
+							handedness = 1;
 						break;
 					}
 				}
@@ -650,13 +660,18 @@ goback:
 						if (--yabcdpad < 0)
 							yabcdpad = 0;
 						break;
+					case mi_hand:
+						if (--handedness < 0)
+							handedness = 0;
+						break;
 					}
 				}
 
 				if (oldcontroltype != controltype ||
 					oldalwaysrun != alwaysrun ||
 					oldstrafebtns != strafebtns ||
-					oldyabcdpad != yabcdpad)
+					oldyabcdpad != yabcdpad ||
+					oldhandedness != handedness)
 					sound = sfx_stnmov;
 			}
 
@@ -914,6 +929,10 @@ void O_Drawer (void)
 		print(menuitem[mi_alwaysrun].x + 150, menuitem[mi_yabcdpad].y, yabcdpad ? "ON" : "OFF");
 		print(menuitem[mi_alwaysrun].x + 150, menuitem[mi_alwaysrun].y, alwaysrun ? "ON" : "OFF");
 		print(menuitem[mi_strafebtns].x + 150, menuitem[mi_strafebtns].y, strabtnstr);
+		if (handedness)
+			print(menuitem[mi_hand].x + 126, menuitem[mi_hand].y, "RIGHT");
+		else
+			print(menuitem[mi_hand].x + 134, menuitem[mi_hand].y, "LEFT");
 	}
 
 	if (screenpos == ms_audio)
@@ -967,7 +986,7 @@ void O_Drawer (void)
 	{
 		char tmp[32];
 		D_snprintf(tmp, sizeof(tmp), "%dx%d", viewportWidth, viewportHeight);
-		I_Print8(menuitem[mi_resolution].x + 114, (unsigned)menuitem[mi_resolution].y/8 + 3, tmp);
+		I_Print8(menuitem[mi_resolution].x + 114, ((unsigned)menuitem[mi_resolution].y+7)/8 + 2, tmp);
 
 		switch (anamorphicview) {
 		case 0:
@@ -1000,7 +1019,7 @@ void O_Drawer (void)
 		}
 
 		D_snprintf(tmp, sizeof(tmp), "%d fps", I_IsPAL() ? 50/ticsperframe : 60/ticsperframe);
-		I_Print8(menuitem[mi_framerate].x + 114, (unsigned)menuitem[mi_framerate].y/8 + 3, tmp);
+		I_Print8(menuitem[mi_framerate].x + 114, ((unsigned)menuitem[mi_framerate].y+7)/8 + 2, tmp);
 	}
 
 	if (screenpos == ms_help)

@@ -252,7 +252,7 @@ static void R_PrepPSprite(pspdef_t *psp)
    fixed_t      tx, x1, x2, cx1, cx2;
    fixed_t      leftoffset;
    const state_t* state;
-   boolean      flip = false;
+   boolean      flip = handedness != 0;
 
    state = &states[psp->state];
    sprdef = &sprites[state->sprite];

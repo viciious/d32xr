@@ -67,6 +67,7 @@ typedef struct __attribute((packed))
 	char spcmDir[9];
 	int8_t lowres;
 	uint8_t ticsperframe;
+	int8_t handedness;
 } saveopts_t;
 
 static char saveslotguard[SRAM_SLOTSIZE - sizeof(savegame_t)] __attribute__((unused));
@@ -201,6 +202,7 @@ static void SaveOptions(void)
 	so.anamorphic = anamorphicview;
 	so.sfxdriver = sfxdriver;
 	so.yabcdpad = yabcdpad;
+	so.handedness = handedness;
 	so.magic1 = SRAM_MAGIC1;
 	so.magic2 = SRAM_MAGIC2;
 	so.lowres = lowres;
@@ -248,6 +250,8 @@ static void ReadOptions(void)
 		so.sfxdriver = 0;
 	if (so.yabcdpad < 0 || so.yabcdpad > 1)
 		so.yabcdpad = 0;
+	if (so.handedness < 0 || so.handedness > 1)
+		so.handedness = 0;
 
 	detailmode = so.detailmode;
 	sfxvolume = so.sfxvolume;
@@ -262,6 +266,7 @@ static void ReadOptions(void)
 	sfxdriver = so.sfxdriver;
 	yabcdpad = so.yabcdpad;
 	lowres = so.lowres;
+	handedness = so.handedness;
 
 	so.spcmDir[sizeof(so.spcmDir)-1] = '\0';
 	D_snprintf(spcmDir, sizeof(spcmDir), "%s", so.spcmDir);
@@ -290,6 +295,7 @@ void ReadEEProm(void)
 	sfxdriver = 0;
 	detailmode = DETAILMODE_DEFAULT;
 	lowres = false;
+	handedness = 0;
 
 	ReadOptions();
 }
