@@ -19,8 +19,6 @@ typedef struct __attribute__((aligned(4), may_alias))
 
 #define MAXSEGS 32
 
-#define HEIGHT16(x) ((int16_t)((uint32_t)(x) >> HEIGHTINTBITS))
-
 typedef struct
 {
    cliprange_t *newend;

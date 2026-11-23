@@ -29,6 +29,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 	pixel_t		*pixels;		/* data patch header references */
 #endif
    texture_t  *texture;
+   fixed_t     texturemid;
    int widthmask;
 
    if (x > stopx)
@@ -47,6 +48,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
    widthmask = texture->width - 1;
    fracstep  = seg->scalestep;
    scalefrac = seg->scalefrac + (x - seg->start) * fracstep;
+   texturemid= FROMHEIGHT16(seg->m_texturemid);
 
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
@@ -93,7 +95,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
       if (*(int8_t *)columnptr == -1)
          continue;
 
-      sprtop = FixedMul(FROMHEIGHT16(seg->m_texturemid), spryscale);
+      sprtop = FixedMul(texturemid, spryscale);
       sprtop = centerYFrac - sprtop;
 
 #ifdef MARS
@@ -388,9 +390,33 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    {
       unsigned short *p = spropening + x2 + 1;
       x = x2 - x1 + 1;
-      do {
-         *--p = vph;
-      } while (--x);
+      unsigned n = (x + 3) >> 2;
+#ifdef MARS
+      unsigned dispatch = ((4 - (x & 3)) & 3) * 2;
+      __asm volatile (
+         "braf %[dispatch]\n\t"
+         "nop\n\t"
+         "0:\n\t"
+         "mov.w %[value],@-%[p]\n\t"
+         "mov.w %[value],@-%[p]\n\t"
+         "mov.w %[value],@-%[p]\n\t"
+         "dt %[n]\n\t"
+         "bf/s 0b\n\t"
+         "mov.w %[value],@-%[p]\n\t"
+         : [p] "+&r" (p), [n] "+&r" (n)
+         : [value] "r" (vph), [dispatch] "r" (dispatch)
+         : "t", "memory"
+      );
+#else
+      switch (x & 3)
+      {
+         case 0: do { *--p = vph;
+         case 3:      *--p = vph;
+         case 2:      *--p = vph;
+         case 1:      *--p = vph;
+         } while (--n > 0);
+      }
+#endif
    }
 
    do
@@ -432,12 +458,15 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
             popn++, psil++;
          }
 
-         do
+         unsigned n = (x + 3) >> 2;
+         switch (x & 3)
          {
-            if(*popn == mark)
-               *popn = *psil;
-            popn += 2, psil += 2;
-         } while (--x);
+            case 0: do { if(*popn == mark) *popn = *psil; popn += 2, psil += 2;
+            case 3:      if(*popn == mark) *popn = *psil; popn += 2, psil += 2;
+            case 2:      if(*popn == mark) *popn = *psil; popn += 2, psil += 2;
+            case 1:      if(*popn == mark) *popn = *psil; popn += 2, psil += 2;
+            } while (--n > 0);
+         }
       }
       else if (silhouette == 3)
       {
@@ -460,10 +489,33 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       else
       {
          opening += x;
-         do {
-            --opening;
-            *opening = openmark;
-         } while (--x);
+         unsigned n = (x + 3) >> 2;
+#ifdef MARS
+         unsigned dispatch = ((4 - (x & 3)) & 3) * 2;
+         __asm volatile (
+            "braf %[dispatch]\n\t"
+            "nop\n\t"
+            "0:\n\t"
+            "mov.w %[value],@-%[p]\n\t"
+            "mov.w %[value],@-%[p]\n\t"
+            "mov.w %[value],@-%[p]\n\t"
+            "dt %[n]\n\t"
+            "bf/s 0b\n\t"
+            "mov.w %[value],@-%[p]\n\t"
+            : [p] "+&r" (opening), [n] "+&r" (n)
+            : [value] "r" (openmark), [dispatch] "r" (dispatch)
+            : "t", "memory"
+         );
+#else
+         switch (x & 3)
+         {
+            case 0: do { *--opening = openmark;
+            case 3:      *--opening = openmark;
+            case 2:      *--opening = openmark;
+            case 1:      *--opening = openmark;
+            } while (--n > 0);
+         }
+#endif
       }
    } while (*walls != NULL);
 }
@@ -552,7 +604,6 @@ static void R_DrawPSprites(int sprscreenhalf)
         int x1 = vis->x1, x2 = vis->x2;
 
         // clear out the clipping array across the range of the psprite
-        if (x1 <= x2)
         {
             unsigned short *p = spropening + x2 + 1;
             i = x2 - x1 + 1;
@@ -615,8 +666,6 @@ void R_Sprites(void)
 
        // composite sort key: distance + id
        sortedsprites[1+count++] = (xscale << 7) + i;
-       if (count == MAXVISSPRITES)
-         break;
    }
 
    // add the gun midpoint
