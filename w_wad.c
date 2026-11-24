@@ -17,24 +17,10 @@ typedef struct
 	int			infotableofs;
 } wadinfo_t;
 
-typedef struct
-{
-	byte		*fileptr;
-	int 		cdlength, cdoffset;
-
-	lumpinfo_t	*lumpinfo;			/* points directly to rom image */
-	int 		firstlump;
-	int			numlumps;
-	int 		infotableofs;
-#ifndef MARS
-	void		*lumpcache[MAXLUMPS];
-#endif
-} wadfile_t;
-
 static VINT cd_pwad_cache_size = -1;
 static VINT cd_pwad_cache_num_lumps = 0;
 
-static wadfile_t wadfile[MAXWADS];
+wadfile_t wadfile[MAXWADS];
 static VINT wadnum = 0;
 
 void strupr (char *s)

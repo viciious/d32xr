@@ -616,7 +616,7 @@ void DrawJagobjLump(int lumpnum, int x, int y, int* ow, int* oh)
 		return;
 
 	lump = W_POINTLUMPNUM(lumpnum);
-	if (!(W_GetNameForNum(lumpnum)[0] & 0x80))
+	if (!W_IsCompressed(lumpnum))
 	{
 		// uncompressed
 		jo = (jagobj_t*)lump;

@@ -463,7 +463,7 @@ extern uint8_t* dc_playpals, *dc_cshift_playpals;
 #ifdef MARS
 #define R_SpritePixelsLength(lumpnum) BIGSHORT(plengths[(lumpnum)-firstsprite])
 
-#define R_CheckSpritePixels(lumpnum) I_RemapPtr((void *)(I_WadBase() + BIGLONG(poffsets[(lumpnum)-firstsprite])))
+#define R_CheckSpritePixels(lumpnum) I_RemapPtr((void *)(wadfile[PWAD_NONE].fileptr + BIGLONG(poffsets[(lumpnum)-firstsprite])))
 
 #define R_CheckPixels(lumpnum) (void *)(W_POINTLUMPNUM(lumpnum))
 

@@ -723,61 +723,9 @@ int 	Z_LargestFreeBlock(memzone_t *mainzone);
 void 	Z_ForEachBlock(memzone_t *mainzone, memblockcall_t cb, void *userp);
 int		Z_FreeBlocks(memzone_t* mainzone);
 
-/*------- */
-/*WADFILE */
-/*------- */
-
-enum
-{
-	PWAD_NONE,
-	PWAD_CD,
-	MAXWADS,
-};
-
-extern char cd_pwad_name[64];
-#define SOUNDS_PWAD_NAME "SOUNDS.WAD"
-#define MAPDEV_PWAD_NAME "MAPDEV.WAD"
-
 /*=============== */
 /*   TYPES */
 /*=============== */
-
-typedef struct
-{
-	int			filepos;					/* also texture_t * for comp lumps */
-	int			size;
-	char		name[8];
-} lumpinfo_t;
-
-void	W_Init (void);
-void 	W_InitCDPWAD(int wawdnum, const char *name);
-
-void 	W_LoadPWAD(int wadnum);
-int 	W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad);
-
-int		W_CheckNumForName (const char *name);
-#define W_GetNumForName(name) W_GetNumForName_(name,__func__)
-int		W_GetNumForName_ (const char *name, const char *func);
-int		W_CheckRangeForName (const char *name, int start, int end);
-
-int		W_LumpLength (int lump);
-int 	W_ReadLump (int lump, void *dest);
-
-void	*W_CacheLumpNum (int lump, int tag);
-void	*W_CacheLumpName (const char *name, int tag);
-
-boolean W_IsIWad(int lump);
-boolean W_IsCompressed_(int lump, const char *func);
-
-const char *W_GetNameForNum (int lump);
-void * W_GetRawLumpData_(int lump, const char *func);
-void * W_GetLumpData_(int lump, const char *func);
-void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compressed);
-#define W_GetRawLumpData(lump) W_GetRawLumpData_(lump,__func__)
-#define W_GetLumpData(lump) W_GetLumpData_(lump,__func__)
-#define W_ReadLumpData(lump,dest,compressed) W_ReadLumpData_(lump,__func__,dest,compressed)
-#define W_POINTLUMPNUM(x) W_GetRawLumpData(x)
-#define W_IsCompressed(lump) W_IsCompressed_(lump,__func__)
 
 /*---------- */
 /*BASE LEVEL */
@@ -960,6 +908,87 @@ void I_Print8 (int x, int y, const char *string);
 int I_Print8Len(const char* string);
 
 void I_DebugScreen (void);
+
+/*------- */
+/*WADFILE */
+/*------- */
+
+#ifndef MARS
+#define MAXLUMPS 65535
+#endif
+
+enum
+{
+	PWAD_NONE,
+	PWAD_CD,
+	MAXWADS,
+};
+
+typedef struct
+{
+	int			filepos;					/* also texture_t * for comp lumps */
+	int			size;
+	char		name[8];
+} lumpinfo_t;
+
+typedef struct
+{
+	byte		*fileptr;
+	int 		cdlength, cdoffset;
+
+	lumpinfo_t	*lumpinfo;			/* points directly to rom image */
+	int 		firstlump;
+	int			numlumps;
+	int 		infotableofs;
+#ifndef MARS
+	void		*lumpcache[MAXLUMPS];
+#endif
+} wadfile_t;
+
+extern wadfile_t wadfile[MAXWADS];
+extern char cd_pwad_name[64];
+#define SOUNDS_PWAD_NAME "SOUNDS.WAD"
+#define MAPDEV_PWAD_NAME "MAPDEV.WAD"
+
+void	W_Init (void);
+void 	W_InitCDPWAD(int wawdnum, const char *name);
+
+void 	W_LoadPWAD(int wadnum);
+int 	W_CacheWADLumps (lumpinfo_t *li, int numlumps, VINT *lumps, boolean setpwad);
+
+int		W_CheckNumForName (const char *name);
+#define W_GetNumForName(name) W_GetNumForName_(name,__func__)
+int		W_GetNumForName_ (const char *name, const char *func);
+int		W_CheckRangeForName (const char *name, int start, int end);
+
+int		W_LumpLength (int lump);
+int 	W_ReadLump (int lump, void *dest);
+
+void	*W_CacheLumpNum (int lump, int tag);
+void	*W_CacheLumpName (const char *name, int tag);
+
+boolean W_IsIWad(int lump);
+boolean W_IsCompressed_(int lump, const char *func);
+
+const char *W_GetNameForNum (int lump);
+void * W_GetRawLumpData_(int lump, const char *func);
+void * W_GetLumpData_(int lump, const char *func);
+void * W_ReadLumpData_(int lump, const char *func, void *dest, boolean compressed);
+#define W_GetRawLumpData(lump) W_GetRawLumpData_(lump,__func__)
+#define W_GetLumpData(lump) W_GetLumpData_(lump,__func__)
+#define W_ReadLumpData(lump,dest,compressed) W_ReadLumpData_(lump,__func__,dest,compressed)
+#define W_POINTLUMPNUM(x) W_GetIWadLumpData(x)
+#define W_IsCompressed(lump) W_IsCompressed_(lump,__func__)
+
+// this only works for lumps in the IWAD, not currently mapped to a PWAD
+// bypasses all the checks, CDFS, compression logic and whatnot
+static inline __attribute__((always_inline))
+void * W_GetIWadLumpData(int lump)
+{
+	wadfile_t *wad = &wadfile[PWAD_NONE];
+	lumpinfo_t *l = &wad->lumpinfo[lump];
+	return I_RemapPtr((void*)(wad->fileptr + BIGLONG(l->filepos)));
+}
 
 /*---- */
 /*GAME */

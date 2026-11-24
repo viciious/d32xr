@@ -125,7 +125,7 @@ void P_LoadSegs (int lump)
 	// FIXME: this is strictly big-endian for now
 	if (W_IsIWad(lump))
 	{
-		segs = W_POINTLUMPNUM(lump);
+		segs = W_GetRawLumpData(lump);
 		return;
 	}
 
@@ -397,7 +397,7 @@ void P_LoadNodes (int lump)
 		int oldpage = 255;
 		I_SetBankPage(oldpage);
 
-		nodes = W_POINTLUMPNUM(lump);
+		nodes = W_GetRawLumpData(lump);
 
 		// re-use nodes from ROM if possible
 		const int page = I_GetBankPage();
@@ -965,7 +965,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 		int oldpage = 255;
 		I_SetBankPage(oldpage);
 
-		W_POINTLUMPNUM(lumpnum+ML_SEGS);
+		W_GetRawLumpData(lumpnum+ML_SEGS);
 
 		segspage = I_GetBankPage();
 		if (segspage == oldpage) {
@@ -1114,7 +1114,7 @@ D_printf ("P_SetupLevel(%s,%i)\n",lumpname,skill);
 				W_ReadLump(skytexture, skytexturep);
 			}
 			else
-				skytexturep = W_POINTLUMPNUM(skytexture);
+				skytexturep = W_GetRawLumpData(skytexture);
 
 			skydepth = 3;
 			skytexturep = R_SkipJagObjHeader(skytexturep, W_LumpLength(skytexture), 256, 128, &skyheader);
