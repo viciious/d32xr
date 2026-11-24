@@ -257,10 +257,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
       if (*(int8_t *)columnptr == -1)
          continue;
 
-      src = columnptr + 2;
       column = (column_t *)columnptr;
-      if ((columnofs & COLUMN_INLINE) != 0)
-         columnptr = NULL;
 
       do {
          int top    = column->topdelta * spryscale + sprtop;
@@ -268,12 +265,28 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
          fixed_t frac;
          int temp = FRACUNIT-1;
 
-         if (columnptr != NULL)
+         // an inlined column is a single post with its pixels right after
+         // the two byte header; src is not needed after the call
+         if ((columnofs & COLUMN_INLINE) != 0)
+            src = (byte *)column + 2;
+         else
          {
-            byte *dataofsofs = columnptr + offsetof(column_t, dataofs);
+#ifdef MARS
+            // may sit at an odd address: two byte reads; asm keeps GCC from
+            // juggling r0 through a stack slot
+            int dataofs;
+            __asm ("mov.b @(2,%1),r0\n\t"
+                   "extu.b r0,%0\n\t"
+                   "mov.b @(3,%1),r0\n\t"
+                   "shll8 %0\n\t"
+                   "extu.b r0,r0\n\t"
+                   "or r0,%0"
+                   : "=&r" (dataofs) : "r" (column), "m" (*column) : "r0");
+#else
+            byte *dataofsofs = (byte *)column + offsetof(column_t, dataofs);
             int dataofs = BIGSHORT((dataofsofs[0] << 8) | dataofsofs[1]);
+#endif
             src = pixels + dataofs;
-            columnptr += sizeof(column_t);
          }
 
 #ifdef MARS
@@ -317,7 +330,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 
          if (column->length < 0)
             break;
-         column = (column_t *)columnptr;
+         column++;
       } while (1);
    } while(++x < stopx);
 }
@@ -347,6 +360,18 @@ static boolean R_SegBehindPoint(viswall_t *viswall, int dx, int dy)
    return (sdx < dx);
 }
 
+// GCC turns a plain *walls++ into add/mov/add #-64/mov.l @(60,rn)
+static inline viswall_t *R_NextWall(viswall_t ***walls)
+{
+#ifdef MARS
+   viswall_t *ds;
+   __asm ("mov.l @%0+,%1" : "+r" (*walls), "=r" (ds) : "m" (**walls));
+   return ds;
+#else
+   return *(*walls)++;
+#endif
+}
+
 //
 // Clip a sprite to the openings created by walls
 //
@@ -367,6 +392,9 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
    unsigned vph = (uint16_t)viewportHeight;
    viswall_t *ds;      // r17
 
+   // keeps vph in one register (GCC otherwise keeps a sign-extended copy
+   // for (int8_t)vph and spills it)
+   __asm ("" : "+r" (vph));
    x1  = vis->x1;
    x2  = vis->x2;
    scalefrac = vis->yscale;  
@@ -419,16 +447,14 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
 #endif
    }
 
+   ds = R_NextWall(&walls);
    do
    {
-      ds = *walls++;
       if(ds->start > x2 || ds->stop < x1)                          // does not intersect
          continue;
 
       r1 = ds->start < x1 ? x1 : ds->start;
       r2 = ds->stop  > x2 ? x2 : ds->stop;
-      if (r1 > r2)
-         continue;
 
       if((ds->scalefrac < scalefrac && ds->scale2 < scalefrac) ||
          ((ds->scalefrac <= scalefrac || ds->scale2 <= scalefrac) && R_SegBehindPoint(ds, vis->gx, vis->gy))) {
@@ -517,7 +543,7 @@ void R_ClipVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreen
          }
 #endif
       }
-   } while (*walls != NULL);
+   } while ((ds = R_NextWall(&walls)) != NULL);
 }
 
 static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
