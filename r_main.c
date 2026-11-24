@@ -1027,6 +1027,7 @@ static void R_Setup (int displayplayer, sector_t **vissectors_, int16_t *planeco
 	tempbuf += sizeof(*vd->gsortedsprites) * (MAXVISSPRITES+1) / sizeof(*tempbuf);
 
 	vd->vissprites = (void *)vd->viswalls;
+	vd->vispsprites = vd->vissprites + MAXVISSPRITES - NUMPSPRITES;
 
 	vd->lastwallcmd = vd->viswalls;			/* no walls added yet */
 	vd->lastsegclip = vd->segclip;
@@ -1051,7 +1052,7 @@ static void R_Setup (int displayplayer, sector_t **vissectors_, int16_t *planeco
 	/* clear sprites */
 	/* */
 	vd->vissprite_p = vd->vissprites;
-	vd->lastsprite_p = vd->vissprite_p;
+	vd->vispsprite_p = vd->vispsprites;
 
 	vd->vissectors = (volatile sector_t **)vissectors_;
 	vd->lastvissector = vd->vissectors;	/* no subsectors visible yet */
@@ -1168,7 +1169,6 @@ visplane_t* R_FindPlane(fixed_t height,
 void R_BSP (void) __attribute__((noinline));
 void R_WallPrep (void) __attribute__((noinline));
 void R_SpritePrep (void) __attribute__((noinline));
-void R_PSpritePrep (void) __attribute__((noinline));
 boolean R_LatePrep (void) __attribute__((noinline));
 void R_Cache (void) __attribute__((noinline));
 void R_SegCommands (void) __attribute__((noinline));
@@ -1307,7 +1307,6 @@ void R_RenderPlayerView(int displayplayer)
 
 	t_sprites = I_GetFRTCounter();
 	R_SpritePrep();
-	R_PSpritePrep();
 	R_Sprites();
 	t_sprites = I_GetFRTCounter() - t_sprites;
 	

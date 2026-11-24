@@ -10,10 +10,11 @@
 
 static atomic_flag spr_lock = ATOMIC_FLAG_INIT;
 
-static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
-static void R_PrepPSprite(pspdef_t* psp) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_PrepMobj(mobj_t* thing) ATTR_DATA_CACHE_ALIGN;
+static void R_PrepPSprite(pspdef_t* psp) ATTR_DATA_CACHE_ALIGN;
 void R_SpritePrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
-void R_PSpritePrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
+static void R_PSpritePrep(void) ATTR_DATA_CACHE_ALIGN;
+static void R_SortSprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 #define R_LockSpr() do { while (atomic_flag_test_and_set(&spr_lock)); } while(0)
 #define R_UnlockSpr() do { atomic_flag_clear(&spr_lock); } while(0)
@@ -174,7 +175,7 @@ static void R_PrepMobj(mobj_t *thing)
    vis = (vissprite_t *)vd->vissprite_p;
 
    // get a new vissprite
-   if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES - NUMPSPRITES) {
+   if(vd->vissprite_p >= vd->vispsprites) {
       R_UnlockSpr();
       return; // too many visible sprites already, leave room for psprites
    }
@@ -306,11 +307,11 @@ static void R_PrepPSprite(pspdef_t *psp)
       return;
 
    // store information in vissprite
-   if(vd->vissprite_p >= vd->vissprites + MAXVISSPRITES)
+   if(vd->vispsprite_p >= vd->vispsprites + NUMPSPRITES)
       return; // out of vissprites
 
-   vis = (vissprite_t *)vd->vissprite_p;
-   vd->vissprite_p++;
+   vis = (vissprite_t *)vd->vispsprite_p;
+   vd->vispsprite_p++;
 
 #ifdef MARS
    SH2_DIVU_DVSR = xscale; // set 32-bit divisor
@@ -377,6 +378,27 @@ void R_SpritePrep(void)
          pse = ++vd->pvissector;
          if (pse >= vd->lastvissector) {
             R_UnlockSpr();
+
+#ifdef MARS
+            // the CPU that reaches the end of the sector list
+            // first also prepares the player sprites
+            if (pse == vd->lastvissector)
+               R_PSpritePrep();
+
+            // each of the 2 CPUs bumps pvissector twice past the end: once
+            // above and once more here when it's done. The one that gets
+            // lastvissector+3 finishes last (incl. psprites) and sorts.
+            R_LockSpr();
+            Mars_ClearCacheLine(&vd->pvissector);
+            pse = ++vd->pvissector;
+            R_UnlockSpr();
+
+            if (pse == vd->lastvissector + 3)
+               R_SortSprites();
+#else
+            R_PSpritePrep();
+            R_SortSprites();
+#endif
             break;
          }
          vd->psecthing = SPTR_TO_LPTR((*pse)->thinglist);
@@ -419,19 +441,16 @@ void Mars_Sec_R_SpritePrep(void)
 #endif
 
 //
-// Process actors in all visible subsectors
+// Project player weapon sprites. Called from R_SpritePrep by the CPU
+// that reaches the end of the visible sector list first.
 //
-void R_PSpritePrep(void)
+static void R_PSpritePrep(void)
 {
    pspdef_t     *psp;
 
 #ifdef MARS
-   Mars_R_SecWait();
-   Mars_ClearCacheLine(&vd->vissprites); // this will also take care of lastsprite_p, vissprite_p & gsortedsprites
+   Mars_ClearCacheLine(&vd->vissprites); // this will also take care of vispsprite_p
 #endif
-
-   // remember end of actor vissprites
-   vd->lastsprite_p = vd->vissprite_p;
 
    // draw player weapon sprites
    for(psp = vd->psprites; psp < vd->lastpsprite; psp++)
@@ -439,6 +458,86 @@ void R_PSpritePrep(void)
       if(psp->state)
          R_PrepPSprite(psp);
    }
+}
+
+//
+// Sort the vissprites by distance and find the screen split point for
+// drawing them on two CPUs. Called from R_SpritePrep by the CPU that
+// finishes last, once all vissprites and psprites are ready.
+//
+static void R_SortSprites(void)
+{
+   int i, count;
+   unsigned half;
+   unsigned midcount;
+   viswall_t *spr;
+   int sortedsprites[MAXVISSPRITES+1];
+   viswall_t *wc;
+
+#ifdef MARS
+   Mars_ClearCacheLine(&vd->vissprites); // this will also take care of vispsprite_p, vissprite_p & sprscreenhalf
+#endif
+
+   count = 0;
+   half = 0;
+   midcount = 0;
+
+   // add the gun midpoint
+   for (spr = vd->vispsprites; spr < vd->vispsprite_p; spr++) {
+        vissprite_t *pspr = (vissprite_t *)spr;
+        int pixcount = pspr->x2 + 1 - pspr->x1;
+        midcount += pixcount;
+        half += (pspr->x1 + (pixcount >> 1)) * pixcount;
+   }
+
+   // sort mobj sprites by distance (back to front)
+   // find approximate average middle point for all
+   // sprites - this will be used to split the draw 
+   // load between the two CPUs on the 32X
+   for (wc = vd->vissprites, i = 0; wc != vd->vissprite_p; wc++, i++)
+   {
+       vissprite_t* ds = (vissprite_t *)wc;
+
+       // average mid point
+       unsigned xscale = ds->xscale;
+       int pixcount = ds->x2 + 1 - ds->x1;
+
+       midcount += pixcount;
+       half += (ds->x1 + (pixcount >> 1)) * pixcount;
+
+       // composite sort key: distance + id
+       sortedsprites[1+count++] = (xscale << 8) + i;
+   }
+
+   // add masked segs
+   for (wc = vd->viswalls; wc < vd->lastwallcmd; wc++)
+   {
+      int pixcount = wc->stop - wc->start + 1;
+
+      if (pixcount <= 0)
+         continue;
+      if (!(wc->actionbits & AC_MIDTEXTURE))
+         continue;
+
+      midcount += pixcount;
+      half += (wc->start + (pixcount >> 1)) * pixcount;
+   }
+
+   // average the mid point
+   if (midcount > 0)
+   {
+      half /= midcount;
+      if (!half || (int)half > viewportWidth)
+         half = viewportWidth / 2;
+   }
+
+   // sort in RAM, then copy to the work buffer, which is in VRAM
+   sortedsprites[0] = count;
+   D_isort(sortedsprites+1, count);
+   for (i = 0; i < count+1; i++)
+      vd->gsortedsprites[i] = sortedsprites[i];
+
+   vd->sprscreenhalf = half;
 }
 
 // EOF

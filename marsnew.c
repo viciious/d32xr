@@ -1012,7 +1012,7 @@ void I_DebugScreen(void)
 			D_snprintf(buf[3], sizeof(buf[0]), "b:%2d", Mars_FRTCounter2Msec(t_ref_bsp_avg));
 			D_snprintf(buf[4], sizeof(buf[0]), "w:%2d %2d", Mars_FRTCounter2Msec(t_ref_segs_avg), vd->lastwallcmd - vd->viswalls);
 			D_snprintf(buf[5], sizeof(buf[0]), "p:%2d %2d", Mars_FRTCounter2Msec(t_ref_planes_avg), vd->lastvisplane - vd->visplanes - 1);
-			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), vd->vissprite_p - vd->vissprites);
+			D_snprintf(buf[6], sizeof(buf[0]), "s:%2d %2d", Mars_FRTCounter2Msec(t_ref_sprites_avg), (vd->vissprite_p - vd->vissprites) + (vd->vispsprite_p - vd->vispsprites));
 			D_snprintf(buf[7], sizeof(buf[0]), "r:%2d", Mars_FRTCounter2Msec(t_ref_total_avg));
 			D_snprintf(buf[8], sizeof(buf[0]), "d:%2d", Mars_FRTCounter2Msec(drawtics));
 			D_snprintf(buf[9], sizeof(buf[0]), "t:%2d", Mars_FRTCounter2Msec(I_GetFRTCounter() - ticstart));

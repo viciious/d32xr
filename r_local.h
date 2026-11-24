@@ -704,8 +704,14 @@ __attribute__((aligned(16)))
 	__attribute__((aligned(16)))
 #endif
 	viswall_t	* volatile vissprites/*[MAXVISSPRITES]*/;
-	viswall_t   * volatile  lastsprite_p, * volatile vissprite_p;
-	int * volatile gsortedsprites;
+	viswall_t   * volatile vispsprite_p, * volatile vissprite_p;
+	volatile int sprscreenhalf; /* sprite draw split point, set by R_SortSprites */
+	viswall_t	* volatile vispsprites/*[NUMPSPRITES]*/;
+
+	/* sorted sprite keys, [0] = count; in the work buffer, because */
+	/* the secondary CPU keeps drawing sprites after R_RenderPlayerView */
+	/* returns. Shares memory with sortedvisplanes. */
+	int * volatile gsortedsprites/*[MAXVISSPRITES+1]*/;
 
 	/* */
 	/* subsectors */

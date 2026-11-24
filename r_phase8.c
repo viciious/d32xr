@@ -624,7 +624,7 @@ static void R_DrawPSprites(int sprscreenhalf)
     unsigned vph = viewportHeight;
 
     // draw psprites
-    for (spr = vd->lastsprite_p; spr < vd->vissprite_p; spr++)
+    for (spr = vd->vispsprites; spr < vd->vispsprite_p; spr++)
     {
         vissprite_t *vis = (vissprite_t *)spr;
         int x1 = vis->x1, x2 = vis->x2;
@@ -645,11 +645,9 @@ static void R_DrawPSprites(int sprscreenhalf)
 #ifdef MARS
 void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 {  
-    Mars_ClearCacheLine(&vd->vissprites); // this will also take care of lastsprite_p, vissprite_p & gsortedsprites
+    Mars_ClearCacheLine(&vd->vissprites); // this will also take care of vispsprite_p, vissprite_p & sprscreenhalf
 
-    // mobj sprites
-    //Mars_ClearCacheLines(vd->gsortedsprites, ((lastsprite_p - vissprites + 1) * sizeof(*vd->gsortedsprites) + 31) / 16);
-
+    // mobj sprites, sorted by either CPU
     R_DrawSortedSprites(vd->gsortedsprites, -sprscreenhalf);
 
     R_DrawPSprites(-sprscreenhalf);
@@ -662,95 +660,21 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 //
 void R_Sprites(void)
 {
-   int i, count;
-   unsigned half;
-   unsigned midcount;
-   viswall_t *spr;
-   int sortedsprites[MAXVISSPRITES+1];
-   viswall_t *wc;
-   mapvertex_t *verts;
-
-   Mars_ClearCacheLine(&vd->vissprites); // this will also take care of lastsprite_p, vissprite_p & gsortedsprites
-
-   // sort mobj sprites by distance (back to front)
-   // find approximate average middle point for all
-   // sprites - this will be used to split the draw 
-   // load between the two CPUs on the 32X
-   count = 0;
-   half = 0;
-   midcount = 0;
-   for (wc = vd->vissprites, i = 0; wc != vd->lastsprite_p; wc++, i++)
-   {
-       vissprite_t* ds = (vissprite_t *)wc;
-
-       // average mid point
-       unsigned xscale = ds->xscale;
-       int pixcount = ds->x2 + 1 - ds->x1;
-
-       midcount += pixcount;
-       half += (ds->x1 + (pixcount >> 1)) * pixcount;
-
-       // composite sort key: distance + id
-       sortedsprites[1+count++] = (xscale << 8) + i;
-   }
-
-   // add the gun midpoint
-   for (spr = vd->lastsprite_p; spr < vd->vissprite_p; spr++) {
-        vissprite_t *pspr = (vissprite_t *)spr;
-        int pixcount = pspr->x2 + 1 - pspr->x1;
-        midcount += pixcount;
-        half += (pspr->x1 + (pixcount >> 1)) * pixcount;
-   }
-
-   // add masked segs
-   for (wc = vd->viswalls; wc < vd->lastwallcmd; wc++)
-   {
-      int pixcount = wc->stop - wc->start + 1;
-
-      if (pixcount <= 0)
-         continue;
-      if (!(wc->actionbits & AC_MIDTEXTURE))
-         continue;
-
-      midcount += pixcount;
-      half += (wc->start + (pixcount >> 1)) * pixcount;
-   }
-
-   // average the mid point
-   if (midcount > 0)
-   {
-      half /= midcount;
-      if (!half || (int)half > viewportWidth)
-         half = viewportWidth / 2;
-   }
-
-   // draw mobj sprites
-   sortedsprites[0] = count;
-   D_isort(sortedsprites+1, count);
-
-   I_SetBankPage(segspage);
-
-   verts = vertexes;
-   for (wc = vd->viswalls; wc < vd->lastwallcmd; wc++)
-   {
-      if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE))
-      {
-         wc->v2i = *(int32_t *)&verts[SEG_UNPACK_V2(wc->seg)];
-         wc->v1i = *(int32_t *)&verts[SEG_UNPACK_V1(wc->seg)];
-      }
-   }
+   int half;
 
 #ifdef MARS
+   // the secondary CPU may still be sorting the sprites in R_SpritePrep
    Mars_R_SecWait();
-   for (i = 0; i < count+1; i++)
-      vd->gsortedsprites[i] = sortedsprites[i];
+   Mars_ClearCacheLine(&vd->vissprites); // this will also take care of vispsprite_p, vissprite_p & sprscreenhalf
 #endif
+
+   half = vd->sprscreenhalf;
 
 #ifdef MARS
    Mars_R_BeginDrawSprites(half);
 #endif
 
-   R_DrawSortedSprites(sortedsprites, half);
+   R_DrawSortedSprites(vd->gsortedsprites, half);
 
    R_DrawPSprites(half);
 
@@ -760,4 +684,3 @@ void R_Sprites(void)
 }
 
 // EOF
-

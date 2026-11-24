@@ -191,6 +191,14 @@ void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts)
         vd->lastsegclip += width;
     }
 
+    // unpack the vertices for walls that clip sprites in phase 8;
+    // this overwrites wc->seg (union with v1i), which isn't needed past here
+    if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE))
+    {
+        wc->v2i = *(int32_t *)&verts[nv2];
+        wc->v1i = *(int32_t *)&verts[nv1];
+    }
+
 #ifdef MARS
     if (wc->stop > wc->start)
     {
