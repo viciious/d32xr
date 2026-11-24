@@ -54,6 +54,9 @@ void *R_SkipJagObjHeader(void *data, int size, int width, int height, jagobj_t *
 {
 	jagobj_t *header = data;
 
+	if (pheader) {
+		*pheader = NULL;
+	}
 	if (!data) {
 		return NULL;
 	}
@@ -69,8 +72,9 @@ void *R_SkipJagObjHeader(void *data, int size, int width, int height, jagobj_t *
 	if (BIGSHORT(header->depth) != 3 && BIGSHORT(header->depth) != 2) {
 		return data;
 	}
-	if (pheader)
+	if (pheader) {
 		*pheader = header;
+	}
 	return (char *)data + sizeof(jagobj_t) - sizeof(header->data);
 }
 
