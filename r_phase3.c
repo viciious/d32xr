@@ -183,8 +183,8 @@ static void R_PrepMobj(mobj_t *thing)
 
 #ifdef MARS
    SH2_DIVU_DVSR = xscale; // set 32-bit divisor
-   SH2_DIVU_DVDNTH = 0;    // high long of 64-bit dividend
-   SH2_DIVU_DVDNTL = -1;   // low long, starts the divide
+   SH2_DIVU_DVDNTH = 1;    // high long of 64-bit dividend
+   SH2_DIVU_DVDNTL = 0;    // low long, starts the divide
 #endif
    vis->patchnum = lump;
 #ifndef MARS
@@ -314,8 +314,8 @@ static void R_PrepPSprite(pspdef_t *psp)
 
 #ifdef MARS
    SH2_DIVU_DVSR = xscale; // set 32-bit divisor
-   SH2_DIVU_DVDNTH = 0;    // high long of 64-bit dividend
-   SH2_DIVU_DVDNTL = -1;   // low long, starts the divide
+   SH2_DIVU_DVDNTH = 1;    // high long of 64-bit dividend
+   SH2_DIVU_DVDNTL = 0;    // low long, starts the divide
 #endif
    vis->patchnum = lump;
 #ifndef MARS
