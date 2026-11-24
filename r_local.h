@@ -738,8 +738,9 @@ __attribute__((aligned(16)))
 #ifdef MARS
 	__attribute__((aligned(16)))
 #endif
-	volatile sector_t **pvissector;
-	volatile mobj_t *psecthing;
+	/* volatile, so reads can't be moved above Mars_ClearCacheLine */
+	volatile sector_t ** volatile pvissector;
+	volatile mobj_t * volatile psecthing;
 } viewdef_t;
 
 extern	viewdef_t	*vd;

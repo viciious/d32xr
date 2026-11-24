@@ -569,7 +569,7 @@ static void R_DrawSortedSprites(int* sortedsprites, int sprscreenhalf)
    {
       vissprite_t* ds;
 
-      ds = (vissprite_t *)(vd->vissprites + (sortedsprites[i] & 0x7f));
+      ds = (vissprite_t *)(vd->vissprites + (sortedsprites[i] & 0xff));
 
       R_ClipVisSprite(ds, spropening, sprscreenhalf, walls);
       R_DrawVisSprite(ds, spropening, sprscreenhalf);
@@ -665,7 +665,7 @@ void R_Sprites(void)
        half += (ds->x1 + (pixcount >> 1)) * pixcount;
 
        // composite sort key: distance + id
-       sortedsprites[1+count++] = (xscale << 7) + i;
+       sortedsprites[1+count++] = (xscale << 8) + i;
    }
 
    // add the gun midpoint
