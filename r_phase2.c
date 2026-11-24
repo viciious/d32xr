@@ -265,26 +265,28 @@ static void R_SegLoop(viswall_t* segl, unsigned short * restrict clipbounds)
         floorclipx = ceilingclipx & 0x00ff;
         ceilingclipx = ((unsigned)ceilingclipx & 0xff00) >> 8;
 
-        //
-        // calc high and low
-        //
-        low = FixedMul(scale2, floornewheight)>>FRACBITS;
-        low = cy - low;
-        if (low < 0)
-            low = 0;
-        else if (low > floorclipx)
-            low = floorclipx;
+        {
+            //
+            // calc high and low
+            //
+            low = FixedMul(scale2, floornewheight)>>FRACBITS;
+            low = cy - low;
+            if (low < 0)
+                low = 0;
+            else if (low > floorclipx)
+                low = floorclipx;
 
-        high = FixedMul(scale2, ceilingnewheight)>>FRACBITS;
-        high = cy - high;
-        if (high > vh)
-            high = vh;
-        else if (high < ceilingclipx)
-            high = ceilingclipx;
+            high = FixedMul(scale2, ceilingnewheight)>>FRACBITS;
+            high = cy - high;
+            if (high > vh)
+                high = vh;
+            else if (high < ceilingclipx)
+                high = ceilingclipx;
 
-        // rewrite clipbounds; the seg keeps the merged values, so
-        // that R_SegCommands can copy them back as whole words
-        COL(newclipbounds) = COL(clipbounds) ^= (COL(clipbounds) ^ ((high << 8) + low)) & newclip;
+            // rewrite clipbounds; the seg keeps the merged values, so
+            // that R_SegCommands can copy them back as whole words
+            COL(newclipbounds) = COL(clipbounds) ^= (COL(clipbounds) ^ ((high << 8) + low)) & newclip;
+        }
 
         //
         // floor
