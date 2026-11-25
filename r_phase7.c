@@ -16,7 +16,7 @@
 
 struct localplane_s;
 
-typedef void (*mapplane_fn)(struct localplane_s* lpl, int, int, int);
+typedef void (*mapplane_fn)(struct localplane_s* lpl, int, int, const int16_t *, int);
 
 typedef struct localplane_s
 {
@@ -40,8 +40,8 @@ typedef struct localplane_s
     mapplane_fn mapplane;
 } localplane_t;
 
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
-static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2) ATTR_DATA_CACHE_ALIGN;
+static void R_MapPlane(localplane_t* lpl, int y, int y2, const int16_t *restrict spanstart, int x2) ATTR_DATA_CACHE_ALIGN;
+static void R_MapPotatoPlane(localplane_t* lpl, int y, int y2, const int16_t *restrict spanstart, int x2) ATTR_DATA_CACHE_ALIGN;
 static void R_PlaneLoop(localplane_t* lpl) ATTR_DATA_CACHE_ALIGN;
 static void R_DrawPlanes2(void) ATTR_DATA_CACHE_ALIGN;
 
@@ -63,107 +63,122 @@ static int pl_next = 0;
 //
 // Render the horizontal spans determined by R_PlaneLoop
 //
-static void R_MapPlane(localplane_t* lpl, int y, int x, int x2)
+static void R_MapPlane(localplane_t* lpl, int y, int y2, const int16_t *restrict spanstart, int x2)
 {
-    fixed_t distance;
-    fixed_t xfrac, yfrac, xstep, ystep;
-    int light;
-    unsigned scale;
-    unsigned miplevel, mipsize;
+    const int lowres = lpl->lowres;
+    int step = 1, n = y2 - y + 1;
 
-    distance = FixedMul(lpl->height, yslope[y]);
-
-#ifdef MARS
-    int32_t t, divunit;
-    __asm volatile (
-        "mov #-128, %1\n\t"
-        "add %1, %1 /* r0 is now 0xFFFFFF00 */ \n\t"
-        "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
-        "mov #0, %0\n\t"
-        "mov.l %3, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
-        "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-        : "=&r" (t), "=&r" (divunit) : "r" (distance), "r"(lpl->lightcoef));
-#endif
-
-    xstep = FixedMul(distance, lpl->basexscale);
-    ystep = FixedMul(distance, lpl->baseyscale);
-
-#if MIPLEVELS > 1
-    miplevel = (unsigned)distance / MIPSCALE;
-    if (miplevel > lpl->maxmip)
-        miplevel = lpl->maxmip;
-    mipsize = lpl->mipsize[miplevel];
-#else
-    miplevel = 0;
-    mipsize = FLATSIZE;
-#endif
-
-    xfrac = lpl->x + FixedMul(distance, lpl->cols[x*2+0] << PLANECOLSHIFT);
-#ifdef MARS
-    // lpl->y is premultiplied by FLATSIZE
-    yfrac = lpl->y - FixedMul(distance, lpl->cols[x*2+1] << (PLANECOLSHIFT+FLATBITS));
-#else
-    yfrac = lpl->y - FixedMul(distance, lpl->cols[x*2+1] << PLANECOLSHIFT);
-#endif
-
-#if MIPLEVELS > 1
-    if (miplevel > 0) {
-        unsigned m = miplevel;
-        do {
-            xfrac >>= 1, xstep >>= 1;
-            yfrac >>= 2, ystep >>= 2;
-        } while (--m);
-    }
-#endif
-
-    if (lpl->lightcoef != 0)
-    {
-#ifdef MARS
-        __asm volatile (
-            "mov #-128, %0\n\t"
-            "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
-            "mov.l @(20,%0), %0 /* get 32-bit quotient */ \n\t"
-            : "=r" (scale));
-#else
-        scale = lpl->lightcoef / distance;
-#endif
-
-        light = lpl->lightsub;
-        light -= scale;
-
-        if (light < lpl->lightmin)
-            light = lpl->lightmin;
-        if (light > lpl->lightmax)
-            light = lpl->lightmax;
-        light = light >> FRACBITS;
-        light <<= 8;
-    }
-    else
-    {
-        light = lpl->lightmax;
-    }
-
-    if (lpl->lowres)
-    {
-        x >>= 1;
+    if (y > y2)
+        step = -1, n = y - y2 + 1;
+    if (lowres)
         x2 >>= 1;
-    }
 
-    drawspan[y&1](y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
+    do {
+        int x = spanstart[y];
+        fixed_t distance;
+        fixed_t xfrac, yfrac, xstep, ystep;
+        int light;
+        unsigned scale;
+        unsigned miplevel, mipsize;
+
+        distance = FixedMul(lpl->height, yslope[y]);
+
+#ifdef MARS
+        int32_t t, divunit;
+        __asm volatile (
+            "mov #-128, %1\n\t"
+            "add %1, %1 /* r0 is now 0xFFFFFF00 */ \n\t"
+            "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
+            "mov #0, %0\n\t"
+            "mov.l %3, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
+            "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
+            : "=&r" (t), "=&r" (divunit) : "r" (distance), "r"(lpl->lightcoef));
+#endif
+
+        xstep = FixedMul(distance, lpl->basexscale);
+        ystep = FixedMul(distance, lpl->baseyscale);
+
+#if MIPLEVELS > 1
+        miplevel = (unsigned)distance / MIPSCALE;
+        if (miplevel > lpl->maxmip)
+            miplevel = lpl->maxmip;
+        mipsize = lpl->mipsize[miplevel];
+#else
+        miplevel = 0;
+        mipsize = FLATSIZE;
+#endif
+
+        xfrac = lpl->x + FixedMul(distance, lpl->cols[x*2+0] << PLANECOLSHIFT);
+#ifdef MARS
+        // lpl->y is premultiplied by FLATSIZE
+        yfrac = lpl->y - FixedMul(distance, lpl->cols[x*2+1] << (PLANECOLSHIFT+FLATBITS));
+#else
+        yfrac = lpl->y - FixedMul(distance, lpl->cols[x*2+1] << PLANECOLSHIFT);
+#endif
+
+#if MIPLEVELS > 1
+        if (miplevel > 0) {
+            unsigned m = miplevel;
+            do {
+                xfrac >>= 1, xstep >>= 1;
+                yfrac >>= 2, ystep >>= 2;
+            } while (--m);
+        }
+#endif
+
+        if (lpl->lightcoef != 0)
+        {
+#ifdef MARS
+            __asm volatile (
+                "mov #-128, %0\n\t"
+                "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+                "mov.l @(20,%0), %0 /* get 32-bit quotient */ \n\t"
+                : "=r" (scale));
+#else
+            scale = lpl->lightcoef / distance;
+#endif
+
+            light = lpl->lightsub;
+            light -= scale;
+
+            if (light < lpl->lightmin)
+                light = lpl->lightmin;
+            if (light > lpl->lightmax)
+                light = lpl->lightmax;
+            light = light >> FRACBITS;
+            light <<= 8;
+        }
+        else
+        {
+            light = lpl->lightmax;
+        }
+
+        if (lowres)
+            x >>= 1;
+
+        drawspan[y&1](y, x, x2, light, xfrac, yfrac, xstep, ystep, lpl->ds_source[miplevel], mipsize);
+        y += step;
+    } while (--n);
 }
 
-static void R_MapPotatoPlane(localplane_t* lpl, int y, int x, int x2)
+static void R_MapPotatoPlane(localplane_t* lpl, int y, int y2, const int16_t *restrict spanstart, int x2)
 {
-    if (x2 < x)
-        return; // nothing to draw (shouldn't happen)
+    const int lowres = lpl->lowres;
+    const int sx2 = lowres ? x2 >> 1 : x2;
+    const int step = y > y2 ? -1 : 1;
 
-    if (lpl->lowres)
-    {
-        x >>= 1;
-        x2 >>= 1;
+    for (;;) {
+        int x;
+
+        x = spanstart[y];
+        if (lowres)
+            x >>= 1;
+
+        drawspan[0](y, x, sx2, lpl->lightmax, 0, 0, 0, 0, lpl->ds_source[0], 64);
+        if (y == y2)
+            break;
+        y += step;
     }
-
-    drawspan[0](y, x, x2, lpl->lightmax, 0, 0, 0, 0, lpl->ds_source[0], 64);
 }
 
 //
@@ -195,6 +210,7 @@ static void R_PlaneLoop(localplane_t *lpl)
    do
    {
       int x2;
+      int e;
 
       b2 = t2 & 0xff;
       t2 = (unsigned)t2 >> 8;
@@ -205,17 +221,19 @@ static void R_PlaneLoop(localplane_t *lpl)
       x2 = pl_x - 1;
 
       // top diffs
-      while (t1 < t2 && t1 <= b1)
+      e = t2 <= b1 ? t2 : b1 + 1;
+      if (t1 < e)
       {
-          mapplane(lpl, t1, spanstart[t1], x2);
-          ++t1;
+        mapplane(lpl, t1, e - 1, spanstart, x2);
+        t1 = e;
       }
 
       // bottom diffs
-      while (b1 > b2 && b1 >= t1)
+      e = b2 >= t1 ? b2 : t1 - 1;
+      if (b1 > e)
       {
-          mapplane(lpl, b1, spanstart[b1], x2);
-          --b1;
+        mapplane(lpl, b1, e + 1, spanstart, x2);
+        b1 = e;
       }
 
       if (pl_x == pl_stopx)
