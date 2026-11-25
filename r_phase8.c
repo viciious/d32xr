@@ -600,14 +600,15 @@ static void R_DrawPSprites(int sprscreenhalf)
 }
 
 #ifdef MARS
-void Mars_Sec_R_DrawSprites(int sprscreenhalf)
+
+void Mars_Sec_R_DrawSprites()
 {  
     Mars_ClearCacheLine(&vd->vissprites); // this will also take care of vispsprite_p, vissprite_p & sprscreenhalf
 
     // mobj sprites, sorted by either CPU
-    R_DrawSortedSprites(vd->gsortedsprites, -sprscreenhalf);
+    R_DrawSortedSprites(vd->gsortedsprites, -vd->sprscreenhalf);
 
-    R_DrawPSprites(-sprscreenhalf);
+    R_DrawPSprites(-vd->sprscreenhalf);
 }
 
 #endif
@@ -617,23 +618,17 @@ void Mars_Sec_R_DrawSprites(int sprscreenhalf)
 //
 void R_Sprites(void)
 {
-   int half;
+#ifdef MARS
+   Mars_R_BeginDrawSprites();
+#endif
 
 #ifdef MARS
-   // the secondary CPU may still be sorting the sprites in R_SpritePrep
-   Mars_R_SecWait();
    Mars_ClearCacheLine(&vd->vissprites); // this will also take care of vispsprite_p, vissprite_p & sprscreenhalf
 #endif
 
-   half = vd->sprscreenhalf;
+   R_DrawSortedSprites(vd->gsortedsprites, vd->sprscreenhalf);
 
-#ifdef MARS
-   Mars_R_BeginDrawSprites(half);
-#endif
-
-   R_DrawSortedSprites(vd->gsortedsprites, half);
-
-   R_DrawPSprites(half);
+   R_DrawPSprites(vd->sprscreenhalf);
 
 #ifdef MARS
    Mars_R_EndDrawSprites();

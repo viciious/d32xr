@@ -860,6 +860,8 @@ static void R_Setup (int displayplayer, sector_t **vissectors_, int16_t *planeco
 	vd->clipangle = xtoviewangle[0]<<FRACBITS;
 	vd->viewangletox = viewangletox;
 
+	vd->sprscreenhalf = viewportWidth;
+
 	damagecount = player->damagecount;
 	bonuscount = player->bonuscount;
 

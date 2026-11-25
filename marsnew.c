@@ -384,7 +384,7 @@ void Mars_Secondary(void)
 			Mars_Sec_R_SpritePrep();
 			break;
 		case MARS_SECCMD_R_DRAW_SPRITES:
-			Mars_Sec_R_DrawSprites(MARS_SYS_COMM6);
+			Mars_Sec_R_DrawSprites();
 			break;
 		case MARS_SECCMD_M_ANIMATE_FIRE:
 			Mars_Sec_M_AnimateFire();
