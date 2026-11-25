@@ -31,19 +31,20 @@ typedef struct
 
 typedef struct drawtex_s
 {
-   drawmip_t mip[MIPLEVELS];
    VINT      maxmip;
    VINT      widthmask;
    fixed_t   texturemid;
    fixed_t   topheight;
    fixed_t   bottomheight;
+   struct drawtex_s *next;
    uint8_t   *columncache;
+   drawmip_t mip[MIPLEVELS];
 } drawtex_t;
 
 typedef struct
 {
     viswall_t* segl;
-    drawtex_t *first, *last;
+    drawtex_t *first;          // texture list
     int lightmin, lightmax, lightsub, lightcoef;
     fixed_t scalestep, offset, distance;
     unsigned centerangle;
@@ -78,7 +79,8 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
     viswall_t* segl = lseg->segl;
 
     fixed_t scalefrac = segl->scalefrac;
-    int texturelight = lseg->lightmax;
+    // texturelight | colnum, the segcolmask value (texturelight is a multiple of 256)
+    unsigned lightcol = lseg->lightmax;
 
     const int start = segl->start;
     const int stop = segl->stop;
@@ -101,7 +103,6 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
        fixed_t r;
        unsigned clip;
        fixed_t scale2;
-       unsigned colnum;
        unsigned iscale;
 
 #ifdef MARS
@@ -125,7 +126,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         // calculate texture offset
         r = finetangent((uint16_t)(lseg->centerangle + xtoviewangle[x]) >> (ANGLETOFINESHIFT-FRACBITS));
         r = FixedMul(lseg->distance, r);
-        colnum = ((unsigned)(lseg->offset - r) >> FRACBITS) & 0xff;
+        r = ((unsigned)(lseg->offset - r) >> FRACBITS) & 0xff; // colnum
 
         // ceilingclipx and floorclipx, unpacked per texture
         clip = clipbounds[x];
@@ -136,17 +137,19 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         if (lseg->lightcoef != 0)
         {
             // calc light level
-            texturelight = lseg->lightsub - FixedMul(scale2, lseg->lightcoef);
+            int texturelight = lseg->lightsub - FixedMul(scale2, lseg->lightcoef);
             if (texturelight < lseg->lightmin)
                 texturelight = lseg->lightmin;
             if (texturelight > lseg->lightmax)
                 texturelight = lseg->lightmax;
             texturelight = texturelight >> FRACBITS;
             texturelight <<= 8;
+            lightcol = texturelight;
         }
+        lightcol = (lightcol & ~0xff) | r;
 
         if (segcolmask)
-            segcolmask[x] = texturelight | colnum;
+            segcolmask[x] = lightcol;
 
 #ifdef MARS
         __asm volatile (
@@ -169,7 +172,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         // draw the textures
         //
         tex = lseg->first;
-        if (tex < lseg->last)
+        if (tex)
         do {
             fixed_t top, bottom;
             int floorclipx = clip & 0x00ff, ceilingclipx = clip >> 8;
@@ -199,7 +202,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
                 pixel_t* src;
 #endif
 
-                texcolnum = colnum & tex->widthmask;
+                texcolnum = lightcol & tex->widthmask;
                 mipcolnum = texcolnum;
                 frac = tex->texturemid - (centerY - top) * iscale;
                 mip = tex->mip;
@@ -256,9 +259,9 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 
                 I_SetThreadLocalVar(DOOMTLS_COLORMAP, mip->colormaps);
 
-                mip->drawcol(x, top, bottom-1, texturelight, frac, texiscale, src, mip->height);
+                mip->drawcol(x, top, bottom-1, lightcol & ~0xff, frac, texiscale, src, mip->height);
             }
-        } while (++tex < lseg->last);
+        } while ((tex = tex->next) != NULL);
     } while (++x <= stop);
 
 #if MIPLEVELS > 1
@@ -343,7 +346,8 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
     uint8_t *columncache = drawtex->columncache;
     int mipwidth, mipheight;
 
-    drawtex->widthmask = width-1;
+    // colnum is 0..255, so R_DrawSeg can mask texturelight | colnum directly
+    drawtex->widthmask = (width-1) & 0xff;
     drawtex->topheight = FROMHEIGHT16(topheight);
     drawtex->bottomheight = FROMHEIGHT16(bottomheight);
     drawtex->texturemid = FROMHEIGHT16(texturemid);
@@ -424,6 +428,7 @@ void R_SegCommands(void)
 
     I_GetThreadLocalVar(DOOMTLS_COLUMNCACHE, toptex->columncache);
     bottomtex->columncache = toptex->columncache + COLUMN_CACHE_SIZE;
+    bottomtex->next = NULL;
 
     extralight = vd->extralight;
     last = vd->lastwallcmd;
@@ -457,8 +462,6 @@ void R_SegCommands(void)
 #endif
 
         lseg.segl = segl;
-        lseg.first = lseg.tex + 1;
-        lseg.last = lseg.tex + 1;
 #if MIPLEVELS > 1
         lseg.minmip = MIPLEVELS;
         lseg.maxmip = 0;
@@ -559,15 +562,17 @@ void R_SegCommands(void)
         {
             R_SetupDrawTexture(toptex, &textures[segl->t_texturenum],
                 segl->t_texturemid, segl->t_topheight, segl->t_bottomheight);
-            lseg.first--;
         }
 
         if (actionbits & AC_BOTTOMTEXTURE)
         {
             R_SetupDrawTexture(bottomtex, &textures[segl->b_texturenum],
                 segl->b_texturemid, segl->b_topheight, segl->b_bottomheight);
-            lseg.last++;
         }
+
+        // top, then bottom texture
+        toptex->next = (actionbits & AC_BOTTOMTEXTURE) ? bottomtex : NULL;
+        lseg.first = (actionbits & AC_TOPTEXTURE) ? toptex : toptex->next;
 
         if ((actionbits & (AC_TOPTEXTURE|AC_BOTTOMTEXTURE|AC_MIDTEXTURE)) != 0)
         {
