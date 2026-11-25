@@ -141,6 +141,10 @@ static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, seg_t **prevseg)
         // unconditionally; P_SegOffset is added while the divider runs
         offset = ((fixed_t)wc->offset << FRACBITS) + rw_offset;
         wc->centerangle = baseangle;
+        // unpack the vertices for walls that clip sprites in phase 8;
+        // this overwrites wc->seg (union with v1i), which isn't needed past here
+        wc->v2i = *(int32_t *)&verts[nv2];
+        wc->v1i = *(int32_t *)&verts[nv1];
     }
     else
     {
@@ -150,6 +154,9 @@ static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, seg_t **prevseg)
         rw_distance = prev->distance;
         offset = prev->offset;
         wc->centerangle = baseangle = prev->centerangle;
+        // this overwrites wc->seg (union with v1i), which isn't needed past here
+        wc->v2i = prev->v2i;
+        wc->v1i = prev->v1i;
     }
     wc->distance = rw_distance;
 
@@ -212,14 +219,6 @@ static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, seg_t **prevseg)
         // lighting + column
         //D_memset(vd->lastsegclip, 255, sizeof(*vd->lastsegclip)*width);
         vd->lastsegclip += width;
-    }
-
-    // unpack the vertices for walls that clip sprites in phase 8;
-    // this overwrites wc->seg (union with v1i), which isn't needed past here
-    if (wc->actionbits & (AC_TOPSIL | AC_BOTTOMSIL | AC_SOLIDSIL | AC_MIDTEXTURE))
-    {
-        wc->v2i = *(int32_t *)&verts[SEG_UNPACK_V2(seg)];
-        wc->v1i = *(int32_t *)&verts[SEG_UNPACK_V1(seg)];
     }
 
 #ifdef MARS
