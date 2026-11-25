@@ -161,7 +161,7 @@ void BufferedDrawSprite (int sprite, int frame, int rotation, int top, int left)
 	for (x = vis.x1; x <= vis.x2; ++x)
 		spropening[x] = viewportHeight;
 
-	R_DrawVisSprite(&vis, spropening, 0);
+	R_DrawVisSprite(&vis, spropening, vis.x1, vis.x2);
 }
 
 

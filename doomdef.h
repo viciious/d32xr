@@ -831,6 +831,7 @@ struct drawsprargs_s;
 #define I_DrawSpan I_DrawSpanC
 
 #define I_DrawSpriteCols I_DrawSpriteColsC
+#define I_DrawMaskedCols I_DrawMaskedColsC
 
 #else
 
@@ -846,6 +847,7 @@ struct drawsprargs_s;
 #define I_DrawSpan I_DrawSpanA
 
 #define I_DrawSpriteCols I_DrawSpriteColsA
+#define I_DrawMaskedCols I_DrawMaskedColsA
 
 #endif
 
@@ -858,6 +860,7 @@ struct drawsprargs_s;
 #else
 
 #define I_DrawSpriteCols I_DrawSpriteColsC
+#define I_DrawMaskedCols I_DrawMaskedColsC
 
 #endif
 
@@ -915,6 +918,7 @@ void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfra
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
 
 void I_DrawSpriteCols(int x, int stopx, unsigned short *spropening, struct drawsprargs_s *drawargs);
+void I_DrawMaskedCols(int x, int stopx, unsigned short *spropening, struct drawsprargs_s *drawargs);
 
 void I_Print8 (int x, int y, const char *string);
 int I_Print8Len(const char* string);

@@ -634,7 +634,7 @@ typedef struct vissprite_s
 
 #define	MAXVISSPRITES	MAXWALLCMDS
 
-void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
+void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int x, int stopx) ATTR_DATA_CACHE_ALIGN;
 
 #define	MAXOPENINGS		SCREENWIDTH*18
 
