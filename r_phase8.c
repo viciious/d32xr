@@ -37,8 +37,8 @@ static void R_DrawPSprites(int sprscreenhalf) ATTR_DATA_CACHE_ALIGN;
 void R_Sprites(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 #if !defined(MARS) || defined(USE_C_DRAW)
-void I_DrawSpriteColsC(int x, int stopx, unsigned short *spropening, drawsprargs_t *drawargs) ATTR_DATA_CACHE_ALIGN;
-void I_DrawMaskedColsC(int x, int stopx, unsigned short *spropening, drawsprargs_t *drawargs) ATTR_DATA_CACHE_ALIGN;
+void I_DrawSpriteColsC(drawsprargs_t *drawargs, int x, int stopx, unsigned short *spropening) ATTR_DATA_CACHE_ALIGN;
+void I_DrawMaskedColsC(drawsprargs_t *drawargs, int x, int stopx, unsigned short *spropening) ATTR_DATA_CACHE_ALIGN;
 
 //
 // C version of I_DrawMaskedColsA in sh2_sprite.s: for each column x in
@@ -47,7 +47,7 @@ void I_DrawMaskedColsC(int x, int stopx, unsigned short *spropening, drawsprargs
 // dcol(x, top, bottom, light, frac, iscale, src, 128); the scale changes
 // per column
 //
-void I_DrawMaskedColsC(int x, int stopx, unsigned short *spropening, drawsprargs_t *drawargs)
+void I_DrawMaskedColsC(drawsprargs_t *drawargs, int x, int stopx, unsigned short *spropening)
 {
    fixed_t       scalefrac  = drawargs->scalefrac;
    const fixed_t scalestep  = drawargs->scalestep;
@@ -146,7 +146,7 @@ void I_DrawMaskedColsC(int x, int stopx, unsigned short *spropening, drawsprargs
    } while (++x < stopx);
 }
 
-void I_DrawSpriteColsC(int x, int stopx, unsigned short *spropening, drawsprargs_t *drawargs)
+void I_DrawSpriteColsC(drawsprargs_t *drawargs, int x, int stopx, unsigned short *spropening)
 {
    fixed_t       xfrac     = drawargs->xfrac;
    const fixed_t fracstep  = drawargs->fracstep;
@@ -261,7 +261,7 @@ void R_DrawMaskedSegRange(viswall_t *seg, int x, int stopx)
 
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, dc_colormaps);
 
-   I_DrawMaskedCols(x, stopx + 1, seg->clipbounds, &drawargs);
+   I_DrawMaskedCols(&drawargs, x, stopx + 1, seg->clipbounds);
 }
 
 //
@@ -291,7 +291,7 @@ void R_DrawVisSprite(vissprite_t *vis, unsigned short *spropening, int x, int st
 
    I_SetThreadLocalVar(DOOMTLS_COLORMAP, vis->colormap2 ? dc_colormaps2 : dc_colormaps);
 
-   I_DrawSpriteCols(x, stopx + 1, spropening, &drawargs);
+   I_DrawSpriteCols(&drawargs, x, stopx + 1, spropening);
 }
 
 //

@@ -1,7 +1,7 @@
 ! Sprite column/post loop for R_DrawVisSprite (r_phase8.c)
 !
-!void I_DrawSpriteColsA(int x, int stopx, unsigned short *spropening,
-!    drawsprargs_t *drawargs);
+!void I_DrawSpriteColsA(drawsprargs_t *drawargs, int x, int stopx,
+!    unsigned short *spropening);
 !
 ! From drawargs, the prologue sets up in the local frame:
 !   sprtop    = centerYFrac - FixedMul(FROMHEIGHT16(texturemid), spryscale)
@@ -45,7 +45,7 @@
         .align  4
         .global _I_DrawSpriteColsA
 _I_DrawSpriteColsA:
-        mov.l   @(DA_SPRYSCALE,r7),r2
+        mov.l   @(DA_SPRYSCALE,r4),r2
         mov     #-1,r1
         shll8   r1              /* r1 = divide unit, 0xFFFFFF00 */
         mov     #1,r0
@@ -61,11 +61,11 @@ _I_DrawSpriteColsA:
         mov.l   r13,@-r15
         mov.l   r14,@-r15
         sts.l   pr,@-r15
-        mov     r7,r8
+        mov     r4,r8
         add     #-FRAMESIZE,r15
 
         mov.w   @(DA_TEXTUREMID,r8),r0
-        mov     r4,r9
+        mov     r5,r9
         shll8   r0
         shll2   r0
         shll2   r0              /* FROMHEIGHT16(texturemid) */
@@ -83,13 +83,13 @@ _I_DrawSpriteColsA:
         mov     #-128,r0
         neg     r0,r0
         mov.l   r0,@(12,r15)    /* texture height 128 */
-        mov     r4,r11
+        mov     r5,r11
         add     r11,r11
-        add     r6,r11          /* &spropening[x] */
+        add     r7,r11          /* &spropening[x] */
         mov.l   @(20,r1),r0     /* iscale, waits for the divide */
         neg     r2,r2
         dmuls.l r2,r0           /* fracbase = FixedMul(-sprtop, iscale) */
-        mov.l   r5,@(LO_STOPX,r15)
+        mov.l   r6,@(LO_STOPX,r15)
         mov.l   r0,@(LO_ISCALE,r15)
         sts     mach,r1
         sts     macl,r0
@@ -239,8 +239,8 @@ centerYFrac:
 
 ! Masked seg column/post loop for R_DrawMaskedSegRange (r_phase8.c)
 !
-!void I_DrawMaskedColsA(int x, int stopx, unsigned short *spropening,
-!    drawsprargs_t *drawargs);
+!void I_DrawMaskedColsA(drawsprargs_t *drawargs, int x, int stopx,
+!    unsigned short *spropening);
 !
 ! Like I_DrawSpriteColsA, but the scale changes per column: for each column
 ! x in [x, stopx) with maskedcol[x] != OPENMARK it sets maskedcol[x] to
@@ -278,21 +278,21 @@ _I_DrawMaskedColsA:
         mov.l   r13,@-r15
         mov.l   r14,@-r15
         sts.l   pr,@-r15
-        mov     r7,r8
+        mov     r4,r8
         add     #-MFRAMESIZE,r15
 
         mov     #-128,r0
         neg     r0,r0
         mov.l   r0,@(12,r15)    /* texture height 128 */
-        mov     r4,r9
-        mov     r4,r11
+        mov     r5,r9
+        mov     r5,r11
         add     r11,r11
-        add     r6,r11          /* &spropening[x] */
+        add     r7,r11          /* &spropening[x] */
         mov.l   @(DA_MASKEDCOL,r8),r0
         add     #-2,r0
-        sub     r6,r0           /* maskedcol[x] is @(r0,r11) after the opening read */
+        sub     r7,r0           /* maskedcol[x] is @(r0,r11) after the opening read */
         mov.l   r0,@(ML_MASKDELTA,r15)
-        mov.l   r5,@(ML_STOPX,r15)
+        mov.l   r6,@(ML_STOPX,r15)
         bra     mcol
         mov.l   @(DA_SCALEFRAC,r8),r10
 
