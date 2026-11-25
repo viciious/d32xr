@@ -40,7 +40,8 @@
 // Returns (h << FRACBITS) / frac, where frac = (num << FRACBITS) / den is the
 // fractional intercept point along the trace. The two shifts cancel, so this is
 // h * den / num: a single 64/32 divide instead of computing frac first.
-static inline __attribute__((always_inline)) fixed_t P_SlopeDiv(fixed_t h, int32_t den, int32_t num)
+static inline __attribute__((always_inline)) 
+fixed_t P_SlopeDiv(fixed_t h, int32_t den, int32_t num)
 {
 #ifdef MARS
    int32_t lo, divunit;
@@ -255,7 +256,8 @@ boolean P_BoxCrossLine (line_t *ld, fixed_t testbbox[4]);
 // chosen by the caller, so that the sign bit marks the back side. On MARS
 // mac.w reads the vertex coordinates straight from memory; *v1 and *v2 are
 // stepped back while the multiplier finishes, so they're unchanged on return.
-static inline __attribute__((always_inline)) void P_VertexSides(const int16_t *sc, fixed_t k,
+static inline __attribute__((always_inline)) 
+void P_VertexSides(const int16_t *sc, fixed_t k,
    mapvertex_t **v1, mapvertex_t **v2, fixed_t *a1, fixed_t *a2)
 {
 #ifdef MARS
@@ -283,7 +285,8 @@ static inline __attribute__((always_inline)) void P_VertexSides(const int16_t *s
 
 fixed_t	P_LineOpening (line_t *linedef);
 
-static inline __attribute__((always_inline)) void P_LineBBox(line_t* ld, fixed_t *bbox)
+static inline __attribute__((always_inline)) 
+void P_LineBBox(line_t* ld, fixed_t *bbox)
 {
 	mapvertex_t* v1 = &vertexes[ld->v1], * v2 = &vertexes[ld->v2];
 

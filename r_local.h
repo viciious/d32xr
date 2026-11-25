@@ -280,32 +280,30 @@ extern const VINT numViewports;
 = Returns side 0 (front) or 1 (back)
 ===============================================================================
 */
-ATTR_DATA_CACHE_ALIGN
-static inline int R_PointOnSide (int x, int y, node_t *node)
+static inline __attribute__((always_inline)) 
+int R_PointOnSide (int x, int y, node_t *node)
 {
 	int32_t	dx,dy;
 	int32_t r1, r2;
 
-	dx = x - ((fixed_t)node->x << FRACBITS);
 #ifdef MARS
-	dx = (unsigned)dx >> FRACBITS;
+	/* muls.w only reads the low 16 bits, and the low 16 bits of */
+	/* (x - (nx << 16)) >> 16 equal (x >> 16) - nx */
+	dx = (x >> FRACBITS) - node->x;
 	__asm volatile(
 		"muls.w %0,%1\n\t"
 		: : "r"(node->dy), "r"(dx) : "macl", "mach");
-#else
-	dx >>= FRACBITS;
-	r1 = node->dy * dx;
-#endif
-
-	dy = y - ((fixed_t)node->y << FRACBITS);
-#ifdef MARS
-	dy = (unsigned)dy >> FRACBITS;
+	dy = (y >> FRACBITS) - node->y;
 	__asm volatile(
 		"sts macl, %0\n\t"
 		"muls.w %2,%3\n\t"
 		"sts macl, %1\n\t"
 		: "=&r"(r1), "=&r"(r2) : "r"(dy), "r"(node->dx) : "macl", "mach");
 #else
+	dx = x - ((fixed_t)node->x << FRACBITS);
+	dx >>= FRACBITS;
+	r1 = node->dy * dx;
+	dy = y - ((fixed_t)node->y << FRACBITS);
 	dy >>= FRACBITS;
 	r2 = dy * node->dx;
 #endif
