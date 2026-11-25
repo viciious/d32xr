@@ -812,6 +812,8 @@ void HUD_Ticker(void);
 void HUD_Init(void);
 void HUD_Drawer(void);
 
+struct drawsprargs_s;
+
 #ifdef MARS
 //#define USE_C_DRAW
 
@@ -828,6 +830,8 @@ void HUD_Drawer(void);
 #define I_DrawFuzzColumn I_DrawFuzzColumnC
 #define I_DrawSpan I_DrawSpanC
 
+#define I_DrawSpriteCols I_DrawSpriteColsC
+
 #else
 
 #define I_DrawColumnLow I_DrawColumnLowA
@@ -841,6 +845,8 @@ void HUD_Drawer(void);
 #define I_DrawFuzzColumn I_DrawFuzzColumnA
 #define I_DrawSpan I_DrawSpanA
 
+#define I_DrawSpriteCols I_DrawSpriteColsA
+
 #endif
 
 #define I_Draw4bColumnLow I_Draw4bColumnLowA
@@ -848,6 +854,10 @@ void HUD_Drawer(void);
 
 #define I_Draw4bColumn I_Draw4bColumnA
 #define I_Draw4bColumnNPo2 I_Draw4bColumnNPo2A
+
+#else
+
+#define I_DrawSpriteCols I_DrawSpriteColsC
 
 #endif
 
@@ -903,6 +913,8 @@ void I_DrawColumnNoDraw(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac_
 
 void I_DrawSpanNoDraw(int ds_y, int ds_x1, int ds_x2, int light, fixed_t ds_xfrac,
 	fixed_t ds_yfrac, fixed_t ds_xstep, fixed_t ds_ystep, inpixel_t* ds_source, int dc_texheight);
+
+void I_DrawSpriteCols(int x, int stopx, unsigned short *spropening, struct drawsprargs_s *drawargs);
 
 void I_Print8 (int x, int y, const char *string);
 int I_Print8Len(const char* string);
