@@ -940,6 +940,7 @@ static void Mars_HandleBeginDMARequest(void)
 
 	SH2_DMA_CHCR0; // read TE
 	SH2_DMA_CHCR0 = chcr; // clear TE
+	SH2_DMA_SAR0 = (int)&MARS_SYS_DMAFIFO;
 	SH2_DMA_DAR0 = 0x20000000 | ((uintptr_t)dest);
 	SH2_DMA_TCR0 = j;
 
