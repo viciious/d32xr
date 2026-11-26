@@ -295,7 +295,8 @@ static char *roq_apply_sld2(roq_parse_ctx* ctx, short * restrict dst, char* buf)
 	return buf+1;
 }
 
-static inline __attribute__((always_inline)) char *roq_apply_cc2(roq_parse_ctx* ctx, short * restrict _dst, char* buf)
+static inline __attribute__((always_inline)) 
+char *roq_apply_cc2(roq_parse_ctx* ctx, short * restrict _dst, char* buf)
 {
 	int * restrict dst = (void*)_dst;
 	int pitch = ctx->canvas_pitch;

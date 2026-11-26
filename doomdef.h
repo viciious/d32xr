@@ -76,6 +76,9 @@ typedef unsigned char byte;
 #define ATTR_OPTIMIZE_EXTREME
 #endif
 
+#define ATTR_NO_INLINE __attribute__((noinline))
+#define ATTR_FORCE_INLINE inline __attribute__((always_inline)) 
+
 #ifdef MARS
 #define SPTR uint16_t
 #define LPTR_TO_NNSPTR(p) ((uint16_t)(((uintptr_t)(p) - DATA_START_ADDRESS)>>2)) // use with caution as pointer at the beginning of RAM address space will be mapped to a NULL pointer!

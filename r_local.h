@@ -280,7 +280,7 @@ extern const VINT numViewports;
 = Returns side 0 (front) or 1 (back)
 ===============================================================================
 */
-static inline __attribute__((always_inline)) 
+static ATTR_FORCE_INLINE
 int R_PointOnSide (int x, int y, node_t *node)
 {
 	int32_t	dx,dy;
