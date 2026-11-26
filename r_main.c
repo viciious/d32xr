@@ -849,6 +849,7 @@ static void R_Setup (int displayplayer, sector_t **vissectors_, int16_t *planeco
 
 	vd->viewsin = finesine(vd->viewangle>>ANGLETOFINESHIFT);
 	vd->viewcos = finecosine(vd->viewangle>>ANGLETOFINESHIFT);
+	vd->rcpcenterx = 0xffffffffu / (unsigned)centerX;
 
 	vd->displayplayer = displayplayer;
 	vd->lightlevel = SSEC_SECTOR(player->mo->subsector)->lightlevel;

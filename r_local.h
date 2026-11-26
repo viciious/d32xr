@@ -563,9 +563,9 @@ typedef struct
 	/* !!! THE FOLLOWING SECTION MUST BE LARGE ENOUGH */
 	/* !!! TO ACCOMODATE VISSPRITE_T STRUCTURE, GETS */
 	/* !!! OVERWRITTEN AFTER PHASE 7 - BEGIN */
-	unsigned	centerangle;
-	fixed_t 	offset;
-	unsigned	distance;
+	fixed_t		uzstart;	/* u = ustep*(x-start) * iscale(x) */
+	fixed_t 	uoffset;    /* u at x = start */
+	fixed_t		uzstep;		/* u is linear in x */
 
 	// 12.4 fixed point
 	int16_t		t_topheight;
@@ -696,6 +696,7 @@ __attribute__((aligned(16)))
 	fixed_t		viewx, viewy, viewz;
 	angle_t		viewangle;
 	fixed_t		viewcos, viewsin;
+	int32_t		rcpcenterx;	/* 2^32 / centerX, for dividing by centerX with a multiply */
 	pspdef_t	*psprites, *lastpsprite;
 	VINT		lightlevel;
 	VINT		extralight;

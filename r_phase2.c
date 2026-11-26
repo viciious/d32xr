@@ -8,14 +8,22 @@
 #include "r_local.h"
 #include "mars.h"
 
-static fixed_t R_ScaleFromGlobalAngle(fixed_t invdist, fixed_t sineb, int x) ATTR_DATA_CACHE_ALIGN;
 static uint16_t P_SegOffset(seg_t *seg) ATTR_DATA_CACHE_ALIGN;
 // consecutive viswalls are often fragments of the same seg (long segs
 // split in R_StoreWallRange, or segs cut into pieces by the solid seg
 // clipper); everything that doesn't depend on the column range is then
 // taken from the previous viswall. wc->seg doesn't survive R_WallLatePrep
-// (it's unioned with v1i), so the caller keeps the last seg in *prevseg
-static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, seg_t **prevseg) ATTR_DATA_CACHE_ALIGN;
+// (it's unioned with v1i), so the caller keeps the last seg, with its
+// distance and angle, which aren't stored in the viswall, in *prev
+typedef struct
+{
+    seg_t       *seg;
+    angle_t      baseangle;
+    fixed_t      distance;
+} wallprev_t;
+
+
+static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, wallprev_t *prev) ATTR_DATA_CACHE_ALIGN;
 // the empty asm fence in R_SegLoop helps gcc produce less silly SH2 assembler code
 static void R_SegLoop(viswall_t* segl, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
@@ -23,21 +31,6 @@ void R_WallPrep(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 //
 // Get distance to point in 3D projection
 //
-
-//
-// Convert angle and distance within view frustum to texture scale factor.
-//
-// scale = stretchX * sin(visangle + ANG90 - normalangle) / (rw_distance * cos(xtoviewangle[x]))
-//
-// invdist is stretchX / rw_distance, computed once per wall, sineb is
-// sin(visangle + ANG90 - normalangle), and 1/cos(xtoviewangle[x]) is the
-// precomputed distscale[x] table (stored >> 1). The caller looks up sineb
-// while the hardware divider is still working on invdist.
-//
-static fixed_t R_ScaleFromGlobalAngle(fixed_t invdist, fixed_t sineb, int x)
-{
-    return FixedMul(FixedMul(invdist, sineb), (fixed_t)distscale[x] << 1);
-}
 
 //
 // Setup texture calculations for lines with upper and lower textures
@@ -81,15 +74,16 @@ static uint16_t P_SegOffset(seg_t *seg)
     return g;
 }
 
-static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, seg_t **prevseg)
+static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, wallprev_t *prev)
 {
     seg_t       *seg = wc->seg;
     fixed_t      scalefrac, scale2;
     fixed_t      invdist;
     angle_t      baseangle;
-    fixed_t      sineb1, sineb2;
+    fixed_t      vsin, vcos;
+    fixed_t      scalestep;
     fixed_t      rw_distance, offset;
-    const boolean newseg = seg != *prevseg;
+    const boolean newseg = seg != prev->seg;
 
     // this is essentially R_StoreWallRange
     if (newseg)
@@ -135,30 +129,25 @@ static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, seg_t **prevseg)
         }
 
         baseangle = vd->viewangle + ANG90 - normalangle;
-        *prevseg = seg;
-
-        // only read by R_DrawSeg for textured walls, so set them
-        // unconditionally; P_SegOffset is added while the divider runs
-        offset = ((fixed_t)wc->offset << FRACBITS) + rw_offset;
-        wc->centerangle = baseangle;
-        // unpack the vertices for walls that clip sprites in phase 8;
+        prev->seg = seg;
+        prev->baseangle = baseangle;
+        prev->distance = rw_distance;
+        offset = ((fixed_t)wc->uoffset << FRACBITS) + rw_offset;
         // this overwrites wc->seg (union with v1i), which isn't needed past here
         wc->v2i = *(int32_t *)&verts[nv2];
         wc->v1i = *(int32_t *)&verts[nv1];
     }
     else
     {
-        // same seg as the previous viswall, so the same sidedef texture
-        // offset too; R_SegLoop doesn't modify these
-        const viswall_t *prev = wc - 1;
+        // same seg as the previous viswall
+        const viswall_t *prevwc = wc - 1;
         rw_distance = prev->distance;
-        offset = prev->offset;
-        wc->centerangle = baseangle = prev->centerangle;
+        baseangle = prev->baseangle;
+        offset = prevwc->uoffset;
         // this overwrites wc->seg (union with v1i), which isn't needed past here
-        wc->v2i = prev->v2i;
-        wc->v1i = prev->v1i;
+        wc->v2i = prevwc->v2i;
+        wc->v1i = prevwc->v1i;
     }
-    wc->distance = rw_distance;
 
 #ifdef MARS
     // invdist = FixedDiv(stretchX, rw_distance), started on the divider here
@@ -171,37 +160,53 @@ static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, seg_t **prevseg)
     invdist = FixedDiv(stretchX, rw_distance);
 #endif
 
+    // Texture column = uoffset + u(x) * iscale(x), iscale(x) = 1 / scale(x)
+    // On a flat wall, texture column / z is linear in screen x, like 1/z,
+    // so u(x) = (column - uoffset) * scale(x) is linear too
+
+    // With c = baseangle and a(x) = the angle of column x from the view
+    // direction, the old texture column was uoffset + rw_distance * cot(c + a)
+    // and scale(x) = invdist * sin(c + a) / cos(a). Dividing one by the other,
+    // rw_distance cancels and
+    //   u(x) = stretchX * cos(c + a) / cos(a) = stretchX * (cos(c) - sin(c) * tan(a))
+    // With tan(a(x)) = (centerX - x) / centerX and stretchX = stretch * centerX:
+    //   u(x) = stretchX * cos(c) + (x - centerX) * stretch * sin(c)
+
+    vsin = finesine(baseangle >> ANGLETOFINESHIFT);
+    vcos = finecosine(baseangle >> ANGLETOFINESHIFT);
+
+    // uzstep is the per-column step, uzstart is u at x = start
+    wc->uzstep = FixedMul(stretch, vsin);
+    wc->uzstart = (wc->start - centerX) * wc->uzstep + FixedMul(stretchX, vcos);
+
     if (newseg)
         offset += (fixed_t)P_SegOffset(seg) << FRACBITS;
-    wc->offset = offset;
-
-    sineb1 = finesine((baseangle + (xtoviewangle[wc->start]<<FRACBITS)) >> ANGLETOFINESHIFT);
-    sineb2 = sineb1;
-    if (wc->stop > wc->start)
-        sineb2 = finesine((baseangle + (xtoviewangle[wc->stop]<<FRACBITS)) >> ANGLETOFINESHIFT);
+    wc->uoffset = offset;
 
 #ifdef MARS
     invdist = SH2_DIVU_DVDNTL;             // get 32-bit quotient (stalls if not done)
 #endif
     // the divide saturates when rw_distance is ~0 (standing on the line);
-    // clamp so the multiply by distscale (up to ~1.42) can't overflow
+    // clamp so the scale (up to ~1.42 * invdist) can't overflow
     if ((unsigned)invdist > 0x50000000)
         invdist = 0x50000000;
 
-    scalefrac = scale2 = wc->scalefrac =
-        R_ScaleFromGlobalAngle(invdist, sineb1, wc->start);
-
-    if (wc->stop > wc->start)
-    {
-        scale2 = R_ScaleFromGlobalAngle(invdist, sineb2, wc->stop);
+    // scale(x) = stretchX * sin(c + a(x)) / (rw_distance * cos(a(x)))
+    //          = invdist * (sin(c) + cos(c) * tan(a(x))),
+    // with tan(a(x)) = (centerX - x) / centerX, which is linear in x:
+    //   scalestep = -invdist * cos(c) / centerX
+    //   scale(x) = invdist * sin(c) + (x - centerX) * scalestep
+    // |tan(a(x))| <= 1, so (x - centerX) * scalestep can't overflow
 #ifdef MARS
-        SH2_DIVU_DVSR = wc->stop - wc->start;  // set 32-bit divisor
-        SH2_DIVU_DVDNT = scale2 - scalefrac;   // set 32-bit dividend, start divide
+    scalestep = -(int32_t)(((int64_t)FixedMul(invdist, vcos) * vd->rcpcenterx) >> 32);
 #else
-        wc->scalestep = IDiv(scale2 - scalefrac, wc->stop - wc->start);
+    scalestep = -IDiv(FixedMul(invdist, vcos), centerX);
 #endif
-    }
+    scalefrac = FixedMul(invdist, vsin) + (wc->start - centerX) * scalestep;
+    scale2 = scalefrac + (wc->stop - wc->start) * scalestep;
 
+    wc->scalefrac = scalefrac;
+    wc->scalestep = scalestep;
     wc->scale2 = scale2;
 
     wc->clipbounds = NULL;
@@ -220,13 +225,6 @@ static void R_WallLatePrep(viswall_t* wc, mapvertex_t *verts, seg_t **prevseg)
         //D_memset(vd->lastsegclip, 255, sizeof(*vd->lastsegclip)*width);
         vd->lastsegclip += width;
     }
-
-#ifdef MARS
-    if (wc->stop > wc->start)
-    {
-        wc->scalestep = SH2_DIVU_DVDNT; // get 32-bit quotient
-    }
-#endif
 }
 
 //
@@ -379,7 +377,7 @@ void Mars_Sec_R_WallPrep(void)
 		visplane_t *visplanes_hash_[NUM_VISPLANES_BUCKETS];
     uint16_t *clipbounds = (uint16_t *)clipbounds_;
     mapvertex_t *verts;
-    seg_t *prevseg;
+    wallprev_t prev = { NULL, 0, 0 };
     volatile uint8_t *addedsegs = (volatile uint8_t *)&MARS_SYS_COMM6;
     volatile uint8_t *readysegs = addedsegs + 1;
 
@@ -393,8 +391,6 @@ void Mars_Sec_R_WallPrep(void)
         vd->visplanes_hash[i] = NULL;
 
     R_InitClipBounds(clipbounds_);
-
-    prevseg = NULL;
 
     first = last = vd->viswalls;
     verylast = NULL;
@@ -420,7 +416,7 @@ void Mars_Sec_R_WallPrep(void)
 
         for (; segl < last; segl++)
         {
-            R_WallLatePrep(segl, verts, &prevseg);
+            R_WallLatePrep(segl, verts, &prev);
 
             R_SegLoop(segl, clipbounds);
 
@@ -438,16 +434,14 @@ void R_WallPrep(void)
     viswall_t* segl;
     unsigned clipbounds_[SCREENWIDTH/2+1];
     unsigned short *clipbounds = (unsigned short *)clipbounds_;
-    seg_t *prevseg;
+    wallprev_t prev = { NULL, 0, 0 };
 
     R_InitClipBounds(clipbounds_);
-    prevseg = NULL;
-
     for (segl = vd->viswalls; segl != vd->lastwallcmd; segl++)
     {
         fixed_t floornewheight = 0, ceilingnewheight = 0;
 
-        R_WallLatePrep(segl, vertexes, &prevseg);
+        R_WallLatePrep(segl, vertexes, &prev);
 
         R_SegLoop(segl, clipbounds, floornewheight, ceilingnewheight);
     }

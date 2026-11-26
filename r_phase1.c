@@ -440,7 +440,7 @@ static void R_WallEarlyPrep(rbspWork_t *rbsp, viswall_t* segl)
       segl->b_texturemid  = HEIGHT16(b_texturemid);
       segl->m_texturemid  = HEIGHT16(m_texturemid);
       segl->seglightlevel = (lightshift << 8) | f_lightlevel;
-      segl->offset        = textureoffset;
+      segl->uoffset       = textureoffset;
    }
 }
 
