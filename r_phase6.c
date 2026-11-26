@@ -21,12 +21,17 @@ typedef struct
    VINT      pitch;
    drawcol_t drawcol;
 
-   // decals stuff
-   VINT       numdecals;
+   // decals stuff: a mip with decals gets R_DrawDecalColumn as its drawcol
+   // and itself as its colormaps (R_DrawSeg sets the TLS colormap to it);
+   // the wrapper composites the column, then calls the real drawer
+   VINT       texcolnum;     // set by R_DrawSeg before each call
    VINT       lastcol;
    texture_t *tex;
    int8_t    *colormaps;
    uint8_t   *columncache;
+   drawcol_t  decaldrawcol;  // the real drawer and colormaps
+   int8_t    *decalcolormaps;
+   VINT       miplevel;
 } drawmip_t;
 
 typedef struct drawtex_s
@@ -69,6 +74,8 @@ static atomic_flag seg_lock = ATOMIC_FLAG_INIT;
 static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_DrawSegSky(seglocal_t *lseg, unsigned short *restrict clipbounds) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex, fixed_t texturemid, fixed_t topheight, fixed_t bottomheight) ATTR_DATA_CACHE_ALIGN;
+static void R_DrawDecalColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
+    fixed_t fracstep, inpixel_t *dc_source, int dc_texheight) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 
 //
@@ -85,7 +92,9 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
     const int start = segl->start;
     const int stop = segl->stop;
     int x;
+#if MIPLEVELS > 1
     unsigned miplevel = 0;
+#endif
 
     drawtex_t *tex;
 
@@ -192,7 +201,20 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
             if (top < bottom)
             {
                 VINT texcolnum, mipcolnum;
+#if MIPLEVELS > 1
                 unsigned m = miplevel;
+#endif
+#ifdef MARS
+                // read the quotient again instead of keeping iscale live across
+                // the drawer call (GCC spills it): the divider still holds it,
+                // the drawers don't divide
+                unsigned iscale;
+                __asm volatile (
+                    "mov #-128, %0\n\t"
+                    "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
+                    "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
+                    : "=r" (iscale));
+#endif
                 unsigned texiscale = iscale;
                 drawmip_t *mip;
                 fixed_t frac;
@@ -205,6 +227,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
                 texcolnum = lightcol & tex->widthmask;
                 mipcolnum = texcolnum;
                 frac = tex->texturemid - (centerY - top) * iscale;
+
                 mip = tex->mip;
 
 #if MIPLEVELS > 1
@@ -224,8 +247,6 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 #endif
                     } while (--i);
                 }
-#else
-                m = 0;
 #endif
 
                 // CALICO: Jaguar-specific GPU blitter input calculation starts here.
@@ -236,27 +257,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 #endif
                 src = mip->data + mipcolnum * mip->pitch;
 
-                if (mip->numdecals > 0)
-                {
-                    // decals/composite textures
-                    if (mip->lastcol == texcolnum)
-                    {
-                        src = mip->columncache;
-                    }
-                    else
-                    {
-                        boolean decaled;
-
-                        decaled = R_CompositeColumn(texcolnum, mip->tex,
-                            src, mip->columncache, mip->height, m);
-                        if (decaled)
-                        {
-                            src = mip->columncache;
-                            mip->lastcol = texcolnum;
-                        }
-                    }
-                }
-
+                mip->texcolnum = texcolnum;
                 I_SetThreadLocalVar(DOOMTLS_COLORMAP, mip->colormaps);
 
                 mip->drawcol(x, top, bottom-1, lightcol & ~0xff, frac, texiscale, src, mip->height);
@@ -276,6 +277,36 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         lseg->maxmip = hi;
     }
 #endif
+}
+
+//
+// The drawcol of mips with decals (numdecals > 0): composites the column into
+// the mip's column cache unless it is already there, then calls the real
+// drawer. R_DrawSeg has set the TLS colormap to the mip itself and
+// mip->texcolnum to the texture column.
+//
+static void R_DrawDecalColumn(int dc_x, int dc_yl, int dc_yh, int light, fixed_t frac,
+    fixed_t fracstep, inpixel_t *dc_source, int dc_texheight)
+{
+    drawmip_t *mip;
+    int texcolnum;
+
+    I_GetThreadLocalVar(DOOMTLS_COLORMAP, mip);
+    texcolnum = mip->texcolnum;
+
+    if (mip->lastcol == texcolnum)
+    {
+        dc_source = mip->columncache;
+    }
+    else if (R_CompositeColumn(texcolnum, mip->tex, dc_source, mip->columncache,
+        dc_texheight, mip->miplevel))
+    {
+        dc_source = mip->columncache;
+        mip->lastcol = texcolnum;
+    }
+
+    I_SetThreadLocalVar(DOOMTLS_COLORMAP, mip->decalcolormaps);
+    mip->decaldrawcol(dc_x, dc_yl, dc_yh, light, frac, fracstep, dc_source, dc_texheight);
 }
 
 //
@@ -345,6 +376,7 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
     int width = tex->width, height = tex->height;
     uint8_t *columncache = drawtex->columncache;
     int mipwidth, mipheight;
+    int numdecals;
 
     // colnum is 0..255, so R_DrawSeg can mask texturelight | colnum directly
     drawtex->widthmask = (width-1) & 0xff;
@@ -380,16 +412,25 @@ static void R_SetupDrawTexture(drawtex_t *drawtex, texture_t *tex,
         mip->columncache = columncache;
         columncache += mip->height;
 
-        mip->numdecals = tex->decals & 0x3;
+        numdecals = tex->decals & 0x3;
         if (R_InTexCache(&r_texcache, mip->data) == 1) {
-            mip->numdecals = 0; 
+            numdecals = 0;
             mip->colormaps = dc_colormaps;
-        } else if (!mip->numdecals && tex->colormaps != NULL) {
+        } else if (!numdecals && tex->colormaps != NULL) {
             mip->drawcol = (mipheight & (mipheight - 1)) ? draw4bcolnpo2 : draw4bcol;
             mip->colormaps = tex->colormaps;
             mip->pitch /= 2;
             if (mip->pitch < 1)
                 mip->pitch = 1;
+        }
+
+        if (numdecals > 0) {
+            // composite the columns first, see R_DrawDecalColumn
+            mip->decaldrawcol = mip->drawcol;
+            mip->decalcolormaps = mip->colormaps;
+            mip->drawcol = R_DrawDecalColumn;
+            mip->colormaps = (int8_t *)mip;
+            mip->miplevel = j;
         }
     } while (++j <= drawtex->maxmip);
 }
