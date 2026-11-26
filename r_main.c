@@ -857,9 +857,6 @@ static void R_Setup (int displayplayer, sector_t **vissectors_, int16_t *planeco
 	vd->lightlevel = SSEC_SECTOR(player->mo->subsector)->lightlevel;
 	vd->fixedcolormap = 0;
 
-	vd->clipangle = xtoviewangle[0]<<FRACBITS;
-	vd->viewangletox = viewangletox;
-
 	vd->sprscreenhalf = viewportWidth;
 
 	damagecount = player->damagecount;

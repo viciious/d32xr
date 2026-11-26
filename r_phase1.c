@@ -28,13 +28,15 @@ typedef struct
    side_t      *curside;
    line_t      *curldef;
    int        splitspans; /* generate wall splits until this reaches 0 */
-   VINT       lastv1;
-   VINT       lastv2;
-   angle_t    lastangle1;
-   angle_t    lastangle2;
+   // view space transform: tz = x*c + y*s - tz0, tx = y*c - x*s - tx0
+   // for map unit x and y, in Q13 map units (tz forward, tx to the left)
+   int16_t    viewcs[4]; /* cos, sin, -sin, cos (Q13) */
+   fixed_t    viewntz0, viewntx0; /* -tz0, -tx0 */
+#ifdef MARS
+   uint32_t   colmul; /* centerX */
+#endif
 } rbspWork_t;
 
-static int R_ClipToViewEdges(angle_t angle1, angle_t angle2) ATTR_DATA_CACHE_ALIGN;
 static void R_AddLine(rbspWork_t *rbsp, seg_t* line) ATTR_DATA_CACHE_ALIGN;
 static void R_ClipWallSegment(rbspWork_t *rbsp, fixed_t first, fixed_t last, boolean solid) ATTR_DATA_CACHE_ALIGN;
 static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord[4]) ATTR_DATA_CACHE_ALIGN;
@@ -64,53 +66,92 @@ static int8_t checkcoord[12][4] =
 
 static sector_t emptysector = { 0, 0, -2, -2, -2 };
 
-static int R_ClipToViewEdges(angle_t angle1, angle_t angle2)
+//
+// R_ProjectVertex projects a map vertex into view space.
+//
+// R_PointToColumnStart / R_PointToColumn give the screen column of a
+// point inside the view frustum, counted from the right edge:
+// floor(centerX * b / tz) with b = tz + tx, 0 <= b <= 2*tz, tz > 0.
+// viewportWidth minus this is ceil(centerX - centerX * tx / tz), the first
+// column at or right of the point (like Doom's original viewangletox),
+// in 0..viewportWidth.
+
+#ifdef MARS
+
+static ATTR_FORCE_INLINE
+void R_ProjectVertex(const rbspWork_t *rbsp, const mapvertex_t *v, int *ptz, int *ptx)
 {
-   angle_t span, tspan;
-   int x1, x2;
-   angle_t doubleclipangle;
-
-   // clip to view edges
-   span = angle1 - angle2;
-   if(span >= ANG180)
-      return 0;
-
-   angle1 -= vd->viewangle;
-   angle2 -= vd->viewangle;
-   doubleclipangle = vd->clipangle * 2;
-
-   tspan = angle1 + vd->clipangle;
-   if(tspan > doubleclipangle)
-   {
-      tspan -= doubleclipangle;
-      // totally off the left edge?
-      if(tspan >= span)
-         return -1;
-      angle1 = vd->clipangle;
-   }
-
-   tspan = vd->clipangle - angle2;
-   if(tspan > doubleclipangle)
-   {
-      tspan -= doubleclipangle;
-      if(tspan >= span)
-         return -1;
-      angle2 = 0 - vd->clipangle;
-   }
-
-   // find the first clippost that touches the source post (adjacent pixels
-   // are touching).
-   angle1 = (angle1 + ANG90) >> ANGLETOFINESHIFT;
-   angle2 = (angle2 + ANG90) >> ANGLETOFINESHIFT;
-   x1    = vd->viewangletox[angle1];
-   x2    = vd->viewangletox[angle2];
-
-   // does not cross a pixel?
-   if(x1 == x2)
-      return -1;
-
-   return (x1<<16) | x2;
+   int tz, tx;
+   // vertex (x, y) and viewcs are int16 pairs in memory: two mac.w each,
+   // accumulating on top of -tz0 / -tx0
+   const void *pv = v, *pk = rbsp->viewcs;
+   __asm (
+      "lds %5,macl\n\t"
+      "mac.w @%3+,@%2+\n\t"
+      "mac.w @%3+,@%2+\n\t"
+      "sts macl,%0\n\t"
+      "lds %6,macl\n\t"
+      "add #-4,%2\n\t"
+      "mac.w @%3+,@%2+\n\t"
+      "mac.w @%3+,@%2+\n\t"
+      "sts macl,%1"
+      : "=&r"(tz), "=&r"(tx), "+r"(pv), "+r"(pk)
+      : "m"(*v), "r"(rbsp->viewntz0), "r"(rbsp->viewntx0), "m"(rbsp->viewcs[0]), "m"(rbsp->viewcs[1]), "m"(rbsp->viewcs[2]), "m"(rbsp->viewcs[3])
+      : "mach", "macl");
+   *ptz = tz;
+   *ptx = tx;
 }
+
+// R_PointToColumnStart starts the 64/32 hardware divide of centerX * b by
+// tz, R_PointToColumn reads the quotient.
+static ATTR_FORCE_INLINE
+void R_PointToColumnStart(const rbspWork_t *rbsp, uint32_t b, uint32_t tz)
+{
+   uint64_t n = (uint64_t)rbsp->colmul * b;
+   SH2_DIVU_DVSR = tz;
+   SH2_DIVU_DVDNTH = (uint32_t)(n >> 32);
+   SH2_DIVU_DVDNTL = (uint32_t)n;
+}
+
+static ATTR_FORCE_INLINE
+int R_PointToColumn(const rbspWork_t *rbsp, uint32_t b, uint32_t tz)
+{
+   return SH2_DIVU_DVDNTL;
+}
+
+#else
+
+static ATTR_FORCE_INLINE
+void R_ProjectVertex(const rbspWork_t *rbsp, const mapvertex_t *v, int *ptz, int *ptx)
+{
+   *ptz = v->x * rbsp->viewcs[0] + v->y * rbsp->viewcs[1] + rbsp->viewntz0;
+   *ptx = v->x * rbsp->viewcs[2] + v->y * rbsp->viewcs[3] + rbsp->viewntx0;
+}
+
+static ATTR_FORCE_INLINE
+void R_PointToColumnStart(const rbspWork_t *rbsp, uint32_t b, uint32_t tz)
+{
+}
+
+static ATTR_FORCE_INLINE
+int R_PointToColumn(const rbspWork_t *rbsp, uint32_t b, uint32_t tz)
+{
+   return FixedMul(FixedDiv(b, tz), centerX);
+}
+
+#endif
+
+//
+// Projects the map point (x, y) into view space.
+//
+static ATTR_FORCE_INLINE
+void R_ProjectPoint(const rbspWork_t *rbsp, int x, int y, int *ptz, int *ptx)
+{
+   *ptz = R_MulsW(x, rbsp->viewcs[0]) + R_MulsW(y, rbsp->viewcs[1]) + rbsp->viewntz0;
+   *ptx = R_MulsW(x, rbsp->viewcs[2]) + R_MulsW(y, rbsp->viewcs[3]) + rbsp->viewntx0;
+}
+
+#define R_InsideView(a, b, tz) (((a) | (b) | ((tz) - 1)) >= 0)
 
 //
 // Checks BSP node/subtree bounding box. Returns true if some part of the bbox
@@ -122,9 +163,8 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
    int boxy;
    int boxpos;
 
-   fixed_t x1, y1, x2, y2;
-
-   angle_t angle1, angle2;
+   int tz1, tx1, tz2, tx2, a1, b1, a2, b2;
+   const int8_t *cc;
 
    cliprange_t *start;
 
@@ -137,40 +177,58 @@ static boolean R_CheckBBox(rbspWork_t *rbsp, int16_t bspcoord_[4])
    bspcoord[2] = bspcoord_[2] << FRACBITS;
    bspcoord[3] = bspcoord_[3] << FRACBITS;
 
-   // find the corners of the box that define the edges from current viewpoint
+   // find the corners of the box that define the edges from current viewpoint;
+   // the box edges are inclusive, so the viewer is never on the line through
+   // the two corners and the span between them is front-facing
    boxx = 2;
-   boxx -= (vd->viewx < bspcoord[BOXRIGHT]);
-   boxx -= (vd->viewx <= bspcoord[BOXLEFT]);
+   boxx -= (vd->viewx <= bspcoord[BOXRIGHT]);
+   boxx -= (vd->viewx < bspcoord[BOXLEFT]);
 
    boxy = 2;
-   boxy -= (vd->viewy > bspcoord[BOXBOTTOM]);
-   boxy -= (vd->viewy >= bspcoord[BOXTOP]);
+   boxy -= (vd->viewy >= bspcoord[BOXBOTTOM]);
+   boxy -= (vd->viewy > bspcoord[BOXTOP]);
 
    boxpos = (boxy << 2) + boxx;
    if(boxpos == 5)
       return true;
 
-   x1 = bspcoord[checkcoord[boxpos][0]];
-   y1 = bspcoord[checkcoord[boxpos][1]];
-   x2 = bspcoord[checkcoord[boxpos][2]];
-   y2 = bspcoord[checkcoord[boxpos][3]];
+   cc = checkcoord[boxpos];
+
+   // the right corner's divide runs while the left corner is projected
+   R_ProjectPoint(rbsp, bspcoord_[cc[2]], bspcoord_[cc[3]], &tz2, &tx2);
+   a2 = tz2 - tx2, b2 = tz2 + tx2;
+
+   R_PointToColumnStart(rbsp, b2, tz2);
+
+   R_ProjectPoint(rbsp, bspcoord_[cc[0]], bspcoord_[cc[1]], &tz1, &tx1);
+   a1 = tz1 - tx1, b1 = tz1 + tx1;
+
+   // clip the front-facing span between the corners to the 90 degree view
+   // frustum |tx| <= tz: with a = tz - tx and b = tz + tx, a corner is inside
+   // if a >= 0 && b >= 0 (and tz > 0); the span can only enter through the
+   // left edge (a1 <= 0 <= a2) and leave through the right one (b2 <= 0 <= b1)
+   if (R_InsideView(a2, b2, tz2))
+      sx2 = viewportWidth - R_PointToColumn(rbsp, b2, tz2);
+   else if (b1 < 0 || b2 > 0)
+      return false;
+   else
+      sx2 = viewportWidth;
+   sx2 = sx2 - 1;
+
+   // the left corner's divide runs during the clip list scan
+   R_PointToColumnStart(rbsp, b1, tz1);
+   if (!R_InsideView(a1, b1, tz1) && (a1 > 0 || a2 < 0))
+      return false;
 
    // check clip list for an open space
-   angle1 = R_PointToAngle(vd->viewx, vd->viewy, x1, y1);
-   angle2 = R_PointToAngle(vd->viewx, vd->viewy, x2, y2);
-
-   sx1 = R_ClipToViewEdges(angle1, angle2);
-   if (sx1 == 0)
-      return true;
-   if (sx1 == -1)
-      return false;
-   sx2 = (sx1 & 0xffff) - 1;
-   sx1 = sx1 >>    16;
-
    start = rbsp->solidsegs - 1;
    do {
       ++start;
    } while (start->last < sx2);
+
+   sx1 = R_InsideView(a1, b1, tz1) ? viewportWidth - R_PointToColumn(rbsp, b1, tz1) : 0;
+   if (sx1 > sx2)
+      return false;
 
    // does the clippost contain the new span?
    if(sx1 >= start->first && sx2 <= start->last)
@@ -550,46 +608,46 @@ crunch:
 //
 static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
 {
-   angle_t angle1, angle2;
+   int tz1, tx1, tz2, tx2, a1, b1, a2, b2;
    fixed_t x1, x2;
    sector_t *frontsector;
    sector_t *backsector;
-   vertex_t v1, v2;
    int side;
    line_t *ldef;
    side_t *sidedef;
    boolean solid;
-   int nv1 = SEG_UNPACK_V1(line);
-   int nv2 = SEG_UNPACK_V2(line);
 
-   v1.x = vertexes[nv1].x << FRACBITS;
-   v1.y = vertexes[nv1].y << FRACBITS;
-   v2.x = vertexes[nv2].x << FRACBITS;
-   v2.y = vertexes[nv2].y << FRACBITS;
+   R_ProjectVertex(rbsp, &vertexes[SEG_UNPACK_V1(line)], &tz1, &tx1);
+   a1 = tz1 - tx1, b1 = tz1 + tx1;
 
-   if (nv1 == rbsp->lastv2)
-      angle1 = rbsp->lastangle2;
-   else if (nv1 == rbsp->lastv1)
-      angle1 = rbsp->lastangle1;
-   else
-      angle1 = R_PointToAngle(vd->viewx, vd->viewy, v1.x, v1.y);
-   if (nv2 == rbsp->lastv1)
-      angle2 = rbsp->lastangle1;
-   else if (nv2 == rbsp->lastv2)
-      angle2 = rbsp->lastangle2;
-   else
-      angle2 = R_PointToAngle(vd->viewx, vd->viewy, v2.x, v2.y);
+   // v1's divide runs during the tests below
+   R_PointToColumnStart(rbsp, b1, tz1);
 
-   rbsp->lastv1 = nv1;
-   rbsp->lastv2 = nv2;
-   rbsp->lastangle1 = angle1;
-   rbsp->lastangle2 = angle2;
+   R_ProjectVertex(rbsp, &vertexes[SEG_UNPACK_V2(line)], &tz2, &tx2);
+   a2 = tz2 - tx2, b2 = tz2 + tx2;
 
-   x1 = R_ClipToViewEdges(angle1, angle2);
-   if (x1 <= 0)
+   // both vertices beyond the same frustum edge?
+   if ((a1 & a2) < 0 || (b1 & b2) < 0)
       return;
-   x2 = (x1 & 0xffff) - 1;
-   x1 = x1 >>    16;
+   
+   // facing away (v1 not left of v2 as seen from the viewer)?
+   if ((int64_t)tx1 * tz2 <= (int64_t)tz1 * tx2)
+      return;
+
+   // clip the front-facing span to the 90 degree view frustum |tx| <= tz:
+   // with a = tz - tx and b = tz + tx, a vertex is inside if a >= 0 && b >= 0
+   // (and tz > 0); the span can only enter through the left edge
+   // (a1 <= 0 <= a2) and leave through the right one (b2 <= 0 <= b1)
+   if (R_InsideView(a1, b1, tz1))
+      x1 = viewportWidth - R_PointToColumn(rbsp, b1, tz1);
+   else if (a1 > 0 || a2 < 0)
+      return;
+   else
+      x1 = 0;
+
+   R_PointToColumnStart(rbsp, b2, tz2); // runs during the backsector checks
+   if (!R_InsideView(a2, b2, tz2) && (b1 < 0 || b2 > 0))
+      return;
 
    // decide which clip routine to use
    side = SEG_UNPACK_SIDE(line);
@@ -627,6 +685,12 @@ static void R_AddLine(rbspWork_t *rbsp, seg_t *line)
    rbsp->curside    = sidedef;
    rbsp->curldef    = ldef;
    rbsp->curbsector = backsector;
+
+   x2 = R_InsideView(a2, b2, tz2) ? viewportWidth - R_PointToColumn(rbsp, b2, tz2) : viewportWidth;
+   if (x1 >= x2)
+      return;
+   x2 = x2 - 1;
+
    R_ClipWallSegment(rbsp, x1, x2, solid);
 }
 
@@ -724,6 +788,7 @@ void R_BSP(void)
 {
    rbspWork_t rbsp;
    cliprange_t solidsegs[MAXSEGS];
+   int viewc, views;
 
    solidsegs[0].first = -2;
    solidsegs[0].last  = -1;
@@ -732,8 +797,18 @@ void R_BSP(void)
    rbsp.solidsegs = solidsegs;
    rbsp.newend = &solidsegs[2];
    rbsp.splitspans = viewportWidth + viewportWidth/2;
-   rbsp.lastv1 = -1;
-   rbsp.lastv2 = -1;
+
+   viewc = vd->viewcos >> 3;
+   views = vd->viewsin >> 3;
+   rbsp.viewcs[0] = viewc;
+   rbsp.viewcs[1] = views;
+   rbsp.viewcs[2] = -views;
+   rbsp.viewcs[3] = viewc;
+   rbsp.viewntz0 = -(FixedMul(vd->viewx, viewc) + FixedMul(vd->viewy, views));
+   rbsp.viewntx0 = -(FixedMul(vd->viewy, viewc) - FixedMul(vd->viewx, views));
+#ifdef MARS
+   rbsp.colmul = centerX;
+#endif
 
    I_SetBankPage(segspage);
 

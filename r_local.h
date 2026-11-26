@@ -275,6 +275,28 @@ extern const VINT numViewports;
 /*
 ===============================================================================
 =
+= R_MulsW
+=
+= Signed 16x16 -> 32-bit product of the low 16 bits of a and b. GCC emits
+= mul.l for int16_t operands that are not loaded straight from memory, so
+= on MARS this forces muls.w.
+===============================================================================
+*/
+#ifdef MARS
+static ATTR_FORCE_INLINE
+int R_MulsW(int a, int b)
+{
+	int r;
+	__asm ("muls.w %1,%2\n\tsts macl,%0" : "=r"(r) : "r"(a), "r"(b) : "macl");
+	return r;
+}
+#else
+#define R_MulsW(a,b) ((int16_t)(a) * (int16_t)(b))
+#endif
+
+/*
+===============================================================================
+=
 = R_PointOnSide
 =
 = Returns side 0 (front) or 1 (back)
@@ -685,8 +707,6 @@ __attribute__((aligned(16)))
 	VINT		displayplayer;
 	VINT		fixedcolormap;
 	VINT		fuzzcolormap;
-	angle_t		clipangle;
-	VINT 		*viewangletox;
 	VINT 		shadow;
 
 	/* */
