@@ -51,14 +51,14 @@ typedef struct
     viswall_t* segl;
     drawtex_t *first;          // texture list
     int lightmin, lightmax, lightsub, lightcoef;
-    fixed_t scalestep, uoffset;
-    fixed_t uzstep, uz;
+    fixed_t scalestep;
+    fixed_t uoffset, uzstep, uz;
     int skypitch;
     drawcol_t drawskycol;
     unsigned skyangle;
 #if MIPLEVELS > 1
     // keep within the mov.l @(disp,Rn) range (60 bytes)
-    unsigned minmip, maxmip;
+    VINT minmip, maxmip;
 #endif
 
     drawtex_t tex[2];
@@ -110,7 +110,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 
     x = start;
     do {
-        fixed_t r;
+        fixed_t u;
         unsigned clip;
         unsigned iscale;
 #ifndef MARS
@@ -147,11 +147,10 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 
         // calculate texture offset: only bits 16..23 are used, so the
         // product may wrap
-        r = FixedMul(uz, (int)iscale);
+        u = FixedMul(uz, (int)iscale);
         uz += lseg->uzstep;
-
-        r = ((unsigned)(lseg->uoffset + r) >> FRACBITS) & 0xff; // colnum
-        lightcol = (lightcol & ~0xff) | r;
+        u = ((unsigned)(lseg->uoffset + u) >> FRACBITS) & 0xff; // colnum
+        lightcol = (lightcol & ~0xff) | u;
 
         if (segcolmask)
             segcolmask[x] = lightcol;
@@ -202,7 +201,6 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
                 texcolnum = lightcol & tex->widthmask;
                 mipcolnum = texcolnum;
                 frac = tex->texturemid - (centerY - top) * iscale;
-
                 mip = tex->mip;
 
 #if MIPLEVELS > 1
