@@ -427,8 +427,12 @@ extern pixel_t* viewportbuffer;
 /* that maps back to x ranges from clipangle to -clipangle */
 extern	uint16_t		*xtoviewangle/*[SCREENWIDTH+1]*/;
 
+#ifdef MARS
+fixed_t finetangent(angle_t angle);
+#else
 extern	const fixed_t		finetangent_[FINEANGLES/2];
 #define finetangent(x)		finetangent_[x]
+#endif
 
 extern	VINT			*validcount;
 extern	VINT			framecount;
