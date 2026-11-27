@@ -84,24 +84,24 @@ void R_SegCommands(void) ATTR_DATA_CACHE_ALIGN __attribute__((noinline));
 static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 {
     viswall_t* segl = lseg->segl;
-
     fixed_t scalefrac = segl->scalefrac;
+#ifdef MARS
+    // start the first column's divide early
+    SH2_DIVU_DVSR = scalefrac; // set 32-bit divisor
+    SH2_DIVU_DVDNTH =  0;      // high long of 64-bit dividend
+    SH2_DIVU_DVDNTL = -1;      // low long, starts the divide
+#endif
     fixed_t uz = lseg->uz;
     // texturelight | colnum, the segcolmask value (texturelight is a multiple of 256)
     unsigned lightcol = lseg->lightmax;
-
     const int start = segl->start;
     const int stop = segl->stop;
     int x;
+    drawtex_t *tex;
+    uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? (segl->clipbounds + 1) + stop - start : NULL;
 #if MIPLEVELS > 1
     unsigned miplevel = 0;
-#endif
 
-    drawtex_t *tex;
-
-    uint16_t *restrict segcolmask = (segl->actionbits & AC_MIDTEXTURE) ? (segl->clipbounds + 1) + stop - start : NULL;
-
-#if MIPLEVELS > 1
     // scale is linear in x, so miplevel is monotonic and its extremes are
     // at the first and the last column: maxmip holds the first one until
     // the loop is done
@@ -110,32 +110,12 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
 
     x = start;
     do {
-       fixed_t r, l;
-       unsigned clip;
-       fixed_t scale2;
-       unsigned iscale;
-
-#ifdef MARS
-        int32_t t, divunit;
-        __asm volatile (
-           "mov #-128, %1\n\t"
-           "add %1, %1 /* %1 is now 0xFFFFFF00 */ \n\t"
-           "mov.l %2, @(0, %1) /* set 32-bit divisor */ \n\t"
-           "mov #0, %0\n\t"
-           "mov.l %0, @(16, %1) /* set high bits of the 64-bit dividend */ \n\t"
-           "mov #-1, %0\n\t"
-           "mov.l %0, @(20, %1) /* set low  bits of the 64-bit dividend, start divide */\n\t"
-           : "=&r" (t), "=&r" (divunit) : "r" (scalefrac));
-#else
+        fixed_t r;
+        unsigned clip;
+        unsigned iscale;
+#ifndef MARS
         fixed_t scale = scalefrac;
 #endif
-
-        scale2 = scalefrac;
-        scalefrac += lseg->scalestep;
-
-        l = uz;
-        uz += lseg->uzstep;
-
         // ceilingclipx and floorclipx, unpacked per texture
         clip = clipbounds[x];
 
@@ -145,7 +125,7 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         if (lseg->lightcoef != 0)
         {
             // calc light level
-            int texturelight = lseg->lightsub - FixedMul(scale2, lseg->lightcoef);
+            int texturelight = lseg->lightsub - FixedMul(scalefrac, lseg->lightcoef);
             if (texturelight < lseg->lightmin)
                 texturelight = lseg->lightmin;
             if (texturelight > lseg->lightmax)
@@ -156,18 +136,20 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
         }
 
 #ifdef MARS
-        __asm volatile (
-            "mov #-128, %0\n\t"
-            "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
-            "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
-            : "=r" (iscale));
+        iscale = SH2_DIVU_DVDNTL;
+        // the next column's divide runs during the rest of this one
+        SH2_DIVU_DVSR = scalefrac + lseg->scalestep; // set 32-bit divisor
+        SH2_DIVU_DVDNTH =  0;      // high long of 64-bit dividend
+        SH2_DIVU_DVDNTL = -1;      // low long, starts the divide
 #else
         iscale = 0xffffffffu / scale;
 #endif
 
         // calculate texture offset: only bits 16..23 are used, so the
         // product may wrap
-        r = FixedMul(l, (int)iscale);
+        r = FixedMul(uz, (int)iscale);
+        uz += lseg->uzstep;
+
         r = ((unsigned)(lseg->uoffset + r) >> FRACBITS) & 0xff; // colnum
         lightcol = (lightcol & ~0xff) | r;
 
@@ -190,8 +172,8 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
             fixed_t top, bottom;
             int floorclipx = clip & 0x00ff, ceilingclipx = clip >> 8;
 
-            top = FixedMul(scale2, tex->topheight)>>FRACBITS;
-            bottom = FixedMul(scale2, tex->bottomheight)>>FRACBITS;
+            top = FixedMul(scalefrac, tex->topheight)>>FRACBITS;
+            bottom = FixedMul(scalefrac, tex->bottomheight)>>FRACBITS;
 
             top = centerY - top;
             if (top < ceilingclipx)
@@ -207,17 +189,6 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
                 VINT texcolnum, mipcolnum;
 #if MIPLEVELS > 1
                 unsigned m = miplevel;
-#endif
-#ifdef MARS
-                // read the quotient again instead of keeping iscale live across
-                // the drawer call (GCC spills it): the divider still holds it,
-                // the drawers don't divide
-                unsigned iscale;
-                __asm volatile (
-                    "mov #-128, %0\n\t"
-                    "add %0, %0 /* %0 is now 0xFFFFFF00 */ \n\t"
-                    "mov.l @(20, %0), %0 /* get 32-bit quotient */ \n\t"
-                    : "=r" (iscale));
 #endif
                 unsigned texiscale = iscale;
                 drawmip_t *mip;
@@ -252,13 +223,6 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
                     } while (--i);
                 }
 #endif
-
-                // CALICO: Jaguar-specific GPU blitter input calculation starts here.
-                // We invoke a software column drawer instead.
-#ifdef MARS
-                // keep GCC from turning mip back into &tex->mip[m] (mul.l)
-                __asm volatile ("" : "+r" (mip));
-#endif
                 src = mip->data + mipcolnum * mip->pitch;
 
                 mip->texcolnum = texcolnum;
@@ -267,6 +231,8 @@ static void R_DrawSeg(seglocal_t *lseg, unsigned short *restrict clipbounds)
                 mip->drawcol(x, top, bottom-1, lightcol & ~0xff, frac, texiscale, src, mip->height);
             }
         } while ((tex = tex->next) != NULL);
+
+        scalefrac += lseg->scalestep;
     } while (++x <= stop);
 
 #if MIPLEVELS > 1

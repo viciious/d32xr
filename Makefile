@@ -51,7 +51,7 @@ endif
 debug: CCFLAGS += -g -ggdb
 reldebug: CCFLAGS += -g -ggdb
 
-release: CCFLAGS += -ffast-math -funroll-loops -fno-align-loops -fno-align-jumps -fno-align-labels
+release: CCFLAGS += -ffast-math -funroll-loops
 release: CCFLAGS += -fno-common -ffunction-sections -fdata-sections
 release: LDFLAGS += -Os
 
